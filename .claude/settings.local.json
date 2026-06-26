@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx vue-tsc *)",
+      "Bash(identify /Users/zhangfeng/project/node-red-vue/switch-machine/1.png)",
+      "Bash(python3 *)"
+    ]
+  }
+}

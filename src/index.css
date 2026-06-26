@@ -1,0 +1,9 @@
+:root {
+  --light-size: 30px;
+  --light-gray: #a6a6a6;
+  --light-gray-glow: rgba(152, 157, 155, 0.6);
+  --light-green: #26c945;
+  --light-green-glow: rgba(38, 201, 69, 0.8);
+  --light-yellow: #ffc520;
+  --light-yellow-glow: rgba(255, 197, 32, 0.8);
+}
