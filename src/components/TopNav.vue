@@ -2,30 +2,30 @@
 import { ref } from "vue";
 
 defineProps<{
-  activeMenu?: string
-}>()
+  activeMenu?: string;
+}>();
 
 const emit = defineEmits<{
-  (e: 'menu-click', menu: string): void
-}>()
+  (e: "menu-click", menu: string): void;
+}>();
 
 const openSubmenu = ref("");
 
 const menuItems = [
-  { key: 'home', label: '首页' },
+  { key: "home", label: "首页" },
   {
-    key: 'assets',
-    label: '设备资产',
+    key: "assets",
+    label: "设备资产",
     children: [
-      { key: 'device-manager', label: '机型资产管理' },
-      { key: 'combination-manager', label: '组合方式管理' },
-      { key: 'config-manager', label: '测试机型管理' },
-      { key: 'binding-manager', label: '绑定配置' },
+      { key: "device-manager", label: "机型资产管理" },
+      { key: "combination-manager", label: "组合方式管理" },
+      { key: "config-manager", label: "测试机型管理" },
+      { key: "binding-manager", label: "绑定配置" },
     ],
   },
-  { key: 'history', label: '历史记录' },
-  { key: 'settings', label: '系统设置' },
-]
+  { key: "history", label: "历史记录" },
+  { key: "settings", label: "系统设置" },
+];
 
 function onMenuEnter(key: string) {
   openSubmenu.value = key;
@@ -37,14 +37,14 @@ function onMenuLeave() {
 
 function onSubClick(subKey: string) {
   openSubmenu.value = "";
-  emit('menu-click', subKey);
+  emit("menu-click", subKey);
 }
 </script>
 
 <template>
   <div class="top-nav">
     <div class="nav-left">
-      <span class="nav-logo">Industrial Precision Configurator</span>
+      <span class="nav-logo"> Portable turnout tester</span>
     </div>
     <div class="nav-center">
       <div
@@ -52,25 +52,27 @@ function onSubClick(subKey: string) {
         :key="item.key"
         class="nav-item-wrapper"
         @mouseenter="onMenuEnter(item.key)"
-        @mouseleave="onMenuLeave"
-      >
+        @mouseleave="onMenuLeave">
         <button
           :class="['nav-btn', { active: activeMenu === item.key }]"
-          @click="item.children ? (openSubmenu === item.key ? onMenuLeave() : onMenuEnter(item.key)) : emit('menu-click', item.key)"
-        >
+          @click="
+            item.children
+              ? openSubmenu === item.key
+                ? onMenuLeave()
+                : onMenuEnter(item.key)
+              : emit('menu-click', item.key)
+          ">
           {{ item.label }}
           <span v-if="item.children" class="nav-arrow">▾</span>
         </button>
         <div
           v-if="item.children && openSubmenu === item.key"
-          class="nav-submenu"
-        >
+          class="nav-submenu">
           <button
             v-for="child in item.children"
             :key="child.key"
             class="nav-sub-btn"
-            @click="onSubClick(child.key)"
-          >
+            @click="onSubClick(child.key)">
             {{ child.label }}
           </button>
         </div>

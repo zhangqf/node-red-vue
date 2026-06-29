@@ -1,12 +1,18 @@
 <script setup lang="ts">
-import { computed, ref, toRaw, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useSocket } from "@/composables/useSocket";
 import DeviceBar from "@/components/DeviceBar.vue";
 import CurrentCurve from "@/components/CurrentCurve.vue";
 import PowerCurve from "@/components/PowerCurve.vue";
 import TestResults from "@/components/TestResults.vue";
 
-import { WEBSOCKET_URL } from "@/config/config";
+import { HTTP_URL, WEBSOCKET_URL } from "@/config/config";
+import { useRoute, useRouter } from "vue-router";
+import { useToast } from "@/composables/useToast";
+
+const route = useRoute();
+const router = useRouter();
+const { withLoading } = useToast();
 
 const ws = useSocket(WEBSOCKET_URL);
 ws.connect();
@@ -138,10 +144,10 @@ const registerArr = computed(() => lastRegisterArr.value);
 // });
 
 const device = ref({
-  name: "ZD6",
-  driveMode: "1、3闭合",
-  direction: "定位 反",
+  name: "",
 });
+const combinationName = ref("");
+const configName = ref("");
 
 const currentData = ref({
   currentValue: 3.8,
@@ -158,265 +164,35 @@ const powerData = ref({
   lockPower: "0",
 });
 const butItemStatus = ref("");
-const itemConfig = ref([
-  {
-    name: "一动E机",
-    type: "1E",
-  },
-  {
-    name: "一动J机",
-    type: "1J",
-  },
-  {
-    name: "二动E机",
-    type: "2E",
-  },
-  {
-    name: "二动J机",
-    type: "2J",
-  },
-]);
+const itemConfig = ref<any[]>([]);
 
-interface RelayItem {
-  name: string;
-  status: "ok" | "ng";
-}
+export type RelayKey = string;
 
-type RelayConfigMap = Record<"1E" | "1J" | "2E" | "2J", RelayItem[]>;
-
-const relayConfig = ref({
-  "1E": [
-    {
-      name: "KA1",
-      status: "ng",
-    },
-    {
-      name: "KA2",
-      status: "ng",
-    },
-    {
-      name: "KA3",
-      status: "ng",
-    },
-    {
-      name: "KA4",
-      status: "ok",
-    },
-    {
-      name: "KA5",
-      status: "ng",
-    },
-    {
-      name: "KA6",
-      status: "ng",
-    },
-    {
-      name: "KA7",
-      status: "ng",
-    },
-    {
-      name: "KA8",
-      status: "ng",
-    },
-    {
-      name: "KA9",
-      status: "ng",
-    },
-    {
-      name: "KA10",
-      status: "ng",
-    },
-    {
-      name: "KA11",
-      status: "ng",
-    },
-    {
-      name: "KA12",
-      status: "ng",
-    },
-  ],
-  "1J": [
-    {
-      name: "KA1",
-      status: "ok",
-    },
-    {
-      name: "KA2",
-      status: "ok",
-    },
-    {
-      name: "KA3",
-      status: "ng",
-    },
-    {
-      name: "KA4",
-      status: "ok",
-    },
-    {
-      name: "KA5",
-      status: "ok",
-    },
-    {
-      name: "KA6",
-      status: "ok",
-    },
-    {
-      name: "KA7",
-      status: "ok",
-    },
-    {
-      name: "KA8",
-      status: "ok",
-    },
-    {
-      name: "KA9",
-      status: "ok",
-    },
-    {
-      name: "KA10",
-      status: "ok",
-    },
-    {
-      name: "KA11",
-      status: "ng",
-    },
-    {
-      name: "KA12",
-      status: "ng",
-    },
-  ],
-  "2E": [
-    {
-      name: "KA1",
-      status: "ng",
-    },
-    {
-      name: "KA2",
-      status: "ng",
-    },
-    {
-      name: "KA3",
-      status: "ng",
-    },
-    {
-      name: "KA4",
-      status: "ok",
-    },
-    {
-      name: "KA5",
-      status: "ng",
-    },
-    {
-      name: "KA6",
-      status: "ng",
-    },
-    {
-      name: "KA7",
-      status: "ng",
-    },
-    {
-      name: "KA8",
-      status: "ng",
-    },
-    {
-      name: "KA9",
-      status: "ng",
-    },
-    {
-      name: "KA10",
-      status: "ng",
-    },
-
-    {
-      name: "KA11",
-      status: "ng",
-    },
-    {
-      name: "KA12",
-      status: "ng",
-    },
-  ],
-  "2J": [
-    {
-      name: "KA1",
-      status: "ok",
-    },
-    {
-      name: "KA2",
-      status: "ok",
-    },
-    {
-      name: "KA3",
-      status: "ng",
-    },
-    {
-      name: "KA4",
-      status: "ok",
-    },
-    {
-      name: "KA5",
-      status: "ok",
-    },
-    {
-      name: "KA6",
-      status: "ok",
-    },
-    {
-      name: "KA7",
-      status: "ng",
-    },
-    {
-      name: "KA8",
-      status: "ng",
-    },
-    {
-      name: "KA9",
-      status: "ng",
-    },
-    {
-      name: "KA10",
-      status: "ng",
-    },
-    {
-      name: "KA11",
-      status: "ng",
-    },
-    {
-      name: "KA12",
-      status: "ng",
-    },
-  ],
-});
-
-const terminals = ref([
-  { name: "X1", status: "ok" },
-  { name: "X3", status: "ok" },
-  { name: "X4", status: "ok" },
-  { name: "X5", status: "ok" },
-  { name: "X6", status: "ok" },
-  { name: "X7", status: "ok" },
-  { name: "X8", status: "ok" },
-  { name: "X9", status: "ok" },
-  { name: "X10", status: "ok" },
-]);
+const terminals = ref<any[]>([]);
 
 const wsSendData = ref<number[] | null>(null);
 
-export type RelayKey = "1E" | "1J" | "2E" | "2J";
+const active = ref<string>("");
+const deviceId = route.params.deviceId as string;
+const combinationId = route.params.combinationId as string;
+const configId = route.params.configId as string;
 
-const active = ref<RelayKey>("1E");
+async function getConfig(itemType: string) {
+  try {
+    const response = await fetch(HTTP_URL + "/getConfigRelays/" + itemType, {
+      method: "get",
+      headers: { "Content-Type": "application/json" },
+    });
+    terminals.value = await response.json();
+  } catch {
+    terminals.value = [];
+  }
+}
 
-watch(
-  active,
-  (newkey) => {
-    const list = relayConfig.value[newkey];
-    butItemStatus.value = "";
-    terminals.value = [...list];
-    const result = list.map((item) => (item.status === "ok" ? 1 : 0));
-    wsSendData.value = result;
-  },
-  { immediate: true },
-);
+watch(active, (newkey) => {
+  if (!newkey) return;
+  getConfig(newkey);
+});
 
 const handleStart = (start: string) => {
   if (start === "start") {
@@ -424,34 +200,51 @@ const handleStart = (start: string) => {
   }
 };
 
-const findNode = (name: string, status: string) => {
-  const targetTerminal = terminals.value.find((item) => item.name === name);
+const findNode = (relay_name: string, default_status: number) => {
+  const targetTerminal = terminals.value.find(
+    (item) => item.relay_name === relay_name,
+  );
   if (targetTerminal) {
-    targetTerminal.status = status;
+    targetTerminal.default_status = default_status;
   }
 };
 
+interface ActionRelays {
+  DC: string;
+  FC: string;
+  CD: string;
+  HX: string;
+  JD: string;
+}
+
+const configActionRelays = ref<ActionRelays>({
+  DC: "",
+  FC: "",
+  CD: "",
+  HX: "",
+  JD: "",
+});
+
 const handleDC = () => {
-  findNode("KA11", "ok");
+  findNode(configActionRelays.value.DC, 1);
   handleDo();
   setTimeout(() => {
-    findNode("KA11", "ng");
+    findNode(configActionRelays.value.DC, 0);
     handleDo();
   }, 6000);
 };
 
 const handleFC = () => {
-  findNode("KA12", "ok");
+  findNode(configActionRelays.value.FC, 1);
   handleDo();
   setTimeout(() => {
-    findNode("KA12", "ng");
+    findNode(configActionRelays.value.FC, 0);
     handleDo();
   }, 6000);
 };
 
 const handleDo = () => {
   updateConfigData();
-  console.log(wsSendData.value);
   sendCmd(wsSendData.value);
 };
 
@@ -460,36 +253,23 @@ function sendCmd(data: number[] | null) {
 }
 
 const buttonItemConfig = [
-  {
-    name: "定操",
-    type: "DC",
-  },
-  {
-    name: "反操",
-    type: "FC",
-  },
-  {
-    name: "传动",
-    type: "CD",
-  },
-  {
-    name: "混线",
-    type: "HX",
-  },
-  {
-    name: "接地",
-    type: "JD",
-  },
+  { name: "定操", type: "DC" },
+  { name: "反操", type: "FC" },
+  { name: "传动", type: "CD" },
+  { name: "混线", type: "HX" },
+  { name: "接地", type: "JD" },
 ];
 
 const updateConfigData = () => {
-  const result = terminals.value.map((item) => (item.status === "ok" ? 1 : 0));
+  const result = terminals.value.map((item) =>
+    item.default_status === 1 || item.default_status === "ok" ? 1 : 0,
+  );
   wsSendData.value = result;
 };
 
 const butItemIsDisable = ref(false);
 
-const nextDoTime = ref(15);
+const nextDoTime = ref(10);
 let timerId: number | null = null;
 const handleOpe = (type: string) => {
   if (butItemIsDisable.value) return;
@@ -518,16 +298,50 @@ const handleOpe = (type: string) => {
     }
   }, 1000);
 };
+
+async function getList() {
+  try {
+    const [itemRes, deviceRes, comboRes, configRes] = await Promise.all([
+      fetch(HTTP_URL + "/getConfig/" + deviceId + "/" + combinationId),
+      fetch(HTTP_URL + "/getDevice/" + deviceId),
+      fetch(HTTP_URL + "/getCombination/" + combinationId),
+      fetch(HTTP_URL + "/getConfigList/" + configId),
+    ]);
+
+    itemConfig.value = await itemRes.json();
+
+    if (itemConfig.value.length > 0) {
+      active.value = itemConfig.value.filter((v) => v.id === configId)[0].id;
+    }
+
+    const deviceData = await deviceRes.json();
+    device.value.name = deviceData.name || "";
+
+    const comboData = await comboRes.json();
+    combinationName.value = comboData.name || "";
+
+    const configData = await configRes.json();
+    configActionRelays.value = configData.actionRelays || {};
+    configName.value = configData.name || "";
+  } catch {}
+}
+
+onMounted(async () => {
+  await withLoading(async () => {
+    await getList();
+  });
+});
 </script>
 
 <template>
   <div class="dashboard">
     <DeviceBar
       :device-name="device.name"
-      :drive-mode="device.driveMode"
+      :combination-name="combinationName"
+      :config-name="configName"
       :item-config="itemConfig"
-      :direction="device.direction"
-      v-model:active="active" />
+      v-model:active="active"
+      @back="router.back()" />
 
     <div class="main-content">
       <CurrentCurve
@@ -578,11 +392,13 @@ const handleOpe = (type: string) => {
       <div class="terminal-bar-grid">
         <div
           v-for="t in terminals"
-          :key="t.name"
+          :key="t.id"
           class="terminal-bar-item"
-          :class="t.status">
-          <span class="terminal-bar-dot" :class="t.status"></span>
-          <span class="terminal-bar-name">{{ t.name }}</span>
+          :class="[t.default_status ? 'ok' : 'ng']">
+          <span
+            class="terminal-bar-dot"
+            :class="[t.default_status ? 'ok' : 'ng']"></span>
+          <span class="terminal-bar-name">{{ t.relay_name }}</span>
         </div>
       </div>
     </div>
@@ -598,7 +414,9 @@ const handleOpe = (type: string) => {
         class="terminal-bar-item"
         :class="{ ok: t, ng: !t }">
         <span class="terminal-bar-dot" :class="{ ok: t, ng: !t }"></span>
-        <span class="terminal-bar-name">{{ terminals[index]?.name }}</span>
+        <span class="terminal-bar-name">{{
+          terminals[index]?.relay_name
+        }}</span>
       </div>
     </div>
     <div class="status-bar">

@@ -1,6 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
+import { useRoute } from "vue-router";
 import { HTTP_URL } from "@/config/config";
+import { useToast } from "@/composables/useToast";
+
+const route = useRoute();
+const { withLoading, showToast } = useToast();
 
 interface Device {
   id: string;
@@ -42,7 +47,10 @@ const bindings = ref<Binding[]>([]);
 const selectedDeviceId = ref("");
 
 /* ---- 从绑定中查找 ---- */
-function getBinding(deviceId: string, combinationId: string): Binding | undefined {
+function getBinding(
+  deviceId: string,
+  combinationId: string,
+): Binding | undefined {
   return bindings.value.find(
     (b) => b.deviceId === deviceId && b.combinationId === combinationId,
   );
@@ -51,14 +59,18 @@ function getBinding(deviceId: string, combinationId: string): Binding | undefine
 function isCombinationBound(combinationId: string): boolean {
   if (!selectedDeviceId.value) return false;
   return bindings.value.some(
-    (b) => b.deviceId === selectedDeviceId.value && b.combinationId === combinationId,
+    (b) =>
+      b.deviceId === selectedDeviceId.value &&
+      b.combinationId === combinationId,
   );
 }
 
 function toggleCombination(combinationId: string) {
   if (!selectedDeviceId.value) return;
   const existing = bindings.value.findIndex(
-    (b) => b.deviceId === selectedDeviceId.value && b.combinationId === combinationId,
+    (b) =>
+      b.deviceId === selectedDeviceId.value &&
+      b.combinationId === combinationId,
   );
   if (existing !== -1) {
     bindings.value.splice(existing, 1);
@@ -116,17 +128,19 @@ async function saveBindings() {
   const payload = bindings.value.filter(
     (b) => b.deviceId === selectedDeviceId.value,
   );
-  try {
+  await withLoading(async () => {
     const response = await fetch(HTTP_URL + "/saveBinding", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ deviceId: selectedDeviceId.value, bindings: payload }),
+      body: JSON.stringify({
+        deviceId: selectedDeviceId.value,
+        bindings: payload,
+      }),
     });
     const data = await response.json();
     console.log("Node-RED回应:", data);
-  } catch (error) {
-    console.error("提交失败:", error);
-  }
+    fetchBindings();
+  }, "保存成功");
 }
 
 /* ---- 拉取数据 ---- */
@@ -136,9 +150,24 @@ async function fetchDevices() {
     devices.value = await res.json();
   } catch {
     devices.value = [
-      { id: "1", name: "ZD6 转辙机 #001", typeName: "ZD6", location: "站场 A 区" },
-      { id: "2", name: "ZD6 转辙机 #002", typeName: "ZD6", location: "站场 B 区" },
-      { id: "3", name: "S700K 转辙机 #001", typeName: "S700K", location: "站场 C 区" },
+      {
+        id: "1",
+        name: "ZD6 转辙机 #001",
+        typeName: "ZD6",
+        location: "站场 A 区",
+      },
+      {
+        id: "2",
+        name: "ZD6 转辙机 #002",
+        typeName: "ZD6",
+        location: "站场 B 区",
+      },
+      {
+        id: "3",
+        name: "S700K 转辙机 #001",
+        typeName: "S700K",
+        location: "站场 C 区",
+      },
     ];
   }
 }
@@ -149,9 +178,24 @@ async function fetchCombinations() {
     combinations.value = await res.json();
   } catch {
     combinations.value = [
-      { id: "1", name: "双动双机", description: "双机牵引组合方式", deviceType: "ZD6" },
-      { id: "2", name: "单动单机", description: "单机牵引组合方式", deviceType: "ZD6" },
-      { id: "3", name: "双动双机", description: "双机牵引组合方式", deviceType: "S700K" },
+      {
+        id: "1",
+        name: "双动双机",
+        description: "双机牵引组合方式",
+        deviceType: "ZD6",
+      },
+      {
+        id: "2",
+        name: "单动单机",
+        description: "单机牵引组合方式",
+        deviceType: "ZD6",
+      },
+      {
+        id: "3",
+        name: "双动双机",
+        description: "双机牵引组合方式",
+        deviceType: "S700K",
+      },
     ];
   }
 }
@@ -162,17 +206,39 @@ async function fetchConfigs() {
     configs.value = await res.json();
   } catch {
     configs.value = [
-      { id: "1", name: "定位→反位 拉力曲线", description: "标准拉力曲线检测参数", deviceId: "1", deviceName: "ZD6 转辙机 #001" },
-      { id: "2", name: "驱动回路 导通检测", description: "X1-C1, X2-C10 回路导通参数", deviceId: "1", deviceName: "ZD6 转辙机 #001" },
-      { id: "3", name: "表示回路 导通检测", description: "X1, X2 回路导通参数", deviceId: "2", deviceName: "ZD6 转辙机 #002" },
+      {
+        id: "1",
+        name: "定位→反位 拉力曲线",
+        description: "标准拉力曲线检测参数",
+        deviceId: "1",
+        deviceName: "ZD6 转辙机 #001",
+      },
+      {
+        id: "2",
+        name: "驱动回路 导通检测",
+        description: "X1-C1, X2-C10 回路导通参数",
+        deviceId: "1",
+        deviceName: "ZD6 转辙机 #001",
+      },
+      {
+        id: "3",
+        name: "表示回路 导通检测",
+        description: "X1, X2 回路导通参数",
+        deviceId: "2",
+        deviceName: "ZD6 转辙机 #002",
+      },
     ];
   }
 }
 
+const BindData = ref([]);
+
 async function fetchBindings() {
   try {
-    const res = await fetch(HTTP_URL + "/getBindings");
-    bindings.value = await res.json();
+    const res = await fetch(HTTP_URL + "/getBingings");
+    const data = await res.json();
+    console.log(data);
+    BindData.value = data;
   } catch {
     bindings.value = [
       {
@@ -189,10 +255,27 @@ async function fetchBindings() {
   }
 }
 
+watch(selectedDeviceId, (newVal) => {
+  if (newVal) {
+    const deviceData = BindData.value.find((i: any) => i.deviceId === newVal);
+    bindings.value = deviceData?.bindings || [];
+  }
+});
+
 onMounted(async () => {
-  await Promise.all([fetchDevices(), fetchCombinations(), fetchConfigs(), fetchBindings()]);
+  await Promise.all([
+    fetchDevices(),
+    fetchCombinations(),
+    fetchConfigs(),
+    fetchBindings(),
+  ]);
   if (devices.value.length > 0 && !selectedDeviceId.value) {
-    selectedDeviceId.value = devices.value[0].id;
+    const preferId = route.query.deviceId as string;
+    if (preferId && devices.value.some((d) => d.id === preferId)) {
+      selectedDeviceId.value = preferId;
+    } else {
+      selectedDeviceId.value = devices.value[0].id;
+    }
   }
 });
 </script>
@@ -223,16 +306,14 @@ onMounted(async () => {
         v-for="combo in combinations"
         :key="combo.id"
         class="bind-row"
-        :class="{ bound: isCombinationBound(combo.id) }"
-      >
+        :class="{ bound: isCombinationBound(combo.id) }">
         <div class="bind-row-header">
           <label class="checkbox-label">
             <input
               type="checkbox"
               :checked="isCombinationBound(combo.id)"
               :disabled="!selectedDeviceId"
-              @change="toggleCombination(combo.id)"
-            />
+              @change="toggleCombination(combo.id)" />
             <span class="combo-name">{{ combo.name }}</span>
             <span class="combo-desc">{{ combo.description }}</span>
           </label>
@@ -246,16 +327,16 @@ onMounted(async () => {
               v-for="cfg in configs"
               :key="cfg.id"
               class="chip-label"
-              :class="{ checked: isConfigBound(combo.id, cfg.id) }"
-            >
+              :class="{ checked: isConfigBound(combo.id, cfg.id) }">
               <input
                 type="checkbox"
                 :checked="isConfigBound(combo.id, cfg.id)"
-                @change="toggleConfig(combo.id, cfg.id)"
-              />
+                @change="toggleConfig(combo.id, cfg.id)" />
               {{ cfg.name }}
             </label>
-            <span v-if="configs.length === 0" class="empty-hint">暂无测试机型</span>
+            <span v-if="configs.length === 0" class="empty-hint"
+              >暂无测试机型</span
+            >
           </div>
         </div>
       </div>
@@ -268,13 +349,12 @@ onMounted(async () => {
         <div class="tree-root">
           {{ devices.find((d) => d.id === selectedDeviceId)?.name }}
         </div>
-        <div v-for="item in boundCombinations" :key="item.combinationId" class="tree-branch">
+        <div
+          v-for="item in boundCombinations"
+          :key="item.combinationId"
+          class="tree-branch">
           <div class="tree-combo">├ {{ item.combination?.name }}</div>
-          <div
-            v-for="cfg in item.configList"
-            :key="cfg.id"
-            class="tree-config"
-          >
+          <div v-for="cfg in item.configList" :key="cfg.id" class="tree-config">
             └ {{ cfg.name }}
           </div>
           <div v-if="item.configList.length === 0" class="tree-config empty">

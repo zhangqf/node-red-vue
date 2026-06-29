@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref, toRaw } from "vue";
 import { HTTP_URL } from "@/config/config";
+import { useToast } from "@/composables/useToast";
+
+const { withLoading } = useToast();
 
 interface Device {
   id: string;
@@ -73,7 +76,7 @@ async function save() {
     const newId = String(Date.now());
     devices.value.push({ id: newId, ...form.value });
   }
-  try {
+  await withLoading(async () => {
     const response = await fetch(HTTP_URL + "/saveDevice", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -81,9 +84,7 @@ async function save() {
     });
     const data = await response.json();
     console.log("Node-RED回应:", data);
-  } catch (error) {
-    console.error("提交失败:", error);
-  }
+  }, "保存成功");
   getList();
   showModal.value = false;
 }

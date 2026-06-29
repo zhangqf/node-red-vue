@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import TopNav from "@/components/TopNav.vue";
+import GlobalToast from "@/components/GlobalToast.vue";
 
 const router = useRouter();
 
@@ -10,39 +11,48 @@ const activeMenu = ref("home");
 function onMenuClick(menu: string) {
   switch (menu) {
     case "home":
-      activeMenu.value = "home";
       router.push({ name: "deviceList" });
       break;
     case "device-manager":
-      activeMenu.value = "assets";
       router.push({ name: "device-manager" });
       break;
     case "combination-manager":
-      activeMenu.value = "assets";
       router.push({ name: "combination-manager" });
       break;
     case "config-manager":
-      activeMenu.value = "assets";
       router.push({ name: "config-manager" });
       break;
     case "binding-manager":
-      activeMenu.value = "assets";
       router.push({ name: "binding-manager" });
       break;
     case "history":
-      activeMenu.value = "history";
       break;
     case "settings":
-      activeMenu.value = "settings";
       break;
   }
 }
+
+const homeRoutes = ["deviceList", "configure", "work"];
+const assetRoutes = ["device-manager", "combination-manager", "config-manager", "binding-manager"];
+
+watch(
+  () => router.currentRoute.value.name,
+  (name) => {
+    if (homeRoutes.includes(name as string)) activeMenu.value = "home";
+    else if (assetRoutes.includes(name as string)) activeMenu.value = "assets";
+    else if (name === "history") activeMenu.value = "history";
+    else if (name === "settings") activeMenu.value = "settings";
+    else activeMenu.value = "home";
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
   <div class="app-shell">
     <TopNav :active-menu="activeMenu" @menu-click="onMenuClick" />
     <router-view />
+    <GlobalToast />
   </div>
 </template>
 

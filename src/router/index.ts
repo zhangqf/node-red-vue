@@ -13,10 +13,14 @@ const router = createRouter({
     { path: "/", name: "deviceList", component: DeviceList },
     { path: "/devices", name: "device-manager", component: DeviceManager },
     { path: "/configs", name: "config-manager", component: ConfigManager },
-    { path: "/combinations", name: "combination-manager", component: CombinationManager },
+    {
+      path: "/combinations",
+      name: "combination-manager",
+      component: CombinationManager,
+    },
     { path: "/bindings", name: "binding-manager", component: BindingManager },
     { path: "/configure/:deviceId", name: "configure", component: Configure },
-    { path: "/work/:deviceId/:configId", name: "work", component: Work },
+    { path: "/work/:deviceId/:combinationId/:configId", name: "work", component: Work },
   ],
 });
 

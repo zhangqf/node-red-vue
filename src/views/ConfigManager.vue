@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { nextTick, onMounted, ref } from "vue";
 import { HTTP_URL } from "@/config/config";
+import { useToast } from "@/composables/useToast";
+
+const { withLoading } = useToast();
 
 interface Relay {
   relay_name: string;
@@ -14,7 +17,17 @@ interface Config {
   description: string;
   relaysNum?: number;
   relays: Relay[];
+  actionRelays?: Record<string, string>;
 }
+
+const operationGroups = ["DC", "FC", "CD", "HX", "JD"];
+const groupLabels: Record<string, string> = {
+  DC: "定操",
+  FC: "反操",
+  CD: "传动",
+  HX: "混线",
+  JD: "接地",
+};
 
 /* ---- 显示模式开关 ---- */
 const showOkNg = ref(true);
@@ -74,7 +87,12 @@ const configs = ref<Config[]>([
 const showModal = ref(false);
 const isEdit = ref(false);
 const editId = ref("");
-const form = ref({ name: "", description: "", relays: [] as Relay[] });
+const form = ref({
+  name: "",
+  description: "",
+  relays: [] as Relay[],
+  actionRelays: {} as Record<string, string>,
+});
 
 /* ---- 绑定状态 ---- */
 const boundIds = ref<Set<string>>(new Set());
@@ -88,12 +106,19 @@ async function fetchBoundIds() {
 }
 
 /* ---- 继电器编辑 ---- */
+const relayTableRef = ref<HTMLElement | null>(null);
+
 function addRelay() {
   const nextOrder = form.value.relays.length + 1;
   form.value.relays.push({
     relay_name: "",
     default_status: 0,
     sort_order: nextOrder,
+  });
+  nextTick(() => {
+    if (relayTableRef.value) {
+      relayTableRef.value.scrollTop = relayTableRef.value.scrollHeight;
+    }
   });
 }
 
@@ -107,11 +132,21 @@ function toggleRelayStatus(index: number) {
   r.default_status = r.default_status === 1 ? 0 : 1;
 }
 
+function relayNames(): string[] {
+  return form.value.relays.filter((r) => r.relay_name).map((r) => r.relay_name);
+}
+
 /* ---- 增/改/查 ---- */
+function emptyActionRelays(): Record<string, string> {
+  const map: Record<string, string> = {};
+  operationGroups.forEach((g) => (map[g] = ""));
+  return map;
+}
+
 function openAdd() {
   isEdit.value = false;
   editId.value = "";
-  form.value = { name: "", description: "", relays: [] };
+  form.value = { name: "", description: "", relays: [], actionRelays: emptyActionRelays() };
   showModal.value = true;
 }
 
@@ -122,6 +157,7 @@ function openEdit(cfg: Config) {
     name: cfg.name,
     description: cfg.description,
     relays: cloneRelays(cfg.relays),
+    actionRelays: { ...emptyActionRelays(), ...cfg.actionRelays },
   };
   showModal.value = true;
 }
@@ -133,6 +169,7 @@ function viewDetail(cfg: Config) {
     name: cfg.name,
     description: cfg.description,
     relays: cloneRelays(cfg.relays),
+    actionRelays: { ...emptyActionRelays(), ...cfg.actionRelays },
   };
   showModal.value = true;
 }
@@ -144,6 +181,7 @@ function saveAsCopy(cfg: Config) {
     name: cfg.name + " (副本)",
     description: cfg.description,
     relays: cloneRelays(cfg.relays),
+    actionRelays: { ...emptyActionRelays(), ...cfg.actionRelays },
   };
   showModal.value = true;
 }
@@ -154,6 +192,7 @@ async function save() {
     name: form.value.name,
     description: form.value.description,
     relays: form.value.relays.map((r) => ({ ...r })),
+    actionRelays: { ...form.value.actionRelays },
   };
 
   if (isEdit.value && !boundIds.value.has(editId.value)) {
@@ -175,7 +214,7 @@ async function save() {
     });
   }
 
-  try {
+  await withLoading(async () => {
     const response = await fetch(HTTP_URL + "/saveConfig", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -183,9 +222,7 @@ async function save() {
     });
     const data = await response.json();
     console.log("Node-RED回应:", data);
-  } catch (error) {
-    console.error("提交失败:", error);
-  }
+  }, "保存成功");
   getList();
   showModal.value = false;
 }
@@ -289,99 +326,123 @@ onMounted(() => {
             class="modal-input"
             :disabled="boundIds.has(editId)" />
 
-          <label>继电器配置</label>
-
-          <!-- 显示模式开关 -->
-          <div class="display-toggles">
-            <span class="toggle-hint">状态显示：</span>
-            <label class="toggle-label" :class="{ on: showOkNg }">
-              <input type="checkbox" v-model="showOkNg" /> OK/NG
-            </label>
-            <label class="toggle-label" :class="{ on: showTrueFalse }">
-              <input type="checkbox" v-model="showTrueFalse" /> TRUE/FALSE
-            </label>
-            <label class="toggle-label" :class="{ on: showArrow }">
-              <input type="checkbox" v-model="showArrow" /> 箭头
-            </label>
+          <div class="section-header">
+            <span class="section-label">继电器配置</span>
+            <div class="display-toggles">
+              <label class="toggle-label" :class="{ on: showOkNg }">
+                <input type="checkbox" v-model="showOkNg" /> OK/NG
+              </label>
+              <label class="toggle-label" :class="{ on: showTrueFalse }">
+                <input type="checkbox" v-model="showTrueFalse" /> TRUE/FALSE
+              </label>
+              <label class="toggle-label" :class="{ on: showArrow }">
+                <input type="checkbox" v-model="showArrow" /> 箭头
+              </label>
+            </div>
           </div>
 
-          <div class="relay-table-wrapper">
-            <table class="relay-table">
-              <thead>
-                <tr>
-                  <th style="width: 44px">#</th>
-                  <th>继电器名称</th>
-                  <th style="width: 130px">状态</th>
-                  <th v-if="!boundIds.has(editId)" style="width: 44px"></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(r, i) in form.relays" :key="i">
-                  <td class="sort-cell">{{ r.sort_order }}</td>
-                  <td>
-                    <input
-                      v-model="r.relay_name"
-                      class="relay-input"
-                      placeholder="如 KA1, X1"
-                      :disabled="boundIds.has(editId)" />
-                  </td>
-                  <td class="status-cell">
-                    <div class="status-parts">
-                      <button
-                        v-if="showOkNg"
-                        class="status-chip"
-                        :class="{
-                          ok: r.default_status === 1,
-                          ng: r.default_status === 0,
-                        }"
-                        :disabled="boundIds.has(editId)"
-                        @click="toggleRelayStatus(i)">
-                        {{ r.default_status === 1 ? "OK" : "NG" }}
-                      </button>
-                      <button
-                        v-if="showTrueFalse"
-                        class="status-chip"
-                        :class="{
-                          ok: r.default_status === 1,
-                          ng: r.default_status === 0,
-                        }"
-                        :disabled="boundIds.has(editId)"
-                        @click="toggleRelayStatus(i)">
-                        {{ r.default_status === 1 ? "TRUE" : "FALSE" }}
-                      </button>
-                      <button
-                        v-if="showArrow"
-                        class="status-chip arrow-icon"
-                        :class="{
-                          ok: r.default_status === 1,
-                          ng: r.default_status === 0,
-                        }"
-                        :disabled="boundIds.has(editId)"
-                        @click="toggleRelayStatus(i)">
-                        {{ r.default_status === 1 ? "↑" : "↓" }}
-                      </button>
-                    </div>
-                  </td>
-                  <td v-if="!boundIds.has(editId)" style="text-align: center">
-                    <button class="relay-remove-btn" @click="removeRelay(i)">
-                      ×
-                    </button>
-                  </td>
-                </tr>
-                <tr v-if="form.relays.length === 0">
-                  <td colspan="4" class="relay-empty">
-                    暂无继电器，点击下方按钮添加
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="relay-layout">
+            <div class="relay-left">
+              <div ref="relayTableRef" class="relay-table-wrapper">
+                <table class="relay-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 30px">#</th>
+                      <th style="width: 95px">名称</th>
+                      <th style="text-align: center">状态</th>
+                      <th v-if="!boundIds.has(editId)" style="width: 28px"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(r, i) in form.relays" :key="i">
+                      <td class="sort-cell">{{ r.sort_order }}</td>
+                      <td>
+                        <input
+                          v-model="r.relay_name"
+                          class="relay-input"
+                          placeholder="KA1"
+                          :disabled="boundIds.has(editId)" />
+                      </td>
+                      <td class="status-cell">
+                        <div class="status-parts">
+                          <button
+                            v-if="showOkNg"
+                            class="status-chip"
+                            :class="{
+                              ok: r.default_status === 1,
+                              ng: r.default_status === 0,
+                            }"
+                            :disabled="boundIds.has(editId)"
+                            @click="toggleRelayStatus(i)">
+                            {{ r.default_status === 1 ? "OK" : "NG" }}
+                          </button>
+                          <button
+                            v-if="showTrueFalse"
+                            class="status-chip"
+                            :class="{
+                              ok: r.default_status === 1,
+                              ng: r.default_status === 0,
+                            }"
+                            :disabled="boundIds.has(editId)"
+                            @click="toggleRelayStatus(i)">
+                            {{ r.default_status === 1 ? "TRUE" : "FALSE" }}
+                          </button>
+                          <button
+                            v-if="showArrow"
+                            class="status-chip arrow-icon"
+                            :class="{
+                              ok: r.default_status === 1,
+                              ng: r.default_status === 0,
+                            }"
+                            :disabled="boundIds.has(editId)"
+                            @click="toggleRelayStatus(i)">
+                            {{ r.default_status === 1 ? "↑" : "↓" }}
+                          </button>
+                        </div>
+                      </td>
+                      <td
+                        v-if="!boundIds.has(editId)"
+                        style="text-align: center">
+                        <button
+                          class="relay-remove-btn"
+                          @click="removeRelay(i)">
+                          ×
+                        </button>
+                      </td>
+                    </tr>
+                    <tr v-if="form.relays.length === 0">
+                      <td colspan="4" class="relay-empty">暂无继电器</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <button
+                v-if="!boundIds.has(editId)"
+                class="add-relay-btn"
+                @click="addRelay">
+                + 添加继电器
+              </button>
+            </div>
+
+            <div class="action-relays">
+              <div class="action-header">动作继电器</div>
+              <div v-for="g in operationGroups" :key="g" class="action-row">
+                <span class="action-label">{{ groupLabels[g] }}</span>
+                <select
+                  v-model="form.actionRelays[g]"
+                  class="action-select"
+                  :disabled="boundIds.has(editId)">
+                  <option value="">--</option>
+                  <option
+                    v-for="name in relayNames()"
+                    :key="name"
+                    :value="name">
+                    {{ name }}
+                  </option>
+                </select>
+              </div>
+            </div>
           </div>
-          <button
-            v-if="!boundIds.has(editId)"
-            class="add-relay-btn"
-            @click="addRelay">
-            + 添加继电器
-          </button>
         </div>
         <div class="modal-footer">
           <button class="action-btn cancel" @click="showModal = false">
@@ -470,11 +531,12 @@ onMounted(() => {
 
 .action-btn {
   border: none;
-  font-size: 12px;
-  padding: 4px 12px;
+  font-size: 13px;
+  padding: 7px 16px;
   border-radius: 3px;
   cursor: pointer;
   transition: background 0.2s;
+  min-height: 34px;
 }
 
 .action-btn.edit {
@@ -545,7 +607,7 @@ onMounted(() => {
   border: 1px solid #1a2d44;
   border-radius: 8px;
   padding: 24px;
-  width: 580px;
+  width: 620px;
   max-height: 82vh;
   display: flex;
   flex-direction: column;
@@ -561,8 +623,8 @@ onMounted(() => {
 .modal-body {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 20px;
+  gap: 2px;
+  margin-bottom: 16px;
   flex: 1;
   min-height: 0;
 }
@@ -581,9 +643,9 @@ onMounted(() => {
   background: #051424;
   border: 1px solid #1a2d44;
   color: #e0e8f0;
-  padding: 8px 12px;
+  padding: 9px 12px;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 14px;
   outline: none;
 }
 
@@ -596,32 +658,41 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
+/* section 标题行 */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.section-label {
+  font-size: 12px;
+  color: #5a7288;
+  flex-shrink: 0;
+}
+
 /* 显示模式开关 */
 .display-toggles {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-top: 4px;
-}
-
-.toggle-hint {
-  font-size: 11px;
-  color: #5a7288;
-  margin-right: 4px;
+  flex: 1;
 }
 
 .toggle-label {
   display: flex;
   align-items: center;
-  gap: 3px;
-  font-size: 11px;
+  gap: 2px;
+  font-size: 12px;
   color: #5a7288;
-  padding: 2px 8px;
+  padding: 4px 8px;
   border: 1px solid #1a2d44;
   border-radius: 10px;
   cursor: pointer;
   user-select: none;
   transition: all 0.2s;
+  min-height: 28px;
 }
 
 .toggle-label.on {
@@ -637,12 +708,29 @@ onMounted(() => {
 }
 
 /* 继电器表格 */
+.relay-layout {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+  min-height: 0;
+}
+
+.relay-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
 .relay-table-wrapper {
+  flex: 1;
   border: 1px solid #1a2d44;
-  border-radius: 6px;
+  border-radius: 4px;
   overflow: hidden;
-  max-height: 260px;
+  max-height: 240px;
   overflow-y: auto;
+  min-width: 0;
 }
 
 .relay-table {
@@ -655,7 +743,7 @@ onMounted(() => {
   color: #5a7288;
   font-size: 11px;
   font-weight: 500;
-  padding: 6px 10px;
+  padding: 4px 8px;
   text-align: left;
   position: sticky;
   top: 0;
@@ -663,7 +751,7 @@ onMounted(() => {
 }
 
 .relay-table td {
-  padding: 4px 10px;
+  padding: 4px 8px;
   border-top: 1px solid #1a2d44;
 }
 
@@ -674,13 +762,13 @@ onMounted(() => {
 }
 
 .relay-input {
-  width: 100%;
+  width: 90px;
   background: #051424;
   border: 1px solid #1a2d44;
   color: #e0e8f0;
-  padding: 5px 8px;
+  padding: 7px 8px;
   border-radius: 3px;
-  font-size: 12px;
+  font-size: 13px;
   outline: none;
 }
 
@@ -706,14 +794,15 @@ onMounted(() => {
   background: rgba(248, 113, 113, 0.12);
   color: #f87171;
   border: 1px solid rgba(248, 113, 113, 0.3);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  padding: 2px 8px;
+  padding: 5px 10px;
   border-radius: 3px;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
-  min-width: 36px;
+  min-width: 40px;
+  min-height: 30px;
   text-align: center;
 }
 
@@ -729,19 +818,21 @@ onMounted(() => {
 }
 
 .status-chip.arrow-icon {
-  font-size: 14px;
-  min-width: 28px;
-  padding: 1px 8px;
+  font-size: 16px;
+  min-width: 32px;
+  padding: 3px 8px;
 }
 
 .relay-remove-btn {
   background: transparent;
   border: none;
   color: #f87171;
-  font-size: 16px;
+  font-size: 18px;
   cursor: pointer;
-  padding: 0 4px;
+  padding: 4px 8px;
   line-height: 1;
+  min-width: 30px;
+  min-height: 30px;
 }
 
 .relay-remove-btn:hover {
@@ -757,19 +848,69 @@ onMounted(() => {
 
 .add-relay-btn {
   background: transparent;
-  border: 1px dashed #2a4a68;
-  color: #8fb4d8;
+  border: 1px solid #1a6b3c;
+  color: #34d399;
   font-size: 12px;
-  padding: 6px;
-  border-radius: 4px;
+  padding: 5px 12px;
+  border-radius: 3px;
   cursor: pointer;
   transition: all 0.2s;
-  margin-top: 4px;
+  flex-shrink: 0;
+  min-height: 30px;
 }
 
 .add-relay-btn:hover {
-  border-color: #5a92d0;
-  color: #b8d4f0;
+  background: rgba(52, 211, 153, 0.1);
+}
+
+/* 动作继电器 */
+.action-relays {
+  width: 180px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.action-header {
+  font-size: 12px;
+  color: #5a7288;
+  margin-bottom: 2px;
+}
+
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-label {
+  font-size: 11px;
+  color: #8fb4d8;
+  width: 28px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.action-select {
+  flex: 1;
+  background: #051424;
+  border: 1px solid #1a2d44;
+  color: #e0e8f0;
+  padding: 6px 8px;
+  border-radius: 3px;
+  font-size: 13px;
+  outline: none;
+  min-height: 32px;
+}
+
+.action-select:focus {
+  border-color: #2d5280;
+}
+
+.action-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .modal-footer {
