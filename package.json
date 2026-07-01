@@ -1,6 +1,8 @@
 {
   "name": "switch-machine",
   "version": "0.0.0",
+  "author": "hebimaoshi",
+  "description": "Switch Machine",
   "private": true,
   "type": "module",
   "main": "electron/main.cjs",
