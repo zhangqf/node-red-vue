@@ -21,10 +21,10 @@
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
     "electron:dev": "NODE_ENV=development electron .",
-    "electron:build": "vite build && electron-builder",
-    "electron:build:win": "vite build && electron-builder --win",
-    "electron:build:mac": "vite build && electron-builder --mac",
-    "electron:build:linux": "vite build && electron-builder --linux"
+    "electron:build": "vite build && electron-builder --publish never",
+    "electron:build:win": "vite build && electron-builder --win --publish never",
+    "electron:build:mac": "vite build && electron-builder --mac --publish never",
+    "electron:build:linux": "vite build && electron-builder --linux --publish never"
   },
   "build": {
     "appId": "com.switch-machine.app",
@@ -96,6 +96,11 @@
     "vite": "^8.0.8",
     "vite-plugin-vue-devtools": "^8.1.1",
     "vue-tsc": "^3.2.6"
+  },
+  "optionalDependencies": {
+    "@node-rs/bcrypt-win32-x64-msvc": "1.10.7",
+    "@node-rs/bcrypt-darwin-arm64": "1.10.7",
+    "@node-rs/bcrypt-linux-x64-gnu": "1.10.7"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
