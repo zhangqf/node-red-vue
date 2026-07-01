@@ -17,7 +17,7 @@ interface Config {
   description: string;
   relaysNum?: number;
   relays: Relay[];
-  actionRelays?: Record<string, string>;
+  actionRelays?: Record<string, string[]>;
 }
 
 const operationGroups = ["DC", "FC", "CD", "HX", "JD"];
@@ -28,6 +28,17 @@ const groupLabels: Record<string, string> = {
   HX: "混线",
   JD: "接地",
 };
+
+/* ---- 折叠 ---- */
+const expandedGroups = ref<Record<string, boolean>>({});
+
+function toggleGroup(g: string) {
+  expandedGroups.value[g] = !expandedGroups.value[g];
+}
+
+function isGroupExpanded(g: string): boolean {
+  return expandedGroups.value[g] ?? false;
+}
 
 /* ---- 显示模式开关 ---- */
 const showOkNg = ref(true);
@@ -91,7 +102,7 @@ const form = ref({
   name: "",
   description: "",
   relays: [] as Relay[],
-  actionRelays: {} as Record<string, string>,
+  actionRelays: {} as Record<string, string[]>,
 });
 
 /* ---- 绑定状态 ---- */
@@ -136,18 +147,57 @@ function relayNames(): string[] {
   return form.value.relays.filter((r) => r.relay_name).map((r) => r.relay_name);
 }
 
+function toggleActionRelay(group: string, name: string) {
+  const arr = form.value.actionRelays[group];
+  if (!arr) {
+    form.value.actionRelays[group] = [name];
+    return;
+  }
+  const idx = arr.indexOf(name);
+  if (idx === -1) {
+    arr.push(name);
+  } else {
+    arr.splice(idx, 1);
+  }
+}
+
+function isActionRelaySelected(group: string, name: string): boolean {
+  return form.value.actionRelays[group]?.includes(name) ?? false;
+}
+
 /* ---- 增/改/查 ---- */
-function emptyActionRelays(): Record<string, string> {
-  const map: Record<string, string> = {};
-  operationGroups.forEach((g) => (map[g] = ""));
+function emptyActionRelays(): Record<string, string[]> {
+  const map: Record<string, string[]> = {};
+  operationGroups.forEach((g) => (map[g] = []));
   return map;
 }
 
 function openAdd() {
   isEdit.value = false;
   editId.value = "";
-  form.value = { name: "", description: "", relays: [], actionRelays: emptyActionRelays() };
+  form.value = {
+    name: "",
+    description: "",
+    relays: [],
+    actionRelays: emptyActionRelays(),
+  };
   showModal.value = true;
+}
+
+function normalizeActionRelays(
+  raw: Record<string, string | string[]> | undefined,
+): Record<string, string[]> {
+  const base = emptyActionRelays();
+  if (!raw) return base;
+  for (const g of operationGroups) {
+    const val = raw[g];
+    if (Array.isArray(val)) {
+      base[g] = val;
+    } else if (typeof val === "string" && val) {
+      base[g] = [val];
+    }
+  }
+  return base;
 }
 
 function openEdit(cfg: Config) {
@@ -157,7 +207,7 @@ function openEdit(cfg: Config) {
     name: cfg.name,
     description: cfg.description,
     relays: cloneRelays(cfg.relays),
-    actionRelays: { ...emptyActionRelays(), ...cfg.actionRelays },
+    actionRelays: normalizeActionRelays(cfg.actionRelays),
   };
   showModal.value = true;
 }
@@ -169,7 +219,7 @@ function viewDetail(cfg: Config) {
     name: cfg.name,
     description: cfg.description,
     relays: cloneRelays(cfg.relays),
-    actionRelays: { ...emptyActionRelays(), ...cfg.actionRelays },
+    actionRelays: normalizeActionRelays(cfg.actionRelays),
   };
   showModal.value = true;
 }
@@ -181,12 +231,13 @@ function saveAsCopy(cfg: Config) {
     name: cfg.name + " (副本)",
     description: cfg.description,
     relays: cloneRelays(cfg.relays),
-    actionRelays: { ...emptyActionRelays(), ...cfg.actionRelays },
+    actionRelays: normalizeActionRelays(cfg.actionRelays),
   };
   showModal.value = true;
 }
 
 async function save() {
+  console.log(form.value);
   const payload = {
     id: isEdit.value ? editId.value : "",
     name: form.value.name,
@@ -426,20 +477,37 @@ onMounted(() => {
 
             <div class="action-relays">
               <div class="action-header">动作继电器</div>
-              <div v-for="g in operationGroups" :key="g" class="action-row">
-                <span class="action-label">{{ groupLabels[g] }}</span>
-                <select
-                  v-model="form.actionRelays[g]"
-                  class="action-select"
-                  :disabled="boundIds.has(editId)">
-                  <option value="">--</option>
-                  <option
+              <div v-for="g in operationGroups" :key="g" class="action-group">
+                <button
+                  class="action-group-label"
+                  :disabled="boundIds.has(editId)"
+                  @click="toggleGroup(g)">
+                  <span
+                    class="group-arrow"
+                    :class="{ open: isGroupExpanded(g) }"
+                    >▸</span
+                  >
+                  <span>{{ groupLabels[g] }}</span>
+                  <span class="group-count">{{
+                    (form.actionRelays[g] || []).length
+                  }}</span>
+                </button>
+                <div v-if="isGroupExpanded(g)" class="action-checks">
+                  <label
                     v-for="name in relayNames()"
                     :key="name"
-                    :value="name">
-                    {{ name }}
-                  </option>
-                </select>
+                    class="action-check">
+                    <input
+                      type="checkbox"
+                      :checked="isActionRelaySelected(g, name)"
+                      :disabled="boundIds.has(editId)"
+                      @change="toggleActionRelay(g, name)" />
+                    <span>{{ name }}</span>
+                  </label>
+                  <div v-if="relayNames().length === 0" class="action-empty">
+                    暂无继电器
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -731,6 +799,8 @@ onMounted(() => {
   max-height: 240px;
   overflow-y: auto;
   min-width: 0;
+  scrollbar-width: thin;
+  scrollbar-color: #1a3350 #051424;
 }
 
 .relay-table {
@@ -869,7 +939,31 @@ onMounted(() => {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  border: 1px solid #1a2d44;
+  border-radius: 4px;
+  padding: 8px;
+  max-height: 290px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #1a3350 #051424;
+}
+
+.action-relays::-webkit-scrollbar {
+  width: 5px;
+}
+
+.action-relays::-webkit-scrollbar-track {
+  background: #051424;
+}
+
+.action-relays::-webkit-scrollbar-thumb {
+  background: #1a3350;
+  border-radius: 3px;
+}
+
+.action-relays::-webkit-scrollbar-thumb:hover {
+  background: #254670;
 }
 
 .action-header {
@@ -878,39 +972,97 @@ onMounted(() => {
   margin-bottom: 2px;
 }
 
-.action-row {
+.action-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.action-group-label {
   display: flex;
   align-items: center;
   gap: 4px;
-}
-
-.action-label {
-  font-size: 11px;
+  background: transparent;
+  border: none;
   color: #8fb4d8;
-  width: 28px;
-  flex-shrink: 0;
-  text-align: right;
-}
-
-.action-select {
-  flex: 1;
-  background: #051424;
-  border: 1px solid #1a2d44;
-  color: #e0e8f0;
-  padding: 6px 8px;
+  font-size: 11px;
+  padding: 3px 4px;
   border-radius: 3px;
-  font-size: 13px;
-  outline: none;
-  min-height: 32px;
+  cursor: pointer;
+  transition: background 0.15s;
+  width: 100%;
+  text-align: left;
+  min-height: 28px;
 }
 
-.action-select:focus {
-  border-color: #2d5280;
+.action-group-label:hover {
+  background: rgba(90, 146, 208, 0.1);
 }
 
-.action-select:disabled {
+.action-group-label:disabled {
+  cursor: default;
   opacity: 0.6;
+}
+
+.group-arrow {
+  font-size: 10px;
+  transition: transform 0.15s;
+  width: 10px;
+  flex-shrink: 0;
+}
+
+.group-arrow.open {
+  transform: rotate(90deg);
+}
+
+.group-count {
+  margin-left: auto;
+  font-size: 10px;
+  color: #5a7288;
+  background: #051424;
+  padding: 1px 5px;
+  border-radius: 8px;
+  min-width: 16px;
+  text-align: center;
+}
+
+.action-checks {
+  padding-left: 8px;
+}
+
+.action-check {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #c0d0e0;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: background 0.15s;
+  min-height: 26px;
+}
+
+.action-check:hover {
+  background: rgba(90, 146, 208, 0.08);
+}
+
+.action-check input[type="checkbox"] {
+  width: 13px;
+  height: 13px;
+  accent-color: #5a92d0;
+  flex-shrink: 0;
+}
+
+.action-check input[type="checkbox"]:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
+}
+
+.action-empty {
+  font-size: 11px;
+  color: #5a7288;
+  padding: 4px;
 }
 
 .modal-footer {
@@ -918,5 +1070,22 @@ onMounted(() => {
   justify-content: flex-end;
   gap: 10px;
   flex-shrink: 0;
+}
+
+.relay-table-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.relay-table-wrapper::-webkit-scrollbar-track {
+  background: #051424;
+}
+
+.relay-table-wrapper::-webkit-scrollbar-thumb {
+  background: #1a3350;
+  border-radius: 3px;
+}
+
+.relay-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #254670;
 }
 </style>

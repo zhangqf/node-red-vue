@@ -26,6 +26,7 @@ function onMenuClick(menu: string) {
       router.push({ name: "binding-manager" });
       break;
     case "history":
+      router.push({ name: "history" });
       break;
     case "settings":
       break;

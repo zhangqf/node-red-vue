@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, toRef, watch } from "vue";
 import { useSocket } from "@/composables/useSocket";
 import DeviceBar from "@/components/DeviceBar.vue";
 import CurrentCurve from "@/components/CurrentCurve.vue";
@@ -60,7 +60,10 @@ watch(
     // 收到寄存器数据 → 只更新寄存器缓存，线圈不动
     if (data.unitId === 1) {
       const rawReg = Array.isArray(data.payload) ? data.payload : [];
-      lastRegisterArr.value = rawReg;
+      // lastRegisterArr.value = rawReg;
+      if (isAction.value) {
+        lastRegisterArr.value = rawReg;
+      }
     }
 
     if (data.unitId === 3) {
@@ -196,10 +199,11 @@ watch(active, (newkey) => {
 
 const handleStart = (start: string) => {
   if (start === "start") {
-    sendCmd(wsSendData.value);
+    handleDo();
   }
 };
 
+// 单个更新
 const findNode = (relay_name: string, default_status: number) => {
   const targetTerminal = terminals.value.find(
     (item) => item.relay_name === relay_name,
@@ -209,38 +213,93 @@ const findNode = (relay_name: string, default_status: number) => {
   }
 };
 
+const batchUpdateTerminal = (nameList: string[], status: number) => {
+  terminals.value
+    .filter((item) => nameList.includes(item.relay_name))
+    .forEach((item) => {
+      item.default_status = status;
+    });
+};
+
 interface ActionRelays {
-  DC: string;
-  FC: string;
-  CD: string;
-  HX: string;
-  JD: string;
+  DC: string[];
+  FC: string[];
+  CD: string[];
+  HX: string[];
+  JD: string[];
 }
 
 const configActionRelays = ref<ActionRelays>({
-  DC: "",
-  FC: "",
-  CD: "",
-  HX: "",
-  JD: "",
+  DC: [],
+  FC: [],
+  CD: [],
+  HX: [],
+  JD: [],
 });
 
-const handleDC = () => {
-  findNode(configActionRelays.value.DC, 1);
+const isAction = ref(false);
+
+const startRecord = () => {
+  isAction.value = true;
+};
+const stopRecord = () => {
+  isAction.value = false;
+};
+
+const currentCurveRef = ref<InstanceType<typeof CurrentCurve>>();
+
+const saveRecord = async (relay: keyof ActionRelays) => {
+  const exposed = currentCurveRef.value;
+  const valley = exposed?.valley_current;
+  const peak = exposed?.peak_current;
+  const history = exposed?.currentHistory;
+  const xLabels = exposed?.xLabels;
+  const tempData = {
+    device_name: device.value.name,
+    combination_name: combinationName.value,
+    config_name: configName.value,
+    op_type: relay,
+    status: "success",
+    peak_current: peak,
+    valley_current: valley,
+    curve_data: history,
+    time_data: xLabels,
+  };
+
+  try {
+    const response = await fetch(HTTP_URL + "/saveRecord", {
+      method: "post",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(tempData),
+    });
+    const data = await response.json();
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const handleRelayAction = (key: keyof ActionRelays) => {
+  const relay = configActionRelays.value[key];
+  batchUpdateTerminal(relay, 1);
   handleDo();
-  setTimeout(() => {
-    findNode(configActionRelays.value.DC, 0);
+  startRecord();
+  setTimeout(async () => {
+    batchUpdateTerminal(relay, 0);
     handleDo();
+    stopRecord();
+    saveRecord(key);
   }, 6000);
 };
 
+const handleDC = () => {
+  const key = butItemStatus.value as keyof ActionRelays;
+  handleRelayAction(key);
+};
+
 const handleFC = () => {
-  findNode(configActionRelays.value.FC, 1);
-  handleDo();
-  setTimeout(() => {
-    findNode(configActionRelays.value.FC, 0);
-    handleDo();
-  }, 6000);
+  const key = butItemStatus.value as keyof ActionRelays;
+  handleRelayAction(key);
 };
 
 const handleDo = () => {
@@ -273,7 +332,8 @@ const nextDoTime = ref(10);
 let timerId: number | null = null;
 const handleOpe = (type: string) => {
   if (butItemIsDisable.value) return;
-
+  const exposed = currentCurveRef.value;
+  exposed?.resetData();
   butItemStatus.value = type;
   butItemIsDisable.value = true;
 
@@ -291,10 +351,11 @@ const handleOpe = (type: string) => {
     nextDoTime.value--;
     // 倒计时到0，清除定时器、解锁按钮
     if (nextDoTime.value <= 0) {
-      nextDoTime.value = 15;
+      nextDoTime.value = 10;
       clearInterval(timerId!);
       timerId = null;
       butItemIsDisable.value = false;
+      butItemStatus.value = "";
     }
   }, 1000);
 };
@@ -349,6 +410,7 @@ onMounted(async () => {
         :convert-current="currentData.convertCurrent"
         :lock-current="currentData.lockCurrent"
         :register-arr="registerArr"
+        ref="currentCurveRef"
         @start="handleStart" />
 
       <!-- <PowerCurve

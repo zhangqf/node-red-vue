@@ -11,9 +11,11 @@ const props = defineProps<{
 
 const emit = defineEmits<{ start: [type: string] }>();
 
-const MAX_POINTS = 300;
+const MAX_POINTS = 150;
 const currentHistory = ref<number[]>([]);
 const xLabels = ref<string[]>([]);
+const peak_current = ref<number>(0);
+const valley_current = ref<number>(0);
 
 watch(
   () => props.registerArr,
@@ -41,10 +43,12 @@ const chartOpt = computed(() => {
     };
   }
 
+  peak_current.value = Math.max(...data);
+  valley_current.value = Math.min(...data);
+
   const maxVal = Math.max(...data, 0.01);
   const minVal = Math.min(...data, 0);
   const padding = (maxVal - minVal) * 0.15 || 0.5;
-
   return {
     tooltip: {
       trigger: "axis",
@@ -114,9 +118,25 @@ const chartOpt = computed(() => {
   };
 });
 
+const resetData = () => {
+  valley_current.value = 0;
+  peak_current.value = 0;
+  xLabels.value = [];
+  currentHistory.value = [];
+};
+
 const handleStart = () => {
+  resetData();
   emit("start", "start");
 };
+
+defineExpose({
+  valley_current,
+  peak_current,
+  xLabels,
+  currentHistory,
+  resetData,
+});
 </script>
 
 <template>
@@ -131,21 +151,25 @@ const handleStart = () => {
 
     <div class="params-row">
       <div class="param">
-        <span class="param-label">启动电流</span>
-        <span class="param-value">{{ startCurrent?.toFixed(1) || "1.0" }}</span>
+        <!-- <span class="param-label">启动电流</span>
+        <span class="param-value">{{ startCurrent?.toFixed(1) || "1.0" }}</span> -->
+        <span class="param-label">电流峰值</span>
+        <span class="param-value">{{ peak_current }}</span>
       </div>
       <div class="param">
-        <span class="param-label">转换电流</span>
-        <span class="param-value">{{ convertCurrent?.toFixed(1) || "0" }}</span>
+        <!-- <span class="param-label">转换电流</span>
+        <span class="param-value">{{ convertCurrent?.toFixed(1) || "0" }}</span> -->
+        <span class="param-label">电流谷值</span>
+        <span class="param-value">{{ valley_current }}</span>
       </div>
-      <div class="param">
+      <!-- <div class="param">
         <span class="param-label">锁闭电流</span>
         <span class="param-value">{{ lockCurrent?.toFixed(1) || "0" }}</span>
-      </div>
+      </div> -->
     </div>
 
     <div class="power-btn-section">
-      <button class="power-btn" @click="handleStart">开始</button>
+      <button class="power-btn" @click="handleStart">同步继电器状态</button>
     </div>
   </div>
 </template>

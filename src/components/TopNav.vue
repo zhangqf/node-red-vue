@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 
 defineProps<{
   activeMenu?: string;
@@ -10,6 +10,7 @@ const emit = defineEmits<{
 }>();
 
 const openSubmenu = ref("");
+const navRef = ref<HTMLElement | null>(null);
 
 const menuItems = [
   { key: "home", label: "首页" },
@@ -24,50 +25,70 @@ const menuItems = [
     ],
   },
   { key: "history", label: "历史记录" },
-  { key: "settings", label: "系统设置" },
+  // { key: "settings", label: "系统设置" },
 ];
 
-function onMenuEnter(key: string) {
-  openSubmenu.value = key;
-}
-
-function onMenuLeave() {
-  openSubmenu.value = "";
+function onMenuClick(key: string) {
+  openSubmenu.value = openSubmenu.value === key ? "" : key;
 }
 
 function onSubClick(subKey: string) {
   openSubmenu.value = "";
   emit("menu-click", subKey);
 }
+
+function onNavClick(key: string) {
+  openSubmenu.value = "";
+  emit("menu-click", key);
+}
+
+function onOutsideClick(e: MouseEvent) {
+  if (navRef.value && !navRef.value.contains(e.target as Node)) {
+    openSubmenu.value = "";
+  }
+}
+
+function onEsc(e: KeyboardEvent) {
+  if (e.key === "Escape") openSubmenu.value = "";
+}
+
+onMounted(() => {
+  document.addEventListener("click", onOutsideClick);
+  document.addEventListener("keydown", onEsc);
+});
+
+onUnmounted(() => {
+  document.removeEventListener("click", onOutsideClick);
+  document.removeEventListener("keydown", onEsc);
+});
 </script>
 
 <template>
-  <div class="top-nav">
+  <div ref="navRef" class="top-nav">
     <div class="nav-left">
-      <span class="nav-logo"> Portable turnout tester</span>
+      <span class="nav-logo">Portable turnout tester</span>
     </div>
     <div class="nav-center">
-      <div
-        v-for="item in menuItems"
-        :key="item.key"
-        class="nav-item-wrapper"
-        @mouseenter="onMenuEnter(item.key)"
-        @mouseleave="onMenuLeave">
+      <div v-for="item in menuItems" :key="item.key" class="nav-item-wrapper">
         <button
+          v-if="!item.children"
           :class="['nav-btn', { active: activeMenu === item.key }]"
-          @click="
-            item.children
-              ? openSubmenu === item.key
-                ? onMenuLeave()
-                : onMenuEnter(item.key)
-              : emit('menu-click', item.key)
-          ">
+          @click="onNavClick(item.key)">
           {{ item.label }}
-          <span v-if="item.children" class="nav-arrow">▾</span>
+        </button>
+        <button
+          v-else
+          :class="['nav-btn', { active: openSubmenu === item.key }]"
+          @click.stop="onMenuClick(item.key)">
+          {{ item.label }}
+          <span class="nav-arrow" :class="{ open: openSubmenu === item.key }"
+            >▾</span
+          >
         </button>
         <div
           v-if="item.children && openSubmenu === item.key"
-          class="nav-submenu">
+          class="nav-submenu"
+          @click.stop>
           <button
             v-for="child in item.children"
             :key="child.key"
@@ -130,6 +151,8 @@ function onSubClick(subKey: string) {
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
+  min-height: 36px;
 }
 
 .nav-btn:hover {
@@ -145,19 +168,25 @@ function onSubClick(subKey: string) {
 .nav-arrow {
   margin-left: 4px;
   font-size: 10px;
+  display: inline-block;
+  transition: transform 0.2s;
+}
+
+.nav-arrow.open {
+  transform: rotate(180deg);
 }
 
 .nav-submenu {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 2px);
   left: 0;
-  margin-top: 4px;
   background: #0b1d33;
   border: 1px solid #1a2d44;
   border-radius: 6px;
   padding: 4px;
   min-width: 160px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 101;
 }
 
 .nav-sub-btn {
@@ -168,10 +197,11 @@ function onSubClick(subKey: string) {
   border: none;
   color: #8fb4d8;
   font-size: 13px;
-  padding: 8px 14px;
+  padding: 10px 14px;
   border-radius: 4px;
   cursor: pointer;
   transition: background 0.15s;
+  min-height: 36px;
 }
 
 .nav-sub-btn:hover {

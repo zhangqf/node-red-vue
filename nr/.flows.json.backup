@@ -1,0 +1,3739 @@
+[
+    {
+        "id": "5be343417955c941",
+        "type": "tab",
+        "label": "流程 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "e4bbd3713100fe17",
+        "type": "tab",
+        "label": "流程 3",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "4fe4dfbb2cfd361b",
+        "type": "group",
+        "z": "e4bbd3713100fe17",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "ac0c0da2c41e1fe8",
+            "1b29b8c8846873d6",
+            "bbd68333fe91be2f",
+            "f97bc51ae7903873",
+            "ad4ad9c54e05a5b8",
+            "d1b0dd844c3d8c13",
+            "e2434463005bea31",
+            "6ab05986b5d67ea4",
+            "a4647c8903d39b44",
+            "f8f227f0618e08e6",
+            "953e9c4eb9758f73",
+            "bba67b992186e095",
+            "4fd8e73a29131ee8",
+            "5e1af7db10d7b9e4",
+            "bfc6040de7488514",
+            "888665f10992f316",
+            "2aeb47285dba651c",
+            "f40fdbba500c4671",
+            "af69ccc6c4f50f0f",
+            "13bd6c3aed222bb4"
+        ],
+        "x": 134,
+        "y": 579,
+        "w": 1472,
+        "h": 442
+    },
+    {
+        "id": "7de647ac98380939",
+        "type": "group",
+        "z": "e4bbd3713100fe17",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "b524683239dc8bec",
+            "721ae27e9b235f72",
+            "47fe2425a9586396"
+        ],
+        "x": 924,
+        "y": 39,
+        "w": 772,
+        "h": 82
+    },
+    {
+        "id": "9e2d670578adbe41",
+        "type": "group",
+        "z": "e4bbd3713100fe17",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "b23876d9dc0184f1",
+            "5f829c6a2cbec815",
+            "54cf7476d7f4cf15",
+            "11836aace9c6d856",
+            "8e5bb841558f7674",
+            "ad803c27d1464a2e",
+            "6c73b535266f1f23"
+        ],
+        "x": 974,
+        "y": 139,
+        "w": 872,
+        "h": 182
+    },
+    {
+        "id": "bf3f6c3990ea97ae",
+        "type": "group",
+        "z": "e4bbd3713100fe17",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "615c605e6d0b245b",
+            "c95286fd53cb3fb8",
+            "988771dcfb793b2d"
+        ],
+        "x": 174,
+        "y": 39,
+        "w": 432,
+        "h": 142
+    },
+    {
+        "id": "a78c98a47184b2fa",
+        "type": "group",
+        "z": "e4bbd3713100fe17",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "24528c2f1d2587f6",
+            "416eaff2595c58b0",
+            "2cede691de602618",
+            "d50b53f9cf0907c2",
+            "be1d62f199409815",
+            "f93e8a3804d4dc0b",
+            "935d0b965e39f5e6"
+        ],
+        "x": 154,
+        "y": 339,
+        "w": 1312,
+        "h": 162
+    },
+    {
+        "id": "4da623926d6c77a5",
+        "type": "group",
+        "z": "e4bbd3713100fe17",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "816606ce8737142b",
+            "7af8344f8b7fed41",
+            "eacb6c47c7152ce5",
+            "475375aa68d94f13",
+            "69b677011b73a8d9",
+            "6f9fcb45d8ed78a1",
+            "9b76a8c05b3d673d",
+            "0df45154e0c5264d",
+            "790592008e525544",
+            "ac1673d22cb4ec60",
+            "0155688f05cdb5e9",
+            "1a80ba819d609353",
+            "491d8f3d1b34e5f8",
+            "dfa271ac96df5e58",
+            "ebbb265202107f4d",
+            "9b158a7943f394b1",
+            "2586687dbbbce16b",
+            "5e160c43aa72cdb7",
+            "36279db1fb28575f",
+            "63f1d2ef59c0e768"
+        ],
+        "x": 134,
+        "y": 1059,
+        "w": 1692,
+        "h": 342
+    },
+    {
+        "id": "ee922bcc4e4be091",
+        "type": "group",
+        "z": "e4bbd3713100fe17",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "98ecd42917f08589",
+            "06bcdab41d263cf3",
+            "633e8979244a2edf",
+            "9426d046ee314ab1",
+            "6c1a428b399e1e31",
+            "3cc5dffc73567df4",
+            "91d6d16c4f9e64bc",
+            "35884c18bdafe0f3",
+            "d362d2a9bf18faca",
+            "ecd68c439a07e9a6",
+            "bf699477709440cd",
+            "980cf2cf4f4a0a81",
+            "77eebe7762328e95",
+            "95f0c68d95e826d6",
+            "d07f84451c9327e0",
+            "7a49ac2a0709ebf1",
+            "ad20ce19291bd677",
+            "b5d1bca30d6b413c",
+            "bf8ccbe9969cb576"
+        ],
+        "x": 134,
+        "y": 1479,
+        "w": 1592,
+        "h": 502
+    },
+    {
+        "id": "a42bb8bd1ff9df38",
+        "type": "group",
+        "z": "e4bbd3713100fe17",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "d42331ab30e78ba2",
+            "021e664962df98d0",
+            "160a74dd8adee908",
+            "44326690c377145a",
+            "1a3de2fb60e01829",
+            "301539b662ced6cd",
+            "46087d697858744b",
+            "67e9c1da7554b419",
+            "6b9ba2a0b663ec04",
+            "5209cd9f7de03baa",
+            "91f27410ce833066",
+            "0cd21c60e0847f3a",
+            "ac1f666eb13f236b",
+            "612c348feedb361b",
+            "2ffa9d691edaad3a",
+            "4c3f2dd3204c5ae9",
+            "1bd5dbf68a7fa75a",
+            "77cfc4f098c3ca4d",
+            "3427115dcda3a7c8",
+            "4aa1290d9f72520d"
+        ],
+        "x": 134,
+        "y": 2119,
+        "w": 1532,
+        "h": 442
+    },
+    {
+        "id": "ef73e6d3cd26e55f",
+        "type": "group",
+        "z": "e4bbd3713100fe17",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "bd3c77f42ceb849c",
+            "1babbb8260091973",
+            "486dc1816ebaddc7",
+            "033370223fe82401",
+            "f1346434d3b50664",
+            "cd4630254b36b65e",
+            "ee6733dcfc2e6bb3",
+            "32e9ef79f56e8db2",
+            "c02f9c3cda19300b",
+            "1532e363938c0d4b"
+        ],
+        "x": 134,
+        "y": 2599,
+        "w": 1112,
+        "h": 322
+    },
+    {
+        "id": "c30e3804a1626779",
+        "type": "group",
+        "z": "e4bbd3713100fe17",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "d5fe4bd714558514",
+            "a6b0007bc85dc551",
+            "b3acce0fafad168d",
+            "6324453b6150690d",
+            "e42cc32e979df9f4",
+            "b738a5ad36b40d6d",
+            "6875ec1c93a59739",
+            "2dd14a1ca92d70b3",
+            "ef684b82cc5416f1"
+        ],
+        "x": 134,
+        "y": 3079,
+        "w": 1332,
+        "h": 202
+    },
+    {
+        "id": "8bf8286c4001ee60",
+        "type": "group",
+        "z": "e4bbd3713100fe17",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "b0f1c1dfdb2fd365",
+            "800b8a3740666e3c",
+            "16191a1dbf02c2b9",
+            "f5d0dae114e0f986",
+            "f030e2abf8cf18ec",
+            "26fcf6a914564605",
+            "cacf6eda77938154",
+            "af270d552148a632",
+            "3b2fa1bd2beb72ff",
+            "681dd78b7c7c7cf7",
+            "0405412e7ae4198d",
+            "bbda677f348284b1"
+        ],
+        "x": 127,
+        "y": 3539,
+        "w": 1619,
+        "h": 242
+    },
+    {
+        "id": "8f47e2e3400d33b2",
+        "type": "group",
+        "z": "e4bbd3713100fe17",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "d02f3cbfac1b65a3",
+            "4ef7dc1649620198",
+            "18087b30c35111f7",
+            "f0e807248014ea5d",
+            "1c125f2e5bf7d17f",
+            "7616693109f924fc",
+            "562cb33c8a99ca69",
+            "d9f47646683b095b",
+            "f44c6125ad32c744",
+            "20a0e311c09edb22",
+            "a246ecd9553dfb91",
+            "708e32731ad70d8d",
+            "d1f7549338e5a7fd",
+            "efb9644129d40d17",
+            "e2e409d9a6d6f299",
+            "dbe61619444831dc",
+            "b774dc21446d33cb"
+        ],
+        "x": 194,
+        "y": 4079,
+        "w": 1152,
+        "h": 522
+    },
+    {
+        "id": "6030307041b868b9",
+        "type": "ui-base",
+        "name": "My Dashboard",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control"
+        ],
+        "showPathInSidebar": false,
+        "headerContent": "page",
+        "navigationStyle": "default",
+        "titleBarStyle": "default",
+        "showReconnectNotification": true,
+        "notificationDisplayTime": 1,
+        "showDisconnectNotification": true,
+        "allowInstall": false
+    },
+    {
+        "id": "5afbd89f4c8dc5e7",
+        "type": "ui-theme",
+        "name": "Default Theme",
+        "colors": {
+            "surface": "#ffffff",
+            "primary": "#0094CE",
+            "bgPage": "#eeeeee",
+            "groupBg": "#ffffff",
+            "groupOutline": "#cccccc"
+        },
+        "sizes": {
+            "density": "default",
+            "pagePadding": "12px",
+            "groupGap": "12px",
+            "groupBorderRadius": "4px",
+            "widgetGap": "12px"
+        }
+    },
+    {
+        "id": "2d44360ebaa017d1",
+        "type": "ui-page",
+        "name": "Page 1",
+        "ui": "6030307041b868b9",
+        "path": "/page1",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "5afbd89f4c8dc5e7",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": 0,
+                "cols": 3
+            },
+            {
+                "name": "Tablet",
+                "px": 576,
+                "cols": 6
+            },
+            {
+                "name": "Small Desktop",
+                "px": 768,
+                "cols": 9
+            },
+            {
+                "name": "Desktop",
+                "px": 1024,
+                "cols": 12
+            }
+        ],
+        "order": 2,
+        "className": "",
+        "visible": true,
+        "disabled": "false"
+    },
+    {
+        "id": "2cfdc18188734828",
+        "type": "ui-group",
+        "name": "group1",
+        "page": "2d44360ebaa017d1",
+        "width": "4",
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "b7f4d401dc488179",
+        "type": "ui-page",
+        "name": "配置",
+        "ui": "6030307041b868b9",
+        "path": "/page2",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "5afbd89f4c8dc5e7",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 3,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "52052470d062789d",
+        "type": "ui-group",
+        "name": "配置table",
+        "page": "b7f4d401dc488179",
+        "width": 6,
+        "height": "3",
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "4b736505764b58bb",
+        "type": "websocket-listener",
+        "path": "/ws/test",
+        "wholemsg": "true"
+    },
+    {
+        "id": "7b910949a4a3b9f3",
+        "type": "ui-page",
+        "name": "新table",
+        "ui": "6030307041b868b9",
+        "path": "/page3",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "5afbd89f4c8dc5e7",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 1,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "84b03579151ff7e2",
+        "type": "ui-group",
+        "name": "Group Name",
+        "page": "7b910949a4a3b9f3",
+        "width": 6,
+        "height": "3",
+        "order": 2,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "982afaa40fc1cf40",
+        "type": "ui-group",
+        "name": "Group Name",
+        "page": "7b910949a4a3b9f3",
+        "width": 6,
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "3d078257c9d9eba6",
+        "type": "mqtt-broker",
+        "name": "mqtt1",
+        "broker": "127.0.0.1",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "top",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "12",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "2ea71bdcc3fd14a1",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "127.0.0.1",
+        "port": "8083",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "851f7922d6045b99",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "127.0.0.1",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "ab7411a45b491f53",
+        "type": "modbus-client",
+        "name": "modbus",
+        "clienttype": "serial",
+        "bufferCommands": true,
+        "stateLogEnabled": false,
+        "queueLogEnabled": false,
+        "failureLogEnabled": true,
+        "tcpHost": "127.0.0.1",
+        "tcpPort": 502,
+        "tcpType": "DEFAULT",
+        "serialPort": "/dev/tty.PL2303G-USBtoUART2130",
+        "serialType": "RTU-BUFFERD",
+        "serialBaudrate": 9600,
+        "serialDatabits": 8,
+        "serialStopbits": 1,
+        "serialParity": "none",
+        "serialConnectionDelay": 100,
+        "serialAsciiResponseStartDelimiter": "0x3A",
+        "unit_id": 1,
+        "commandDelay": 1,
+        "clientTimeout": 1000,
+        "reconnectOnTimeout": true,
+        "reconnectTimeout": 2000,
+        "parallelUnitIdsAllowed": true,
+        "showErrors": false,
+        "showWarnings": true,
+        "showLogs": true
+    },
+    {
+        "id": "95d1e8946abaa5d8",
+        "type": "modbus-client",
+        "name": "",
+        "clienttype": "simpleser",
+        "bufferCommands": true,
+        "stateLogEnabled": false,
+        "queueLogEnabled": false,
+        "failureLogEnabled": true,
+        "tcpHost": "127.0.0.1",
+        "tcpPort": 502,
+        "tcpType": "DEFAULT",
+        "serialPort": "/dev/tty.wlan-debug",
+        "serialType": "RTU-BUFFERD",
+        "serialBaudrate": 9600,
+        "serialDatabits": 8,
+        "serialStopbits": 1,
+        "serialParity": "none",
+        "serialConnectionDelay": 100,
+        "serialAsciiResponseStartDelimiter": "0x3A",
+        "unit_id": 1,
+        "commandDelay": 1,
+        "clientTimeout": 100,
+        "reconnectOnTimeout": true,
+        "reconnectTimeout": 300,
+        "parallelUnitIdsAllowed": true,
+        "showErrors": false,
+        "showWarnings": true,
+        "showLogs": true
+    },
+    {
+        "id": "03b992201154bc2f",
+        "type": "modbus-client",
+        "name": "",
+        "clienttype": "tcp",
+        "bufferCommands": true,
+        "stateLogEnabled": false,
+        "queueLogEnabled": false,
+        "failureLogEnabled": true,
+        "tcpHost": "127.0.0.1",
+        "tcpPort": 502,
+        "tcpType": "DEFAULT",
+        "serialPort": "/dev/ttyUSB",
+        "serialType": "RTU-BUFFERD",
+        "serialBaudrate": 9600,
+        "serialDatabits": 8,
+        "serialStopbits": 1,
+        "serialParity": "none",
+        "serialConnectionDelay": 100,
+        "serialAsciiResponseStartDelimiter": "0x3A",
+        "unit_id": 1,
+        "commandDelay": 1,
+        "clientTimeout": 1000,
+        "reconnectOnTimeout": true,
+        "reconnectTimeout": 2000,
+        "parallelUnitIdsAllowed": true,
+        "showErrors": false,
+        "showWarnings": true,
+        "showLogs": true
+    },
+    {
+        "id": "018e6b14623da357",
+        "type": "modbus-client",
+        "name": "",
+        "clienttype": "simpleser",
+        "bufferCommands": true,
+        "stateLogEnabled": false,
+        "queueLogEnabled": false,
+        "failureLogEnabled": true,
+        "tcpHost": "127.0.0.1",
+        "tcpPort": 502,
+        "tcpType": "DEFAULT",
+        "serialPort": "/dev/tty.usbserial-110",
+        "serialType": "RTU-BUFFERD",
+        "serialBaudrate": "115200",
+        "serialDatabits": 8,
+        "serialStopbits": 1,
+        "serialParity": "none",
+        "serialConnectionDelay": 100,
+        "serialAsciiResponseStartDelimiter": "0x3A",
+        "unit_id": 1,
+        "commandDelay": 1,
+        "clientTimeout": 1000,
+        "reconnectOnTimeout": true,
+        "reconnectTimeout": 2000,
+        "parallelUnitIdsAllowed": true,
+        "showErrors": false,
+        "showWarnings": true,
+        "showLogs": true
+    },
+    {
+        "id": "a074385e545da94b",
+        "type": "sqlitedb",
+        "db": "./data/device.db",
+        "mode": "RWC"
+    },
+    {
+        "id": "c68717946e713a83",
+        "type": "sqlitedb",
+        "db": "./data/combination.db",
+        "mode": "RWC"
+    },
+    {
+        "id": "f4ba4947ccb76eb1",
+        "type": "sqlitedb",
+        "db": "./data/test.db",
+        "mode": "RWC"
+    },
+    {
+        "id": "33892c68efc7c072",
+        "type": "ui-control",
+        "z": "5be343417955c941",
+        "name": "1",
+        "ui": "6030307041b868b9",
+        "events": "change",
+        "x": 290,
+        "y": 480,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b23876d9dc0184f1",
+        "type": "websocket in",
+        "z": "e4bbd3713100fe17",
+        "g": "9e2d670578adbe41",
+        "name": "socketin",
+        "server": "4b736505764b58bb",
+        "client": "",
+        "x": 1060,
+        "y": 220,
+        "wires": [
+            [
+                "11836aace9c6d856",
+                "5f829c6a2cbec815"
+            ]
+        ]
+    },
+    {
+        "id": "ac0c0da2c41e1fe8",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "name": "saveDevice",
+        "url": "/saveDevice",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 230,
+        "y": 680,
+        "wires": [
+            [
+                "bbd68333fe91be2f"
+            ]
+        ]
+    },
+    {
+        "id": "1b29b8c8846873d6",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "name": "saveDeviceOut",
+        "statusCode": "200",
+        "headers": {},
+        "x": 1500,
+        "y": 640,
+        "wires": []
+    },
+    {
+        "id": "b524683239dc8bec",
+        "type": "file in",
+        "z": "e4bbd3713100fe17",
+        "g": "7de647ac98380939",
+        "name": "读取device",
+        "filename": "device",
+        "filenameType": "str",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 1290,
+        "y": 80,
+        "wires": [
+            [
+                "721ae27e9b235f72"
+            ]
+        ]
+    },
+    {
+        "id": "721ae27e9b235f72",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "7de647ac98380939",
+        "name": "debug 7",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1590,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "47fe2425a9586396",
+        "type": "inject",
+        "z": "e4bbd3713100fe17",
+        "g": "7de647ac98380939",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 1020,
+        "y": 80,
+        "wires": [
+            [
+                "b524683239dc8bec"
+            ]
+        ]
+    },
+    {
+        "id": "615c605e6d0b245b",
+        "type": "modbus-read",
+        "z": "e4bbd3713100fe17",
+        "d": true,
+        "g": "bf3f6c3990ea97ae",
+        "name": "继电器",
+        "topic": "1",
+        "showStatusActivities": false,
+        "logIOActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "1",
+        "dataType": "Coil",
+        "adr": "0",
+        "quantity": "32",
+        "rate": "1",
+        "rateUnit": "s",
+        "delayOnStart": false,
+        "enableDeformedMessages": false,
+        "startDelayTime": "",
+        "server": "95d1e8946abaa5d8",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "x": 270,
+        "y": 140,
+        "wires": [
+            [
+                "c95286fd53cb3fb8",
+                "988771dcfb793b2d"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "5f829c6a2cbec815",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "9e2d670578adbe41",
+        "name": "function 1",
+        "func": "// 取出前端传来的线圈数组\nconst coilArr = msg.value || [];\n// 初始化32个0的数组\nconst rawData = new Array(32).fill(0);\n// 从下标0开始，覆盖对应长度，剩余保持0\nrawData.splice(0, coilArr.length, ...coilArr);\n\n\n\n// msg.payload = {\n//   \"fc\":1,\n//     \"unitid\":2,\n//     \"address\":0,\n//     \"quantity\":32,\n//     \"name\":\"继电器状态\",\n//   \"value\": msg.value\n// };\n\n \n\n  msg.payload = {\n    \"fc\":15,\n    \"unitid\":2,\n    \"address\":0,\n    \"quantity\":32,\n    \"value\": rawData\n  };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1240,
+        "y": 220,
+        "wires": [
+            [
+                "54cf7476d7f4cf15",
+                "8e5bb841558f7674"
+            ]
+        ]
+    },
+    {
+        "id": "c95286fd53cb3fb8",
+        "type": "websocket out",
+        "z": "e4bbd3713100fe17",
+        "g": "bf3f6c3990ea97ae",
+        "name": "ws 发送数据",
+        "server": "4b736505764b58bb",
+        "client": "",
+        "x": 510,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "bbd68333fe91be2f",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "name": "judgeUpdateOrAdd",
+        "func": "if (!msg.payload || typeof msg.payload !== 'object' || Object.keys(msg.payload).length === 0) {\n    throw new Error(\"接收到的数据为空或格式不正确，请检查请求体\");\n}\n\nif(msg.payload.id){\n    msg.requestType = \"update\"\n} else {\n    msg.requestType = \"add\"\n}\n\n\n\n\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 680,
+        "wires": [
+            [
+                "ad4ad9c54e05a5b8"
+            ]
+        ]
+    },
+    {
+        "id": "f97bc51ae7903873",
+        "type": "uuid",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "uuidVersion": "v4",
+        "namespaceType": "",
+        "namespace": "",
+        "namespaceCustom": "",
+        "name": "",
+        "field": "uuid",
+        "fieldType": "msg",
+        "x": 890,
+        "y": 740,
+        "wires": [
+            [
+                "e2434463005bea31"
+            ]
+        ]
+    },
+    {
+        "id": "ad4ad9c54e05a5b8",
+        "type": "switch",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "name": "updateOrAdd",
+        "property": "requestType",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "update",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "add",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 680,
+        "y": 680,
+        "wires": [
+            [
+                "d1b0dd844c3d8c13"
+            ],
+            [
+                "f97bc51ae7903873"
+            ]
+        ]
+    },
+    {
+        "id": "d1b0dd844c3d8c13",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "name": "handleUpdate",
+        "func": "// const fs = global.get('fs')\n// const path = global.get('path')\n// const crypto = global.get('crypto')\n// const root = global.get('rootPath');\n// const filePath = path.join(root, 'device')\n\n\n// try {\n//     let list = []\n//     if(fs.existsSync(filePath)){\n//         const raw = fs.readFileSync(filePath, \"utf8\")\n//         list = JSON.parse(raw)\n//         console.log(typeof list)\n//     }\n//     const targetId = msg.payload.id\n//     console.log(list)\n//     const index = list.findIndex(item => item.id === targetId)\n//     if(index > -1) {\n//         list[index] =msg.payload\n//     }\n//     fs.writeFileSync(filePath,JSON.stringify(list, null, 2), 'utf8')\n//     msg.result = '更新成功'\n// } catch (error) {\n//     msg.error = error.message;\n// };\n\n\nmsg.params = {\n    $id: msg.payload.id,\n    $name: msg.payload.name,\n    $typeName: msg.payload.typeName,\n    $location: msg.payload.location\n}\n\n\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 920,
+        "y": 620,
+        "wires": [
+            [
+                "a4647c8903d39b44"
+            ]
+        ]
+    },
+    {
+        "id": "e2434463005bea31",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "name": "handleAdd",
+        "func": "// const fs = global.get('fs')\n// const path = global.get('path')\n// const crypto = global.get('crypto')\n// const root = global.get('rootPath');\n// const filePath = path.join(root, 'device')\n\n\n\nmsg.payload.id = msg.uuid\n\n\n// const dir = path.dirname(filePath);\n\n// // 当前传入的设备数据\n// const newItem = msg.payload;\n\n// async function saveDevice() {\n//     try {\n//         debugger;\n//         // 1. 目录不存在自动创建\n//         if (!fs.existsSync(dir)) {\n//             fs.mkdirSync(dir, { recursive: true });\n//         }\n\n//         let deviceList = [];\n//         // 2. 文件存在则读取原有数据\n//         if (fs.existsSync(filePath)) {\n//             const fileText = await fs.promises.readFile(filePath, \"utf8\");\n//             node.info(fileText)\n//             // 防止文件为空报错\n//             if (fileText.trim()) {\n//                 deviceList = JSON.parse(fileText);\n//             }\n//         }\n\n//         // 3. 根据id查找，更新/新增设备\n//         const targetId = newItem.data.id;\n//         let hasExist = false;\n//         for (let i = 0; i < deviceList.length; i++) {\n//             if (deviceList[i].data.id === targetId) {\n//                 deviceList[i] = newItem;\n//                 hasExist = true;\n//                 break;\n//             }\n//         }\n//         if (!hasExist) {\n//             deviceList.push(newItem);\n//         }\n\n//         // 4. 格式化写入，美化换行，方便查看\n//         const saveText = JSON.stringify(deviceList, null, 2);\n//         await fs.promises.writeFile(filePath, saveText, \"utf8\");\n\n//         node.warn(\"设备数据持久化完成\");\n//         msg.deviceList = deviceList;\n//     } catch (err) {\n//         node.error(\"持久化失败\", err.stack);\n//         console.error(err);\n//     }\n//     return msg;\n// }\n\n// saveDevice();\n\n\n\n// try {\n//     const dir = path.dirname(filePath);\n//     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });\n//         const line = `[${new Date().toLocaleString()}] ${msg.payload.data}\\n`;\n//         await fs.promises.appendFile(filePath, line, \"utf8\");\n// } catch (error) {\n//     msg.error = error.message;\n// };\n\nmsg.params = {\n    $id: msg.payload.id,\n    $name: msg.payload.name,\n    $typeName: msg.payload.typeName,\n    $location: msg.payload.location\n}\n\n\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1070,
+        "y": 720,
+        "wires": [
+            [
+                "a4647c8903d39b44"
+            ]
+        ]
+    },
+    {
+        "id": "988771dcfb793b2d",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "bf3f6c3990ea97ae",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 490,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "c3be2a63e134c448",
+        "type": "modbus-read",
+        "z": "e4bbd3713100fe17",
+        "d": true,
+        "name": "继电器",
+        "topic": "4",
+        "showStatusActivities": false,
+        "logIOActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "1",
+        "dataType": "HoldingRegister",
+        "adr": "14",
+        "quantity": "1",
+        "rate": "1",
+        "rateUnit": "s",
+        "delayOnStart": false,
+        "enableDeformedMessages": false,
+        "startDelayTime": "",
+        "server": "018e6b14623da357",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "x": 330,
+        "y": 260,
+        "wires": [
+            [
+                "483f3c1e0e2a04f6"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "483f3c1e0e2a04f6",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "name": "debug 5",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 480,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "24528c2f1d2587f6",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "function 3",
+        "func": "const deviceList = [\n  {\n  \"fc\":3,\n    \"unitid\":1,\n    \"address\":14,\n    \"quantity\":1,\n    \"name\":\"电流\"\n  },\n  {\n    \"fc\":1,\n    \"unitid\":2,\n    \"address\":0,\n    \"quantity\":32,\n    \"name\":\"继电器状态\"\n  }, \n  {\n    \"fc\": 3,\n    \"unitid\": 1,\n    \"address\": 14,\n    \"quantity\": 1,\n    \"name\": \"电流\"\n  }\n  // {\n  //   \"fc\":2,\n  //   \"unitid\":3,\n  //   \"address\":0,\n  //   \"quantity\":16,\n  //   \"name\":\"表示\"\n  // },\n]\n\n// 读取循环下标\nlet idx = context.get(\"idx\") || 0;\nconst dev = deviceList[idx];\nmsg.modbus = {};\n\nmsg.payload = {\n    fc: dev.fc,\n    unitid: dev.unitid,\n    address: dev.address,\n    quantity: dev.quantity\n};\n\n// msg.payload = {\n//     \"fc\":1,\n//     \"unitid\":2,\n//     \"address\":0,\n//     \"quantity\":32,\n//     \"name\":\"继电器状态\"\n//   }\n  // \"fc\":3,\n  //   \"unitid\":1,\n  //   \"address\":14,\n  //   \"quantity\":1,\n  //   \"name\":\"电流\"\n\n\n // {\n  //   \"fc\":1,\n  //   \"unitid\":2,\n  //   \"address\":0,\n  //   \"quantity\":32,\n  //   \"name\":\"继电器状态\"\n  // }\n\nmsg.deviceName = dev.name;\n// 循环计数\nidx = idx + 1;\nif(idx >= deviceList.length){\n    idx = 0;\n}\ncontext.set(\"idx\", idx);\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 500,
+        "y": 420,
+        "wires": [
+            [
+                "2cede691de602618"
+            ]
+        ]
+    },
+    {
+        "id": "416eaff2595c58b0",
+        "type": "inject",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "0.05",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 260,
+        "y": 440,
+        "wires": [
+            [
+                "24528c2f1d2587f6"
+            ]
+        ]
+    },
+    {
+        "id": "2cede691de602618",
+        "type": "modbus-flex-getter",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "logIOActivities": false,
+        "server": "018e6b14623da357",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "enableDeformedMessages": true,
+        "startDelayTime": "",
+        "x": 740,
+        "y": 420,
+        "wires": [
+            [
+                "be1d62f199409815",
+                "f93e8a3804d4dc0b"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "d50b53f9cf0907c2",
+        "type": "websocket out",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "ws 发送数据",
+        "server": "4b736505764b58bb",
+        "client": "",
+        "x": 1370,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "be1d62f199409815",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "function 4",
+        "func": "\nconst data = msg;\n if(data.unitId==1){\n    msg.payload[0] = msg.payload[0] / 100.0\n}\n\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1100,
+        "y": 420,
+        "wires": [
+            [
+                "d50b53f9cf0907c2"
+            ]
+        ]
+    },
+    {
+        "id": "54cf7476d7f4cf15",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "9e2d670578adbe41",
+        "name": "debug 10",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1360,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "11836aace9c6d856",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "9e2d670578adbe41",
+        "name": "debug 11",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1170,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "8e5bb841558f7674",
+        "type": "modbus-flex-write",
+        "z": "e4bbd3713100fe17",
+        "g": "9e2d670578adbe41",
+        "name": "",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "server": "018e6b14623da357",
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 1530,
+        "y": 220,
+        "wires": [
+            [
+                "ad803c27d1464a2e"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "f93e8a3804d4dc0b",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "debug 12",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 940,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "6ab05986b5d67ea4",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "d": true,
+        "g": "4fe4dfbb2cfd361b",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "fixed",
+        "sql": "CREATE TABLE IF NOT EXISTS device (\n    id TEXT PRIMARY KEY,\n    name TEXT,\n    typeName TEXT,\n    location TEXT,\n    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n)",
+        "name": "CreateDeviceDB",
+        "x": 540,
+        "y": 980,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "a4647c8903d39b44",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "prepared",
+        "sql": "INSERT OR REPLACE INTO device (id, name,typeName, location) VALUES ($id, $name, $typeName,$location)",
+        "name": "deviceDB",
+        "x": 1240,
+        "y": 640,
+        "wires": [
+            [
+                "5e1af7db10d7b9e4"
+            ]
+        ]
+    },
+    {
+        "id": "f8f227f0618e08e6",
+        "type": "inject",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 280,
+        "y": 980,
+        "wires": [
+            [
+                "6ab05986b5d67ea4"
+            ]
+        ]
+    },
+    {
+        "id": "953e9c4eb9758f73",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "fixed",
+        "sql": "\n\nSELECT * FROM device ORDER BY updated_at DESC",
+        "name": "获取device",
+        "x": 430,
+        "y": 840,
+        "wires": [
+            [
+                "4fd8e73a29131ee8"
+            ]
+        ]
+    },
+    {
+        "id": "bba67b992186e095",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "name": "getDevice",
+        "url": "/getDevice",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 220,
+        "y": 840,
+        "wires": [
+            [
+                "953e9c4eb9758f73"
+            ]
+        ]
+    },
+    {
+        "id": "4fd8e73a29131ee8",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "name": "responseGetDevice",
+        "statusCode": "200",
+        "headers": {},
+        "x": 670,
+        "y": 840,
+        "wires": []
+    },
+    {
+        "id": "5e1af7db10d7b9e4",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "name": "function 5",
+        "func": "\n\nmsg.payload = { \n    code: 200,\n    message: '操作成功'\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1380,
+        "y": 720,
+        "wires": [
+            [
+                "1b29b8c8846873d6"
+            ]
+        ]
+    },
+    {
+        "id": "816606ce8737142b",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "name": "saveCombination",
+        "url": "/saveCombination",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 240,
+        "y": 1160,
+        "wires": [
+            [
+                "7af8344f8b7fed41"
+            ]
+        ]
+    },
+    {
+        "id": "7af8344f8b7fed41",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "name": "judgeUpdateOrAdd",
+        "func": "if (!msg.payload || typeof msg.payload !== 'object' || Object.keys(msg.payload).length === 0) {\n    throw new Error(\"接收到的数据为空或格式不正确，请检查请求体\");\n}\n\nif(msg.payload.id){\n    msg.requestType = \"update\"\n} else {\n    msg.requestType = \"add\"\n}\n\n\n\n\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 490,
+        "y": 1160,
+        "wires": [
+            [
+                "69b677011b73a8d9"
+            ]
+        ]
+    },
+    {
+        "id": "eacb6c47c7152ce5",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "name": "saveCombinationOut",
+        "statusCode": "200",
+        "headers": {},
+        "x": 1600,
+        "y": 1120,
+        "wires": []
+    },
+    {
+        "id": "475375aa68d94f13",
+        "type": "uuid",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "uuidVersion": "v4",
+        "namespaceType": "",
+        "namespace": "",
+        "namespaceCustom": "",
+        "name": "",
+        "field": "uuid",
+        "fieldType": "msg",
+        "x": 970,
+        "y": 1220,
+        "wires": [
+            [
+                "9b76a8c05b3d673d"
+            ]
+        ]
+    },
+    {
+        "id": "69b677011b73a8d9",
+        "type": "switch",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "name": "updateOrAdd",
+        "property": "requestType",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "update",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "add",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 760,
+        "y": 1160,
+        "wires": [
+            [
+                "6f9fcb45d8ed78a1"
+            ],
+            [
+                "475375aa68d94f13"
+            ]
+        ]
+    },
+    {
+        "id": "6f9fcb45d8ed78a1",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "name": "handleUpdate",
+        "func": "\nmsg.params = {\n    $id: msg.payload.id,\n    $name: msg.payload.name,\n    $deviceType: msg.payload.deviceType,\n    $description: msg.payload.description\n}\n\n\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1000,
+        "y": 1100,
+        "wires": [
+            [
+                "1a80ba819d609353"
+            ]
+        ]
+    },
+    {
+        "id": "9b76a8c05b3d673d",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "name": "handleAdd",
+        "func": "\nmsg.payload.id = msg.uuid\n\nmsg.params = {\n    $id: msg.payload.id,\n    $name: msg.payload.name,\n    $deviceType: msg.payload.deviceType,\n    $description: msg.payload.description\n}\n\n\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1150,
+        "y": 1200,
+        "wires": [
+            [
+                "1a80ba819d609353"
+            ]
+        ]
+    },
+    {
+        "id": "0df45154e0c5264d",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "name": "function 2",
+        "func": "\n\nmsg.payload = { \n    code: 200,\n    message: '操作成功'\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1460,
+        "y": 1200,
+        "wires": [
+            [
+                "eacb6c47c7152ce5"
+            ]
+        ]
+    },
+    {
+        "id": "790592008e525544",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "name": "getCombination",
+        "url": "/getCombination",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 260,
+        "y": 1280,
+        "wires": [
+            [
+                "0155688f05cdb5e9"
+            ]
+        ]
+    },
+    {
+        "id": "ac1673d22cb4ec60",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "name": "responseGetDevice",
+        "statusCode": "200",
+        "headers": {},
+        "x": 750,
+        "y": 1280,
+        "wires": []
+    },
+    {
+        "id": "0155688f05cdb5e9",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "fixed",
+        "sql": "\n\nSELECT * FROM combination ORDER BY updated_at DESC",
+        "name": "获取combination",
+        "x": 510,
+        "y": 1280,
+        "wires": [
+            [
+                "ac1673d22cb4ec60"
+            ]
+        ]
+    },
+    {
+        "id": "1a80ba819d609353",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "prepared",
+        "sql": "INSERT OR REPLACE INTO combination (id, name,deviceType, description) VALUES ($id, $name, $deviceType,$description)",
+        "name": "combinationDB",
+        "x": 1280,
+        "y": 1100,
+        "wires": [
+            [
+                "0df45154e0c5264d"
+            ]
+        ]
+    },
+    {
+        "id": "491d8f3d1b34e5f8",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "d": true,
+        "g": "4da623926d6c77a5",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "fixed",
+        "sql": "CREATE TABLE IF NOT EXISTS combination (\n    id TEXT PRIMARY KEY,\n    name TEXT,\n    deviceType TEXT,\n    description TEXT,\n    created_at  TEXT DEFAULT (datetime('now', 'localtime')),\n    updated_at  TEXT DEFAULT (datetime('now', 'localtime'))\n)",
+        "name": "CreateCombinationDB",
+        "x": 1700,
+        "y": 1360,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "dfa271ac96df5e58",
+        "type": "inject",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 1510,
+        "y": 1360,
+        "wires": [
+            [
+                "491d8f3d1b34e5f8"
+            ]
+        ]
+    },
+    {
+        "id": "98ecd42917f08589",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "saveConfig",
+        "url": "/saveConfig",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 220,
+        "y": 1580,
+        "wires": [
+            [
+                "06bcdab41d263cf3"
+            ]
+        ]
+    },
+    {
+        "id": "06bcdab41d263cf3",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "judgeUpdateOrAdd",
+        "func": "if (!msg.payload || typeof msg.payload !== 'object' || Object.keys(msg.payload).length === 0) {\n    throw new Error(\"接收到的数据为空或格式不正确，请检查请求体\");\n}\n\nif(msg.payload.id){\n    msg.requestType = \"update\"\n} else {\n    msg.requestType = \"add\"\n}\n\n\n\n\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 490,
+        "y": 1580,
+        "wires": [
+            [
+                "6c1a428b399e1e31"
+            ]
+        ]
+    },
+    {
+        "id": "633e8979244a2edf",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "saveConfigOut",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 1620,
+        "y": 1520,
+        "wires": []
+    },
+    {
+        "id": "9426d046ee314ab1",
+        "type": "uuid",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "uuidVersion": "v4",
+        "namespaceType": "",
+        "namespace": "",
+        "namespaceCustom": "",
+        "name": "",
+        "field": "uuid",
+        "fieldType": "msg",
+        "x": 890,
+        "y": 1640,
+        "wires": [
+            [
+                "3cc5dffc73567df4"
+            ]
+        ]
+    },
+    {
+        "id": "6c1a428b399e1e31",
+        "type": "switch",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "updateOrAdd",
+        "property": "requestType",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "update",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "add",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 720,
+        "y": 1580,
+        "wires": [
+            [
+                "3cc5dffc73567df4"
+            ],
+            [
+                "9426d046ee314ab1"
+            ]
+        ]
+    },
+    {
+        "id": "3cc5dffc73567df4",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "handleUpdate",
+        "func": " const data = msg.req.body;\n const cid = data.id || msg.uuid || Date.now().toString();\n\n  const relayList = data.relays || [];\n\nconst action_relays = JSON.stringify(data.actionRelays);\n\n\n  let sql = `DELETE FROM config_relays WHERE config_id = '${cid}';\\n`;\nsql += `INSERT OR REPLACE INTO config (id, name, description,action_relays) VALUES ('${cid}', '${(data.name ?? \"\").replace(/'/g, \"''\")}', '${(data.description ?? \"\").replace(/'/g, \"''\")}','${action_relays}');\\n`;\n\n  relayList.forEach(r => {\n      sql += `INSERT OR REPLACE INTO config_relays (id, config_id, relay_name, default_status, sort_order)\n  VALUES ('${cid}_${r.relay_name}', '${cid}', '${r.relay_name}', ${r.default_status}, ${r.sort_order});\\n`;\n  });\n\n  msg.topic = sql;\n  msg.payloadOut = { code: 200, message: \"保存成功\" };\n  return msg;\n\n\n// msg.params = {\n//     $id: msg.payload.id,\n//     $name: msg.payload.name,\n//     $description: msg.payload.description,\n// }\n\n\n\n// return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1060,
+        "y": 1560,
+        "wires": [
+            [
+                "ecd68c439a07e9a6"
+            ]
+        ]
+    },
+    {
+        "id": "91d6d16c4f9e64bc",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "getConfig",
+        "url": "/getConfig",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 220,
+        "y": 1760,
+        "wires": [
+            [
+                "d362d2a9bf18faca"
+            ]
+        ]
+    },
+    {
+        "id": "35884c18bdafe0f3",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {},
+        "x": 1160,
+        "y": 1760,
+        "wires": []
+    },
+    {
+        "id": "d362d2a9bf18faca",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "fixed",
+        "sql": "\n\nSELECT * FROM config ORDER BY updated_at DESC",
+        "name": "获取config",
+        "x": 430,
+        "y": 1760,
+        "wires": [
+            [
+                "7a49ac2a0709ebf1"
+            ]
+        ]
+    },
+    {
+        "id": "ecd68c439a07e9a6",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "batch",
+        "sql": "",
+        "name": "ConfigDB",
+        "x": 1260,
+        "y": 1520,
+        "wires": [
+            [
+                "95f0c68d95e826d6",
+                "bf8ccbe9969cb576"
+            ]
+        ]
+    },
+    {
+        "id": "bf699477709440cd",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "d": true,
+        "g": "ee922bcc4e4be091",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "fixed",
+        "sql": "CREATE TABLE IF NOT EXISTS config (\n    id TEXT PRIMARY KEY,\n    name TEXT,\n    description TEXT,\n    created_at  TEXT DEFAULT (datetime('now', 'localtime')),\n    updated_at  TEXT DEFAULT (datetime('now', 'localtime'))\n)",
+        "name": "ConfigDB",
+        "x": 480,
+        "y": 1900,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "980cf2cf4f4a0a81",
+        "type": "inject",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 260,
+        "y": 1920,
+        "wires": [
+            [
+                "bf699477709440cd",
+                "77eebe7762328e95"
+            ]
+        ]
+    },
+    {
+        "id": "77eebe7762328e95",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "d": true,
+        "g": "ee922bcc4e4be091",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "fixed",
+        "sql": "  CREATE TABLE config_relays (\n    id            TEXT PRIMARY KEY,\n    config_id TEXT NOT NULL REFERENCES config(id) ON DELETE CASCADE,\n    relay_name    TEXT NOT NULL,         -- KA1, KA2, X1 ...\n    default_status INTEGER NOT NULL DEFAULT 0,  -- 1 / 0\n    sort_order    INTEGER DEFAULT 0,\n    UNIQUE(config_id, relay_name)\n  );\n",
+        "name": "Config_relays",
+        "x": 500,
+        "y": 1940,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "95f0c68d95e826d6",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "function 6",
+        "func": "\n\nmsg.payload = { \n    code: 200,\n    message: '操作成功'\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1440,
+        "y": 1520,
+        "wires": [
+            [
+                "633e8979244a2edf"
+            ]
+        ]
+    },
+    {
+        "id": "d07f84451c9327e0",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "查询relays",
+        "x": 850,
+        "y": 1760,
+        "wires": [
+            [
+                "ad20ce19291bd677"
+            ]
+        ]
+    },
+    {
+        "id": "7a49ac2a0709ebf1",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "查询所有的relays",
+        "func": "msg.models = msg.payload;\n  msg.topic = \"SELECT * FROM config_relays ORDER BY config_id, sort_order\";\n  return msg;\n// return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 650,
+        "y": 1760,
+        "wires": [
+            [
+                "d07f84451c9327e0"
+            ]
+        ]
+    },
+    {
+        "id": "ad20ce19291bd677",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "封装数据",
+        "func": "const models = msg.models || [];\nconst allRelays = msg.payload || [];\n\nconst map = {};\nallRelays.forEach(r => {\n    if (!map[r.config_id]) map[r.config_id] = [];\n    map[r.config_id].push({\n        relay_name: r.relay_name,\n        default_status: r.default_status,\n        sort_order: r.sort_order\n    });\n});\n\nmsg.payload = models.map(m => {\n    const { action_relays, ...rest } = m;\n    return {\n    ...rest,\n    actionRelays:JSON.parse(m.action_relays),\n    relaysNum:( map[m.id] || []).length,\n    relays: map[m.id] || []\n    }\n});\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1000,
+        "y": 1760,
+        "wires": [
+            [
+                "35884c18bdafe0f3"
+            ]
+        ]
+    },
+    {
+        "id": "d42331ab30e78ba2",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "a42bb8bd1ff9df38",
+        "name": "saveBinding",
+        "url": "/saveBinding",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 250,
+        "y": 2220,
+        "wires": [
+            [
+                "6b9ba2a0b663ec04"
+            ]
+        ]
+    },
+    {
+        "id": "021e664962df98d0",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "a42bb8bd1ff9df38",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 1120,
+        "y": 2220,
+        "wires": []
+    },
+    {
+        "id": "160a74dd8adee908",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "a42bb8bd1ff9df38",
+        "name": "getBingings",
+        "url": "/getBingings",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 250,
+        "y": 2340,
+        "wires": [
+            [
+                "ac1f666eb13f236b"
+            ]
+        ]
+    },
+    {
+        "id": "44326690c377145a",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "a42bb8bd1ff9df38",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {},
+        "x": 1580,
+        "y": 2320,
+        "wires": []
+    },
+    {
+        "id": "1a3de2fb60e01829",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "a42bb8bd1ff9df38",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "\n\nSELECT * FROM config ORDER BY updated_at DESC",
+        "name": "获取config",
+        "x": 770,
+        "y": 2320,
+        "wires": [
+            [
+                "612c348feedb361b"
+            ]
+        ]
+    },
+    {
+        "id": "301539b662ced6cd",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "d": true,
+        "g": "a42bb8bd1ff9df38",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "fixed",
+        "sql": "  CREATE TABLE device_combination_bindings (\n    device_id      TEXT NOT NULL,\n    combination_id TEXT NOT NULL,\n    PRIMARY KEY (device_id, combination_id),\n    FOREIGN KEY (device_id)      REFERENCES device(id) ON DELETE CASCADE,\n    FOREIGN KEY (combination_id) REFERENCES combinations(id)  ON DELETE CASCADE\n  );\n",
+        "name": "deviceCombinationBindings",
+        "x": 560,
+        "y": 2480,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "46087d697858744b",
+        "type": "inject",
+        "z": "e4bbd3713100fe17",
+        "g": "a42bb8bd1ff9df38",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 280,
+        "y": 2500,
+        "wires": [
+            [
+                "301539b662ced6cd",
+                "67e9c1da7554b419"
+            ]
+        ]
+    },
+    {
+        "id": "67e9c1da7554b419",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "d": true,
+        "g": "a42bb8bd1ff9df38",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "fixed",
+        "sql": "  CREATE TABLE combination_config_bindings (\n    binding_id      TEXT NOT NULL,   -- device_id + combination_id 联合标识\n    config_id   TEXT NOT NULL,\n    PRIMARY KEY (binding_id, config_id),\n    FOREIGN KEY (config_id) REFERENCES config(id) ON DELETE CASCADE\n  );\n",
+        "name": "combinationConfigBindings",
+        "x": 560,
+        "y": 2520,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "6b9ba2a0b663ec04",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "a42bb8bd1ff9df38",
+        "name": "function 10",
+        "func": " const data = msg.req.body;\n  const deviceId = data.deviceId;\n  const bindings = data.bindings || [];\n\n  let sql = \"\";\n\n  // 1. 清旧数据\n  sql += `DELETE FROM device_combination_bindings WHERE device_id = '${deviceId}';\\n`;\n  sql += `DELETE FROM combination_config_bindings WHERE binding_id LIKE '${deviceId}\\\\_%' ESCAPE '\\\\';\\n`;\n\n  // 2. 写新数据\n  bindings.forEach(b => {\n      sql += `INSERT OR REPLACE INTO device_combination_bindings (device_id, combination_id) VALUES ('${deviceId}', '${b.combinationId}');\\n`;\n\n      b.configIds.forEach(cid => {\n          sql += `INSERT OR REPLACE INTO combination_config_bindings (binding_id, config_id) VALUES ('${deviceId}_${b.combinationId}', '${cid}');\\n`;\n      });\n  });\n\n  msg.topic = sql;\n  msg.payloadOut = { code: 200, message: \"保存成功\" };\n  return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 550,
+        "y": 2220,
+        "wires": [
+            [
+                "5209cd9f7de03baa"
+            ]
+        ]
+    },
+    {
+        "id": "5209cd9f7de03baa",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "a42bb8bd1ff9df38",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "batch",
+        "sql": "",
+        "name": "Bingings",
+        "x": 760,
+        "y": 2220,
+        "wires": [
+            [
+                "91f27410ce833066"
+            ]
+        ]
+    },
+    {
+        "id": "91f27410ce833066",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "a42bb8bd1ff9df38",
+        "name": "function 8",
+        "func": "\n\nmsg.payload = { \n    code: 200,\n    message: '操作成功'\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 940,
+        "y": 2220,
+        "wires": [
+            [
+                "021e664962df98d0"
+            ]
+        ]
+    },
+    {
+        "id": "bd3c77f42ceb849c",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "ef73e6d3cd26e55f",
+        "name": "获取deviceList",
+        "url": "/deviceList",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 240,
+        "y": 2700,
+        "wires": [
+            [
+                "1babbb8260091973"
+            ]
+        ]
+    },
+    {
+        "id": "1babbb8260091973",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "ef73e6d3cd26e55f",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "fixed",
+        "sql": "SELECT * FROM device ORDER BY created_at DESC\n\n",
+        "name": "查询deviceList",
+        "x": 500,
+        "y": 2700,
+        "wires": [
+            [
+                "486dc1816ebaddc7",
+                "c02f9c3cda19300b",
+                "1532e363938c0d4b"
+            ]
+        ]
+    },
+    {
+        "id": "486dc1816ebaddc7",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "ef73e6d3cd26e55f",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 760,
+        "y": 2700,
+        "wires": []
+    },
+    {
+        "id": "033370223fe82401",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "ef73e6d3cd26e55f",
+        "name": "获取device下的Combination",
+        "url": "/getDeviceCombination/:deviceId",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 280,
+        "y": 2800,
+        "wires": [
+            [
+                "f1346434d3b50664"
+            ]
+        ]
+    },
+    {
+        "id": "f1346434d3b50664",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "ef73e6d3cd26e55f",
+        "name": "根据deviceID查询combinationList",
+        "func": "const deviceId = msg.req.params.deviceId;\n// msg.topic = `\n// SELECT c.* \n// FROM combination c\n// JOIN device_combination_bindings dcb ON c.id = dcb.combination_id\n// WHERE dcb.device_id = ?\n// `;\n// msg.payload = [deviceId];\n// \n\n\n  // msg.topic = `SELECT c.* FROM combination c\n  // JOIN device_combination_bindings dcb ON c.id = dcb.combination_id\n  // WHERE dcb.device_id = '${deviceId}'`;\n\n\n  msg.topic = `SELECT c.* FROM combination c\n  JOIN device_combination_bindings dcb ON c.id = dcb.combination_id\n  WHERE dcb.device_id = $deviceId`;\n\n  msg.payload = [deviceId];  \n  return msg;\n\n\n  return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 550,
+        "y": 2880,
+        "wires": [
+            [
+                "cd4630254b36b65e"
+            ]
+        ]
+    },
+    {
+        "id": "cd4630254b36b65e",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "ef73e6d3cd26e55f",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "SELECT * FROM combination",
+        "name": "查询deviceList下的Combination",
+        "x": 880,
+        "y": 2880,
+        "wires": [
+            [
+                "ee6733dcfc2e6bb3"
+            ]
+        ]
+    },
+    {
+        "id": "ee6733dcfc2e6bb3",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "ef73e6d3cd26e55f",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 1160,
+        "y": 2780,
+        "wires": []
+    },
+    {
+        "id": "d5fe4bd714558514",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "c30e3804a1626779",
+        "name": "获取Combination 下的config",
+        "url": "/getConfig/:deviceId/:combinationId",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 280,
+        "y": 3180,
+        "wires": [
+            [
+                "a6b0007bc85dc551"
+            ]
+        ]
+    },
+    {
+        "id": "ad803c27d1464a2e",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "9e2d670578adbe41",
+        "name": "debug 16",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1740,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "a6b0007bc85dc551",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "c30e3804a1626779",
+        "name": "根据deviceID和combinationID 查询config",
+        "func": "const deviceId = msg.req.params.deviceId;\nconst combinationId = msg.req.params.combinationId;\n\n\n  msg.topic = `SELECT cfg.* FROM config cfg\n  JOIN combination_config_bindings ccb ON cfg.id = ccb.config_id\n  WHERE ccb.binding_id = '${deviceId}_${combinationId}'`;\n  return msg;\n\n  // msg.topic = `SELECT c.* FROM combination c\n  // JOIN device_combination_bindings dcb ON c.id = dcb.combination_id\n  // WHERE dcb.device_id = $deviceId`;\n\n  // msg.payload = [deviceId];  \n  // return msg;\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 680,
+        "y": 3180,
+        "wires": [
+            [
+                "b3acce0fafad168d"
+            ]
+        ]
+    },
+    {
+        "id": "b3acce0fafad168d",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "c30e3804a1626779",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "查询devie下combination下的config",
+        "x": 1040,
+        "y": 3180,
+        "wires": [
+            [
+                "6324453b6150690d"
+            ]
+        ]
+    },
+    {
+        "id": "6324453b6150690d",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "c30e3804a1626779",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 1380,
+        "y": 3180,
+        "wires": []
+    },
+    {
+        "id": "b0f1c1dfdb2fd365",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "name": "根据configId获取Config列表",
+        "url": "/getConfigRelays/:configId",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 273,
+        "y": 3631.5,
+        "wires": [
+            [
+                "800b8a3740666e3c"
+            ]
+        ]
+    },
+    {
+        "id": "800b8a3740666e3c",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "name": "根据configId获取configList",
+        "func": "  const configId = msg.req.query.id;\n  msg.topic = `SELECT * FROM config WHERE id = '${configId}'`;\n  return msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 580,
+        "y": 3640,
+        "wires": [
+            [
+                "16191a1dbf02c2b9"
+            ]
+        ]
+    },
+    {
+        "id": "16191a1dbf02c2b9",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "根据configId获取configList",
+        "x": 920,
+        "y": 3640,
+        "wires": [
+            [
+                "f5d0dae114e0f986"
+            ]
+        ]
+    },
+    {
+        "id": "f5d0dae114e0f986",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "name": "function 11",
+        "func": "  const configId = msg.req.params.configId;\n  msg.config = msg.payload[0] || {};\n  msg.topic = `SELECT * FROM config_relays WHERE config_id = '${configId}' ORDER BY sort_order`;\n  return msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1170,
+        "y": 3640,
+        "wires": [
+            [
+                "f030e2abf8cf18ec"
+            ]
+        ]
+    },
+    {
+        "id": "f030e2abf8cf18ec",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "根据configId获取configList",
+        "x": 1420,
+        "y": 3640,
+        "wires": [
+            [
+                "26fcf6a914564605"
+            ]
+        ]
+    },
+    {
+        "id": "26fcf6a914564605",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 1660,
+        "y": 3640,
+        "wires": []
+    },
+    {
+        "id": "bfc6040de7488514",
+        "type": "comment",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "name": "机型资产管理",
+        "info": "",
+        "x": 230,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "ebbb265202107f4d",
+        "type": "comment",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "name": "组合方式管理",
+        "info": "",
+        "x": 230,
+        "y": 1100,
+        "wires": []
+    },
+    {
+        "id": "b5d1bca30d6b413c",
+        "type": "comment",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "测试机型管理",
+        "info": "",
+        "x": 230,
+        "y": 1520,
+        "wires": []
+    },
+    {
+        "id": "0cd21c60e0847f3a",
+        "type": "comment",
+        "z": "e4bbd3713100fe17",
+        "g": "a42bb8bd1ff9df38",
+        "name": "绑定配置",
+        "info": "",
+        "x": 240,
+        "y": 2160,
+        "wires": []
+    },
+    {
+        "id": "32e9ef79f56e8db2",
+        "type": "comment",
+        "z": "e4bbd3713100fe17",
+        "g": "ef73e6d3cd26e55f",
+        "name": "首页设备列表",
+        "info": "",
+        "x": 230,
+        "y": 2640,
+        "wires": []
+    },
+    {
+        "id": "e42cc32e979df9f4",
+        "type": "comment",
+        "z": "e4bbd3713100fe17",
+        "g": "c30e3804a1626779",
+        "name": "配置项选择",
+        "info": "",
+        "x": 220,
+        "y": 3120,
+        "wires": []
+    },
+    {
+        "id": "cacf6eda77938154",
+        "type": "comment",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "name": "测试机型",
+        "info": "",
+        "x": 220,
+        "y": 3580,
+        "wires": []
+    },
+    {
+        "id": "935d0b965e39f5e6",
+        "type": "comment",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "modbus读取",
+        "info": "",
+        "x": 250,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "6c73b535266f1f23",
+        "type": "comment",
+        "z": "e4bbd3713100fe17",
+        "g": "9e2d670578adbe41",
+        "name": "modbus 写入",
+        "info": "",
+        "x": 1070,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "ac1f666eb13f236b",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "a42bb8bd1ff9df38",
+        "name": "device_combination_bindings",
+        "func": "// const deviceid= msg.req.params.deviceId\n\n// msg.topic = `SELECT * FROM device_combination_bindings WHERE device_id = '${deviceid}'`;\n// // msg.params=[msg.req.params.deviceId]\n//   return msg;\n\n\n  msg.topic = \"SELECT * FROM device_combination_bindings\";\n  return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 510,
+        "y": 2320,
+        "wires": [
+            [
+                "1a3de2fb60e01829"
+            ]
+        ]
+    },
+    {
+        "id": "612c348feedb361b",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "a42bb8bd1ff9df38",
+        "name": "combination_config_bindings",
+        "func": "\n msg.bindings = msg.payload;\n  msg.topic = \"SELECT * FROM combination_config_bindings\";\n  return msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1030,
+        "y": 2320,
+        "wires": [
+            [
+                "2ffa9d691edaad3a"
+            ]
+        ]
+    },
+    {
+        "id": "2ffa9d691edaad3a",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "a42bb8bd1ff9df38",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "\n\nSELECT * FROM config ORDER BY updated_at DESC",
+        "name": "获取config",
+        "x": 1250,
+        "y": 2320,
+        "wires": [
+            [
+                "4c3f2dd3204c5ae9"
+            ]
+        ]
+    },
+    {
+        "id": "4c3f2dd3204c5ae9",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "a42bb8bd1ff9df38",
+        "name": "merge",
+        "func": "  const bindings = msg.bindings || [];\n  const configBindings = msg.payload || [];\n\n  // 按 deviceId 分组\n  const map = {};\n  bindings.forEach(b => {\n      const key = `${b.device_id}_${b.combination_id}`;\n      if (!map[b.device_id]) map[b.device_id] = {};\n      map[b.device_id][b.combination_id] = [];\n  });\n\n  // 填入 configIds\n  configBindings.forEach(cb => {\n      const parts = cb.binding_id.split('_');\n      const deviceId = parts[0];\n      const combinationId = parts.slice(1).join('_'); // 兼容 UUID 可能带下划线\n      if (map[deviceId] && map[deviceId][combinationId] !== undefined) {\n          map[deviceId][combinationId].push(cb.config_id);\n      }\n  });\n  const deviceRaw = msg.req.params.deviceId;\n\n  msg.payload = Object.entries(map).map(([deviceId, combos]) => ({\n      deviceId,\n      bindings: Object.entries(combos).map(([combinationId, configIds]) => ({\n          deviceId,\n          combinationId,\n          configIds\n      }))\n  }));\n\n  return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1410,
+        "y": 2320,
+        "wires": [
+            [
+                "44326690c377145a"
+            ]
+        ]
+    },
+    {
+        "id": "77cfc4f098c3ca4d",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "a42bb8bd1ff9df38",
+        "name": "getConfigsByBinding",
+        "url": "/getConfigsByBinding/:deviceId/:combinationId",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 260,
+        "y": 2380,
+        "wires": [
+            [
+                "1bd5dbf68a7fa75a"
+            ]
+        ]
+    },
+    {
+        "id": "1bd5dbf68a7fa75a",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "a42bb8bd1ff9df38",
+        "name": "function 12",
+        "func": "// const devideId = msg.req.params.deviceId\n// const combinationId = msg.req.params.combinationId\n\n// msg.topic = `SELECT config_id FROM combination_config-bindings\n// JOIN config cfg ON cfg.id = \n// WHERE binding_id = \"${devideId}_${combinationId}\"\n// `\n\n\nconst deviceId = msg.req.params.deviceId;\nconst combinationId = msg.req.params.combinationId;\nconst bindId = `${deviceId}_${combinationId}`;\n\n\nmsg.topic = `SELECT cfg.* \n  FROM \"combination_config_bindings\" comb\n  JOIN config cfg ON comb.config_id = cfg.id\n  WHERE comb.binding_id = \"${bindId}\"`;\nreturn msg;\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 600,
+        "y": 2400,
+        "wires": [
+            [
+                "3427115dcda3a7c8"
+            ]
+        ]
+    },
+    {
+        "id": "3427115dcda3a7c8",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "a42bb8bd1ff9df38",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "1",
+        "x": 810,
+        "y": 2400,
+        "wires": [
+            [
+                "4aa1290d9f72520d"
+            ]
+        ]
+    },
+    {
+        "id": "4aa1290d9f72520d",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "a42bb8bd1ff9df38",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 1200,
+        "y": 2400,
+        "wires": []
+    },
+    {
+        "id": "b738a5ad36b40d6d",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "c30e3804a1626779",
+        "name": "获取Combination 下的config",
+        "url": "/getConfig/:deviceId/:combinationId",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 280,
+        "y": 3240,
+        "wires": [
+            [
+                "6875ec1c93a59739"
+            ]
+        ]
+    },
+    {
+        "id": "6875ec1c93a59739",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "c30e3804a1626779",
+        "name": "根据deviceID和combinationID 查询config",
+        "func": "const deviceId = msg.req.params.deviceId;\nconst combinationId = msg.req.params.combinationId;\n\n\n  msg.topic = `SELECT cfg.* FROM config cfg\n  JOIN combination_config_bindings ccb ON cfg.id = ccb.config_id\n  WHERE ccb.binding_id = '${deviceId}_${combinationId}'`;\n  return msg;\n\n  // msg.topic = `SELECT c.* FROM combination c\n  // JOIN device_combination_bindings dcb ON c.id = dcb.combination_id\n  // WHERE dcb.device_id = $deviceId`;\n\n  // msg.payload = [deviceId];  \n  // return msg;\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 660,
+        "y": 3240,
+        "wires": [
+            [
+                "2dd14a1ca92d70b3"
+            ]
+        ]
+    },
+    {
+        "id": "2dd14a1ca92d70b3",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "c30e3804a1626779",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "查询devie下combination下的config",
+        "x": 1020,
+        "y": 3240,
+        "wires": [
+            [
+                "ef684b82cc5416f1"
+            ]
+        ]
+    },
+    {
+        "id": "ef684b82cc5416f1",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "c30e3804a1626779",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 1360,
+        "y": 3240,
+        "wires": []
+    },
+    {
+        "id": "888665f10992f316",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "\n\n",
+        "name": "获取device",
+        "x": 630,
+        "y": 900,
+        "wires": [
+            [
+                "13bd6c3aed222bb4"
+            ]
+        ]
+    },
+    {
+        "id": "2aeb47285dba651c",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "name": "getDevicebyId",
+        "url": "/getDevice/:deviceId",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 230,
+        "y": 900,
+        "wires": [
+            [
+                "af69ccc6c4f50f0f"
+            ]
+        ]
+    },
+    {
+        "id": "f40fdbba500c4671",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "name": "responseGetDevice",
+        "statusCode": "200",
+        "headers": {},
+        "x": 990,
+        "y": 900,
+        "wires": []
+    },
+    {
+        "id": "af69ccc6c4f50f0f",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "name": "getDeviceById",
+        "func": "\nconst deviceId = msg.req.params.deviceId\nmsg.topic = `\nSELECT * FROM device WHERE id = \"${deviceId}\"\n`\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 420,
+        "y": 900,
+        "wires": [
+            [
+                "888665f10992f316"
+            ]
+        ]
+    },
+    {
+        "id": "13bd6c3aed222bb4",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "name": "处理数据",
+        "func": "  msg.payload = msg.payload[0] || {};\n  return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 800,
+        "y": 900,
+        "wires": [
+            [
+                "f40fdbba500c4671"
+            ]
+        ]
+    },
+    {
+        "id": "9b158a7943f394b1",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "name": "getCombinationById",
+        "url": "/getCombination/:combinationId",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 270,
+        "y": 1340,
+        "wires": [
+            [
+                "36279db1fb28575f"
+            ]
+        ]
+    },
+    {
+        "id": "2586687dbbbce16b",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "name": "responseGetDevice",
+        "statusCode": "200",
+        "headers": {},
+        "x": 1150,
+        "y": 1340,
+        "wires": []
+    },
+    {
+        "id": "5e160c43aa72cdb7",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "\n\nSELECT * FROM combination ORDER BY updated_at DESC",
+        "name": "获取combination",
+        "x": 750,
+        "y": 1340,
+        "wires": [
+            [
+                "63f1d2ef59c0e768"
+            ]
+        ]
+    },
+    {
+        "id": "36279db1fb28575f",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "name": "getCombinationById",
+        "func": "\nconst combinationId = msg.req.params.combinationId\nmsg.topic = `\nSELECT * FROM combination WHERE id = \"${combinationId}\"\n`\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 500,
+        "y": 1340,
+        "wires": [
+            [
+                "5e160c43aa72cdb7"
+            ]
+        ]
+    },
+    {
+        "id": "63f1d2ef59c0e768",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "name": "处理数据",
+        "func": "  msg.payload = msg.payload[0] || {};\n  return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 960,
+        "y": 1340,
+        "wires": [
+            [
+                "2586687dbbbce16b"
+            ]
+        ]
+    },
+    {
+        "id": "af270d552148a632",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "name": "根据configId获取Config列表",
+        "url": "/getConfigList/:configId",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 273,
+        "y": 3731.5,
+        "wires": [
+            [
+                "3b2fa1bd2beb72ff"
+            ]
+        ]
+    },
+    {
+        "id": "3b2fa1bd2beb72ff",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "name": "根据configId获取configList",
+        "func": "  const configId = msg.req.params.configId;\n  msg.topic = `SELECT * FROM config WHERE id = '${configId}'`;\n  return msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 580,
+        "y": 3740,
+        "wires": [
+            [
+                "681dd78b7c7c7cf7"
+            ]
+        ]
+    },
+    {
+        "id": "681dd78b7c7c7cf7",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "根据configId获取configList",
+        "x": 900,
+        "y": 3740,
+        "wires": [
+            [
+                "bbda677f348284b1"
+            ]
+        ]
+    },
+    {
+        "id": "0405412e7ae4198d",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 1280,
+        "y": 3740,
+        "wires": []
+    },
+    {
+        "id": "bbda677f348284b1",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "name": "处理数据",
+        "func": "const m = msg.payload[0] || {};\n\n// 判断是否为空对象\nif (Object.keys(m).length === 0) {\n  msg.payload = {};\n} else {\n  // 剔除 action_relays 字段，并转换字段\n  const { action_relays, ...rest } = m;\n  let actionRelays = [];\n  try {\n    if (action_relays) actionRelays = JSON.parse(action_relays);\n  } catch (err) {\n    actionRelays = [];\n  }\n  msg.payload = {\n    ...rest,\n    actionRelays,\n  };\n}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1120,
+        "y": 3740,
+        "wires": [
+            [
+                "0405412e7ae4198d"
+            ]
+        ]
+    },
+    {
+        "id": "a011f2682ef777cb",
+        "type": "catch",
+        "z": "e4bbd3713100fe17",
+        "name": "",
+        "scope": null,
+        "uncaught": false,
+        "x": 260,
+        "y": 3960,
+        "wires": [
+            [
+                "a622718cfb27d050"
+            ]
+        ]
+    },
+    {
+        "id": "703262395864eb9e",
+        "type": "file",
+        "z": "e4bbd3713100fe17",
+        "name": "错误日志",
+        "filename": "./data/log",
+        "filenameType": "str",
+        "appendNewline": true,
+        "createDir": false,
+        "overwriteFile": "false",
+        "encoding": "utf8",
+        "x": 800,
+        "y": 3960,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "a622718cfb27d050",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "name": "function 9",
+        "func": "const now = new Date().toLocaleString();\n\nif (msg.error && msg.error.message.includes(\"SQLITE_ERROR:\")) {\n    const logText = `[${now}] SQL执行错误\n错误信息: ${msg.error.message}\n执行SQL: ${msg.topic}\n参数: ${JSON.stringify(msg.params ?? [])}\n--------------------------\\n`;\n    msg.payload = logText;\n}\n\n\n\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 500,
+        "y": 3960,
+        "wires": [
+            [
+                "703262395864eb9e"
+            ]
+        ]
+    },
+    {
+        "id": "bf8ccbe9969cb576",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1370,
+        "y": 1640,
+        "wires": []
+    },
+    {
+        "id": "d742a1bb3c5e35c7",
+        "type": "catch",
+        "z": "e4bbd3713100fe17",
+        "name": "",
+        "scope": null,
+        "uncaught": false,
+        "x": 760,
+        "y": 2040,
+        "wires": [
+            [
+                "afd0265cf68d91bc"
+            ]
+        ]
+    },
+    {
+        "id": "afd0265cf68d91bc",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 930,
+        "y": 2040,
+        "wires": []
+    },
+    {
+        "id": "c02f9c3cda19300b",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "ef73e6d3cd26e55f",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 670,
+        "y": 2780,
+        "wires": []
+    },
+    {
+        "id": "1532e363938c0d4b",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "ef73e6d3cd26e55f",
+        "name": "debug 6",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 650,
+        "y": 2660,
+        "wires": []
+    },
+    {
+        "id": "d02f3cbfac1b65a3",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "saveRecord",
+        "url": "/saveRecord",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 290,
+        "y": 4180,
+        "wires": [
+            [
+                "4ef7dc1649620198",
+                "18087b30c35111f7"
+            ]
+        ]
+    },
+    {
+        "id": "4ef7dc1649620198",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "debug 8",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 530,
+        "y": 4180,
+        "wires": []
+    },
+    {
+        "id": "18087b30c35111f7",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "写入JSON",
+        "func": " const fs = global.get('fs');\n  const path = global.get('path');\n  const rootPath = global.get('rootPath');\n\n  const payload = msg.payload;\n\n  // 生成文件名\n  const now = new Date();\n  const month = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;\n  const timestamp =\n  `${month}-${String(now.getDate()).padStart(2,'0')}${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;\n  \n   const safeDeviceName = payload.device_name.replace(/[ #]/g, '-');\n  const fileName = `${timestamp}-${payload.op_type}-${safeDeviceName}.json`;\n  // const fileName = `${timestamp}-${payload.op_type}-${payload.device_name}.json`;\n\n  // 目录：records/2025-01/\n  const dir = path.join(rootPath, '/data/records', month);\n  if (!fs.existsSync(dir)) {\n      fs.mkdirSync(dir, { recursive: true });\n  }\n\n  const data = {\n    data:payload.curve_data,\n    time:payload.time_data\n  }\n\n  // 写曲线数据\n  const filePath = path.join(dir, fileName);\n  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));\n\n  // 把路径和参数传给下一个节点\n  msg.curve_file = path.join('records', month, fileName);\n  msg.params = [\n      payload.device_name,\n      payload.combination_name,\n      payload.config_name,\n      payload.op_type,\n      payload.status,\n      payload.peak_current,\n      payload.valley_current,\n      msg.curve_file\n  ];\n  return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 4140,
+        "wires": [
+            [
+                "f0e807248014ea5d"
+            ]
+        ]
+    },
+    {
+        "id": "f44c6125ad32c744",
+        "type": "catch",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "",
+        "scope": null,
+        "uncaught": false,
+        "x": 1070,
+        "y": 4460,
+        "wires": [
+            [
+                "e963dc1339a0a52f"
+            ]
+        ]
+    },
+    {
+        "id": "e963dc1339a0a52f",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "name": "debug 9",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1260,
+        "y": 4460,
+        "wires": []
+    },
+    {
+        "id": "f0e807248014ea5d",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "prepared",
+        "sql": "  INSERT INTO operation_records\n    (device_name, combination_name, config_name, op_type, status, peak_current, valley_current, curve_file)\n  VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "name": "",
+        "x": 800,
+        "y": 4140,
+        "wires": [
+            [
+                "1c125f2e5bf7d17f",
+                "562cb33c8a99ca69"
+            ]
+        ]
+    },
+    {
+        "id": "1c125f2e5bf7d17f",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "function 7",
+        "func": "  // msg.payload = { success: true, id: msg.lastId || 0 };\n  // return msg;\nmsg.payload = { \n    code: 200,\n    message: '操作成功'\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1080,
+        "y": 4140,
+        "wires": [
+            [
+                "7616693109f924fc"
+            ]
+        ]
+    },
+    {
+        "id": "7616693109f924fc",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 1260,
+        "y": 4180,
+        "wires": []
+    },
+    {
+        "id": "562cb33c8a99ca69",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "debug 13",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 980,
+        "y": 4540,
+        "wires": []
+    },
+    {
+        "id": "d9f47646683b095b",
+        "type": "comment",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "历史记录",
+        "info": "",
+        "x": 280,
+        "y": 4120,
+        "wires": []
+    },
+    {
+        "id": "20a0e311c09edb22",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "operationRecords",
+        "url": "/operationRecords",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 330,
+        "y": 4360,
+        "wires": [
+            [
+                "a246ecd9553dfb91"
+            ]
+        ]
+    },
+    {
+        "id": "a246ecd9553dfb91",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "fixed",
+        "sql": "SELECT * FROM operation_records ORDER BY created_at DESC",
+        "name": "",
+        "x": 540,
+        "y": 4360,
+        "wires": [
+            [
+                "708e32731ad70d8d"
+            ]
+        ]
+    },
+    {
+        "id": "708e32731ad70d8d",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 740,
+        "y": 4360,
+        "wires": []
+    },
+    {
+        "id": "d1f7549338e5a7fd",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "读取json",
+        "url": "/records/*",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 300,
+        "y": 4480,
+        "wires": [
+            [
+                "efb9644129d40d17",
+                "e2e409d9a6d6f299"
+            ]
+        ]
+    },
+    {
+        "id": "efb9644129d40d17",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "debug 14",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 580,
+        "y": 4460,
+        "wires": []
+    },
+    {
+        "id": "e2e409d9a6d6f299",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "function 13",
+        "func": "const fs = global.get('fs');\n  const path = global.get('path');\n  const rootPath = global.get('rootPath');\n\n  const rawPath = decodeURIComponent(msg.req.path);\n  const filePath = path.join(rootPath, 'data', rawPath);\nconsole.log(filePath)\n  if (fs.existsSync(filePath)) {\n      const raw = fs.readFileSync(filePath, 'utf8');\n      msg.payload = JSON.parse(raw);\n  } else {\n      msg.statusCode = 404;\n      msg.payload = {};\n  }\n  return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 4520,
+        "wires": [
+            [
+                "dbe61619444831dc",
+                "b774dc21446d33cb"
+            ]
+        ]
+    },
+    {
+        "id": "dbe61619444831dc",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 720,
+        "y": 4520,
+        "wires": []
+    },
+    {
+        "id": "b774dc21446d33cb",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "debug 15",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 610,
+        "y": 4560,
+        "wires": []
+    }
+]
