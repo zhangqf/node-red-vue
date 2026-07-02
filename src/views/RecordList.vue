@@ -132,7 +132,7 @@ const chartOpt = computed(() => {
 onMounted(async () => {
   await withLoading(async () => {
     await getList();
-  });
+  }, "数据加载成功");
 });
 </script>
 

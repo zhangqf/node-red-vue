@@ -18,7 +18,10 @@ async function shutdownNR() {
       /* ignore */
     }
     try {
-      await new Promise((resolve) => nrServer.close(resolve));
+      await new Promise((resolve) => {
+        nrServer.close(() => resolve());
+        setTimeout(resolve, 1000);
+      });
     } catch (e) {
       /* ignore */
     }
@@ -129,16 +132,27 @@ function createWindow() {
   }
 }
 
-app.whenReady().then(async () => {
-  try {
-    await startNodeRED();
-    createWindow();
-  } catch (err) {
-    dialog.showErrorBox("Startup Error", err.message);
-    await shutdownNR();
-    app.exit(1);
-  }
-});
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on("second-instance", () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
+  app.whenReady().then(async () => {
+    try {
+      await startNodeRED();
+      createWindow();
+    } catch (err) {
+      dialog.showErrorBox("Startup Error", err.message);
+      await shutdownNR();
+      app.exit(1);
+    }
+  });
+}
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();

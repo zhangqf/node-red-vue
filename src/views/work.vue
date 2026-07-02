@@ -22,6 +22,15 @@ const rawWsMsg = ref<string | null>(null);
 // 分别缓存线圈、寄存器最新有效值
 const lastCoilArr = ref<number[]>([]);
 const lastRegisterArr = ref<number[]>([]);
+interface WSSTATUS {
+  color: string;
+  connected: boolean;
+  lastTime: string;
+  msg: string;
+  type: string;
+}
+
+const wsStatus = ref<WSSTATUS>();
 
 // 公共解析函数
 function parseWsData(raw: string | null) {
@@ -43,6 +52,68 @@ export interface TestItem {
 
 const testResults = ref<TestItem[]>([]);
 
+const funWsRealData = (data) => {
+  // 收到线圈数据 → 只更新线圈缓存，寄存器不动
+  if (data.unitId === 2) {
+    const rawCoil = Array.isArray(data.data) ? data.data : [];
+    const coilArr = rawCoil.map((item: number) => (item ? 1 : 0));
+    lastCoilArr.value = coilArr.slice(0, terminals.value.length);
+  }
+  // 收到寄存器数据 → 只更新寄存器缓存，线圈不动
+  if (data.unitId === 1) {
+    const rawReg = Array.isArray(data.data) ? data.data : [];
+    // lastRegisterArr.value = rawReg;
+    if (isAction.value) {
+      lastRegisterArr.value = rawReg;
+    }
+  }
+  if (data.unitId === 3) {
+    const tempList = [
+      {
+        name: "定位表示",
+        type: "GreenLight",
+        status: data.data[6],
+      },
+      {
+        name: "反位表示",
+        type: "YellowLight",
+        status: data.data[7],
+      },
+      {
+        name: "二级传动反位",
+        type: "SecondaryTransmissionInReversePosition",
+        status: data.data[3],
+      },
+      {
+        name: "二级传动定位",
+        type: "SecondaryTransmissionPositioning",
+        status: data.data[2],
+      },
+      {
+        name: "一级传动反位",
+        type: "PrimaryTransmissionInReversePosition",
+        status: data.data[1],
+      },
+      {
+        name: "一级传动定位",
+        type: "PrimaryTransmissionPositioning",
+        status: data.data[0],
+      },
+    ];
+
+    testResults.value = tempList;
+  }
+};
+
+const modbusStatus = ref();
+
+const funWsStatus = (data) => {
+  if (!data.connected) {
+    lastCoilArr.value = [];
+  }
+  modbusStatus.value = data;
+};
+
 // 监听ws消息，自动更新对应缓存，另一个数组保留旧值
 watch(
   () => ws.message.value,
@@ -50,57 +121,14 @@ watch(
     rawWsMsg.value = newMsg;
     const data = parseWsData(newMsg);
     if (!data) return;
-
-    // 收到线圈数据 → 只更新线圈缓存，寄存器不动
-    if (data.unitId === 2) {
-      const rawCoil = Array.isArray(data.payload) ? data.payload : [];
-      const coilArr = rawCoil.map((item: number) => (item ? 1 : 0));
-      lastCoilArr.value = coilArr.slice(0, terminals.value.length);
-    }
-    // 收到寄存器数据 → 只更新寄存器缓存，线圈不动
-    if (data.unitId === 1) {
-      const rawReg = Array.isArray(data.payload) ? data.payload : [];
-      // lastRegisterArr.value = rawReg;
-      if (isAction.value) {
-        lastRegisterArr.value = rawReg;
+    if (data && data.sendData) {
+      switch (data.sendData.type) {
+        case "modbusStatus":
+          funWsStatus(data.sendData);
+          break;
+        case "modbusRealData":
+          funWsRealData(data.sendData);
       }
-    }
-
-    if (data.unitId === 3) {
-      const tempList = [
-        {
-          name: "定位表示",
-          type: "GreenLight",
-          status: data.payload[6],
-        },
-        {
-          name: "反位表示",
-          type: "YellowLight",
-          status: data.payload[7],
-        },
-        {
-          name: "二级传动反位",
-          type: "SecondaryTransmissionInReversePosition",
-          status: data.payload[3],
-        },
-        {
-          name: "二级传动定位",
-          type: "SecondaryTransmissionPositioning",
-          status: data.payload[2],
-        },
-        {
-          name: "一级传动反位",
-          type: "PrimaryTransmissionInReversePosition",
-          status: data.payload[1],
-        },
-        {
-          name: "一级传动定位",
-          type: "PrimaryTransmissionPositioning",
-          status: data.payload[0],
-        },
-      ];
-
-      testResults.value = tempList;
     }
   },
   { immediate: true },
@@ -111,40 +139,6 @@ const coilArr = computed(() => lastCoilArr.value);
 
 // 寄存器计算属性：永远返回缓存的最新寄存器数据，不会清空
 const registerArr = computed(() => lastRegisterArr.value);
-
-// const wsArr = computed<number[] | undefined>(() => {
-//   const rawMsg = ws.message.value;
-//   // 空消息直接返回空数组兜底
-//   if (!rawMsg) return [];
-
-//   let data: any;
-//   try {
-//     // 只解析一次，全局复用
-//     data = JSON.parse(rawMsg);
-//   } catch (err) {
-//     console.error("websocket json解析失败", err);
-//     return [];
-//   }
-
-//   // 区分数据类型（统一小写匹配后端标记）
-//   if (data.dataType === "CoilStatus") {
-//     // 后端payload是布尔数组 [false, true, false]
-//     const coilRaw = Array.isArray(data.payload) ? data.payload : [];
-//     // 布尔转数字 0/1
-//     let arr: number[] = coilRaw.map((item) => (item ? 1 : 0));
-//     // 按端子数量截断多余数据
-//     return arr.slice(0, terminals.value.length);
-//   }
-
-//   if (data.dataType === "RegisterValue") {
-//     // 后端payload是数字寄存器数组 [0,482,434]
-//     const regArr = Array.isArray(data.payload) ? data.payload : [];
-//     return regArr.slice(0, terminals.value.length);
-//   }
-
-//   // 兜底：未知类型返回空数组，保证computed一定返回number[]
-//   return [];
-// });
 
 const device = ref({
   name: "",
@@ -469,7 +463,6 @@ onMounted(async () => {
         <span class="terminal-bar-title">端子实时</span>
         <span class="terminal-bar-title">状态</span>
       </div>
-      <!-- {{ ws.message.value }} -->
       <div
         v-for="(t, index) in coilArr"
         :key="index"
@@ -483,7 +476,9 @@ onMounted(async () => {
     </div>
     <div class="status-bar">
       <span class="status-text">{{ ws.status }}</span>
-      <!-- <span class="status-message" v-if="ws.message">{{ ws.message }}</span> -->
+      <span class="status-message" :class="modbusStatus.color">{{
+        modbusStatus.msg
+      }}</span>
     </div>
   </div>
 </template>
@@ -645,9 +640,17 @@ onMounted(async () => {
 }
 
 .status-message {
-  font-size: 10px;
-  color: #34d399;
+  font-size: 12px;
   font-family: "SF Mono", "Monaco", "Menlo", monospace;
+}
+.green {
+  color: #34d399;
+}
+.orange {
+  color: orange;
+}
+.red {
+  color: red;
 }
 .action-light {
   align-self: center;

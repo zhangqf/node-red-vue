@@ -110,8 +110,9 @@ const boundIds = ref<Set<string>>(new Set());
 
 async function fetchBoundIds() {
   try {
-    const res = await fetch(HTTP_URL + "/getBoundTestModelIds");
-    const ids: string[] = await res.json();
+    const res = await fetch(HTTP_URL + "/getBoundConfigsIds");
+    const { data } = await res.json();
+    const ids: string[] = data;
     boundIds.value = new Set(ids);
   } catch {}
 }
@@ -278,18 +279,43 @@ async function save() {
   showModal.value = false;
 }
 
+const deleteList = async (id: string) => {
+  const response = await fetch(`${HTTP_URL}/deleteConfig/${id}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!response.ok) {
+    throw new Error(`请求失败，状态码：${response.status}`);
+  }
+
+  const data = await response.json();
+  console.log("删除接口返回：", data);
+
+  if (data.code !== 200 && data.code !== 0) {
+    throw new Error(data.msg || "删除失败");
+  }
+  return data;
+};
+
 async function remove(id: string) {
+  // 包装loading
+  const delAction = withLoading(async () => {
+    const res = await deleteList(id);
+    // 接口成功后：1.本地过滤列表 2.成功提示
+    configs.value = configs.value.filter((c) => c.id !== id);
+
+    return res;
+  }, "正在删除...");
   try {
-    await fetch(HTTP_URL + "/deleteConfig", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
-  } catch {}
-  configs.value = configs.value.filter((c) => c.id !== id);
+    await delAction();
+  } catch (error: any) {
+    console.error("删除操作异常：", error);
+  }
 }
 
 const getList = async () => {
+  fetchBoundIds();
   try {
     const response = await fetch(HTTP_URL + "/getConfig", {
       method: "get",
@@ -299,9 +325,10 @@ const getList = async () => {
   } catch {}
 };
 
-onMounted(() => {
-  getList();
-  // fetchBoundIds();
+onMounted(async () => {
+  await withLoading(async () => {
+    getList();
+  }, "数据加载成功");
 });
 </script>
 

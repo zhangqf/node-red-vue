@@ -48,23 +48,20 @@ function openAdd() {
 function openEdit(item: Combination) {
   isEdit.value = true;
   editId.value = item.id;
-  form.value = {
-    name: item.name,
-    description: item.description,
-    deviceType: item.deviceType,
-  };
+  form.value = { ...item };
   showModal.value = true;
 }
 
 async function save() {
-  // if (isEdit.value) {
-  //   const idx = combinations.value.findIndex((c) => c.id === editId.value);
-  //   if (idx !== -1) {
-  //     combinations.value[idx] = { id: editId.value, ...form.value };
-  //   }
-  // } else {
-  //   combinations.value.push({ id: String(Date.now()), ...form.value });
-  // }
+  if (isEdit.value) {
+    const idx = combinations.value.findIndex((c) => c.id === editId.value);
+    if (idx !== -1) {
+      combinations.value[idx] = { id: editId.value, ...form.value };
+    }
+  } else {
+    const newId = String(Date.now());
+    combinations.value.push({ id: newId, ...form.value });
+  }
 
   // console.log(form.value);
   await withLoading(async () => {
@@ -77,10 +74,43 @@ async function save() {
     console.log("Node-RED回应:", data);
   }, "保存成功");
   showModal.value = false;
+
+  getList();
 }
 
-function remove(id: string) {
-  combinations.value = combinations.value.filter((c) => c.id !== id);
+const deleteList = async (id: string) => {
+  const response = await fetch(`${HTTP_URL}/deleteCombination/${id}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!response.ok) {
+    throw new Error(`请求失败，状态码：${response.status}`);
+  }
+
+  const data = await response.json();
+  console.log("删除接口返回：", data);
+
+  if (data.code !== 200 && data.code !== 0) {
+    throw new Error(data.msg || "删除失败");
+  }
+  return data;
+};
+
+async function remove(id: string) {
+  // 包装loading
+  const delAction = withLoading(async () => {
+    const res = await deleteList(id);
+    // 接口成功后：1.本地过滤列表 2.成功提示
+    combinations.value = combinations.value.filter((c) => c.id !== id);
+
+    return res;
+  }, "正在删除...");
+  try {
+    await delAction();
+  } catch (error: any) {
+    console.error("删除操作异常：", error);
+  }
 }
 
 const getList = async () => {
@@ -94,8 +124,10 @@ const getList = async () => {
   } catch (error) {}
 };
 
-onMounted(() => {
-  getList();
+onMounted(async () => {
+  await withLoading(async () => {
+    getList();
+  }, "数据加载成功");
 });
 </script>
 

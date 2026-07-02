@@ -2,21 +2,22 @@
 import { HTTP_URL } from "@/config/config";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import { useToast } from "@/composables/useToast";
+
+const { withLoading } = useToast();
 
 const router = useRouter();
 
-const devices = [
+const devices = ref([
   { id: "device-001", name: "ZD6 转辙机 #001", location: "站场 A 区" },
   { id: "device-002", name: "ZD6 转辙机 #002", location: "站场 B 区" },
   { id: "device-003", name: "ZD6 转辙机 #003", location: "站场 C 区" },
   { id: "device-004", name: "S700K 转辙机 #001", location: "站场 A 区" },
-];
+]);
 
 function onDeviceClick(deviceId: string) {
   router.push({ name: "configure", params: { deviceId } });
 }
-
-const data = ref([]);
 
 const getList = async () => {
   try {
@@ -24,13 +25,14 @@ const getList = async () => {
       method: "get",
       headers: { "Content-Type": "application/json" },
     });
-    data.value = await response.json();
-    console.log(data);
+    devices.value = await response.json();
   } catch {}
 };
 
-onMounted(() => {
-  getList();
+onMounted(async () => {
+  await withLoading(async () => {
+    getList();
+  }, "数据加载成功");
 });
 </script>
 
@@ -39,7 +41,7 @@ onMounted(() => {
     <h2 class="page-title">设备列表</h2>
     <div class="device-grid">
       <div
-        v-for="device in data"
+        v-for="device in devices"
         :key="device.id"
         class="device-card"
         @click="onDeviceClick(device.id)">

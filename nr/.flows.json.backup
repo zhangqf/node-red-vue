@@ -48,10 +48,15 @@
             "2aeb47285dba651c",
             "f40fdbba500c4671",
             "af69ccc6c4f50f0f",
-            "13bd6c3aed222bb4"
+            "13bd6c3aed222bb4",
+            "c194d4594844291b",
+            "8a559de294823de1",
+            "caea35e23c8b331a",
+            "738abefbb2957d43",
+            "62fc6c706b4a34a3"
         ],
-        "x": 134,
-        "y": 579,
+        "x": 114,
+        "y": 879,
         "w": 1472,
         "h": 442
     },
@@ -147,13 +152,19 @@
             "2cede691de602618",
             "d50b53f9cf0907c2",
             "be1d62f199409815",
-            "f93e8a3804d4dc0b",
-            "935d0b965e39f5e6"
+            "935d0b965e39f5e6",
+            "e6291d3e2a42a9c5",
+            "cd2082966920c8aa",
+            "8ce3da23a457bf4e",
+            "8e1b1384a53df828",
+            "7f34b1f515817ece",
+            "15c676bbf274830b",
+            "cf9d948032b912ce"
         ],
-        "x": 154,
-        "y": 339,
-        "w": 1312,
-        "h": 162
+        "x": 114,
+        "y": 419,
+        "w": 1432,
+        "h": 342
     },
     {
         "id": "4da623926d6c77a5",
@@ -188,12 +199,18 @@
             "2586687dbbbce16b",
             "5e160c43aa72cdb7",
             "36279db1fb28575f",
-            "63f1d2ef59c0e768"
+            "63f1d2ef59c0e768",
+            "f2ca15d02ba90fa1",
+            "8a0180eacd5e090f",
+            "d9abc241b1255248",
+            "f641d22c61a26ba2",
+            "d534274548d1f2d3",
+            "8a1b5602bae74db5"
         ],
-        "x": 134,
-        "y": 1059,
+        "x": 114,
+        "y": 1399,
         "w": 1692,
-        "h": 342
+        "h": 362
     },
     {
         "id": "ee922bcc4e4be091",
@@ -227,10 +244,15 @@
             "7a49ac2a0709ebf1",
             "ad20ce19291bd677",
             "b5d1bca30d6b413c",
-            "bf8ccbe9969cb576"
+            "bf8ccbe9969cb576",
+            "29b11a13b9d1df26",
+            "818aacc27e5b81ef",
+            "da74eea6dfacf5dc",
+            "d23078b7ff3639a1",
+            "e49fe0cf135dc9f1"
         ],
         "x": 134,
-        "y": 1479,
+        "y": 1879,
         "w": 1592,
         "h": 502
     },
@@ -270,8 +292,8 @@
             "4aa1290d9f72520d"
         ],
         "x": 134,
-        "y": 2119,
-        "w": 1532,
+        "y": 2519,
+        "w": 1512,
         "h": 442
     },
     {
@@ -300,7 +322,7 @@
             "1532e363938c0d4b"
         ],
         "x": 134,
-        "y": 2599,
+        "y": 3219,
         "w": 1112,
         "h": 322
     },
@@ -329,7 +351,7 @@
             "ef684b82cc5416f1"
         ],
         "x": 134,
-        "y": 3079,
+        "y": 3699,
         "w": 1332,
         "h": 202
     },
@@ -358,12 +380,17 @@
             "3b2fa1bd2beb72ff",
             "681dd78b7c7c7cf7",
             "0405412e7ae4198d",
-            "bbda677f348284b1"
+            "bbda677f348284b1",
+            "b9e9e730fd72a501",
+            "1db4db4994250a9c",
+            "97ed6a75d77b5ef1",
+            "b3e064fe5e839749",
+            "10f94d18ee7e2792"
         ],
-        "x": 127,
-        "y": 3539,
+        "x": 114,
+        "y": 4227.5,
         "w": 1619,
-        "h": 242
+        "h": 302
     },
     {
         "id": "8f47e2e3400d33b2",
@@ -387,7 +414,6 @@
             "7616693109f924fc",
             "562cb33c8a99ca69",
             "d9f47646683b095b",
-            "f44c6125ad32c744",
             "20a0e311c09edb22",
             "a246ecd9553dfb91",
             "708e32731ad70d8d",
@@ -397,8 +423,8 @@
             "dbe61619444831dc",
             "b774dc21446d33cb"
         ],
-        "x": 194,
-        "y": 4079,
+        "x": 134,
+        "y": 4639,
         "w": 1152,
         "h": 522
     },
@@ -800,13 +826,13 @@
         "name": "",
         "clienttype": "simpleser",
         "bufferCommands": true,
-        "stateLogEnabled": false,
-        "queueLogEnabled": false,
+        "stateLogEnabled": true,
+        "queueLogEnabled": true,
         "failureLogEnabled": true,
         "tcpHost": "127.0.0.1",
         "tcpPort": 502,
         "tcpType": "DEFAULT",
-        "serialPort": "/dev/tty.usbserial-110",
+        "serialPort": "/dev/tty.usbserial-2140",
         "serialType": "RTU-BUFFERD",
         "serialBaudrate": "115200",
         "serialDatabits": 8,
@@ -841,6 +867,14 @@
         "type": "sqlitedb",
         "db": "./data/test.db",
         "mode": "RWC"
+    },
+    {
+        "id": "e48b41b20ada34b1",
+        "type": "modbus-io-config",
+        "name": "modbusLog",
+        "path": "./data/modbus/log.log",
+        "format": "utf8",
+        "addressOffset": ""
     },
     {
         "id": "33892c68efc7c072",
@@ -883,8 +917,8 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 230,
-        "y": 680,
+        "x": 210,
+        "y": 980,
         "wires": [
             [
                 "bbd68333fe91be2f"
@@ -899,8 +933,8 @@
         "name": "saveDeviceOut",
         "statusCode": "200",
         "headers": {},
-        "x": 1500,
-        "y": 640,
+        "x": 1480,
+        "y": 940,
         "wires": []
     },
     {
@@ -1054,8 +1088,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 470,
-        "y": 680,
+        "x": 450,
+        "y": 980,
         "wires": [
             [
                 "ad4ad9c54e05a5b8"
@@ -1074,8 +1108,8 @@
         "name": "",
         "field": "uuid",
         "fieldType": "msg",
-        "x": 890,
-        "y": 740,
+        "x": 870,
+        "y": 1040,
         "wires": [
             [
                 "e2434463005bea31"
@@ -1105,8 +1139,8 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 680,
-        "y": 680,
+        "x": 660,
+        "y": 980,
         "wires": [
             [
                 "d1b0dd844c3d8c13"
@@ -1129,8 +1163,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 920,
-        "y": 620,
+        "x": 900,
+        "y": 920,
         "wires": [
             [
                 "a4647c8903d39b44"
@@ -1150,8 +1184,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1070,
-        "y": 720,
+        "x": 1050,
+        "y": 1020,
         "wires": [
             [
                 "a4647c8903d39b44"
@@ -1238,8 +1272,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 500,
-        "y": 420,
+        "x": 460,
+        "y": 560,
         "wires": [
             [
                 "2cede691de602618"
@@ -1255,10 +1289,6 @@
         "props": [
             {
                 "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
             }
         ],
         "repeat": "0.05",
@@ -1268,8 +1298,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 260,
-        "y": 440,
+        "x": 220,
+        "y": 580,
         "wires": [
             [
                 "24528c2f1d2587f6"
@@ -1282,25 +1312,25 @@
         "z": "e4bbd3713100fe17",
         "g": "a78c98a47184b2fa",
         "name": "",
-        "showStatusActivities": false,
-        "showErrors": false,
+        "showStatusActivities": true,
+        "showErrors": true,
         "showWarnings": true,
-        "logIOActivities": false,
+        "logIOActivities": true,
         "server": "018e6b14623da357",
-        "useIOFile": false,
-        "ioFile": "",
-        "useIOForPayload": false,
-        "emptyMsgOnFail": false,
-        "keepMsgProperties": false,
+        "useIOFile": true,
+        "ioFile": "e48b41b20ada34b1",
+        "useIOForPayload": true,
+        "emptyMsgOnFail": true,
+        "keepMsgProperties": true,
         "delayOnStart": false,
-        "enableDeformedMessages": true,
-        "startDelayTime": "",
-        "x": 740,
-        "y": 420,
+        "enableDeformedMessages": false,
+        "startDelayTime": "2",
+        "x": 680,
+        "y": 560,
         "wires": [
             [
                 "be1d62f199409815",
-                "f93e8a3804d4dc0b"
+                "8e1b1384a53df828"
             ],
             []
         ]
@@ -1313,8 +1343,8 @@
         "name": "ws 发送数据",
         "server": "4b736505764b58bb",
         "client": "",
-        "x": 1370,
-        "y": 400,
+        "x": 1330,
+        "y": 540,
         "wires": []
     },
     {
@@ -1323,18 +1353,19 @@
         "z": "e4bbd3713100fe17",
         "g": "a78c98a47184b2fa",
         "name": "function 4",
-        "func": "\nconst data = msg;\n if(data.unitId==1){\n    msg.payload[0] = msg.payload[0] / 100.0\n}\n\n\nreturn msg;",
+        "func": "\n\n\n\nlet sendData = {};\n\nconst data = msg;\n//  if(data.unitId==1){\n//     msg.payload[0] = msg.payload[0] / 100.0\n// }\n\nif(data.modbusRequest.unitid===1) {\n    msg.payload[0] = msg.payload[0] / 100.0\n}\n\nmsg.sendData = {\n    data:msg.payload,\n    type:\"modbusRealData\",\n    unitId: data.modbusRequest.unitid,\n\tfc: data.modbusRequest.fc,\n\taddress:data.modbusRequest.address,\n\tquantity: data.modbusRequest.quantity,\n}\n\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1100,
-        "y": 420,
+        "x": 940,
+        "y": 540,
         "wires": [
             [
-                "d50b53f9cf0907c2"
+                "d50b53f9cf0907c2",
+                "cf9d948032b912ce"
             ]
         ]
     },
@@ -1398,24 +1429,6 @@
         ]
     },
     {
-        "id": "f93e8a3804d4dc0b",
-        "type": "debug",
-        "z": "e4bbd3713100fe17",
-        "g": "a78c98a47184b2fa",
-        "name": "debug 12",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 940,
-        "y": 460,
-        "wires": []
-    },
-    {
         "id": "6ab05986b5d67ea4",
         "type": "sqlite",
         "z": "e4bbd3713100fe17",
@@ -1425,8 +1438,8 @@
         "sqlquery": "fixed",
         "sql": "CREATE TABLE IF NOT EXISTS device (\n    id TEXT PRIMARY KEY,\n    name TEXT,\n    typeName TEXT,\n    location TEXT,\n    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n)",
         "name": "CreateDeviceDB",
-        "x": 540,
-        "y": 980,
+        "x": 520,
+        "y": 1280,
         "wires": [
             []
         ]
@@ -1440,8 +1453,8 @@
         "sqlquery": "prepared",
         "sql": "INSERT OR REPLACE INTO device (id, name,typeName, location) VALUES ($id, $name, $typeName,$location)",
         "name": "deviceDB",
-        "x": 1240,
-        "y": 640,
+        "x": 1220,
+        "y": 940,
         "wires": [
             [
                 "5e1af7db10d7b9e4"
@@ -1470,8 +1483,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 280,
-        "y": 980,
+        "x": 260,
+        "y": 1280,
         "wires": [
             [
                 "6ab05986b5d67ea4"
@@ -1487,8 +1500,8 @@
         "sqlquery": "fixed",
         "sql": "\n\nSELECT * FROM device ORDER BY updated_at DESC",
         "name": "获取device",
-        "x": 430,
-        "y": 840,
+        "x": 410,
+        "y": 1140,
         "wires": [
             [
                 "4fd8e73a29131ee8"
@@ -1506,8 +1519,8 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 220,
-        "y": 840,
+        "x": 200,
+        "y": 1140,
         "wires": [
             [
                 "953e9c4eb9758f73"
@@ -1522,8 +1535,8 @@
         "name": "responseGetDevice",
         "statusCode": "200",
         "headers": {},
-        "x": 670,
-        "y": 840,
+        "x": 650,
+        "y": 1140,
         "wires": []
     },
     {
@@ -1539,8 +1552,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1380,
-        "y": 720,
+        "x": 1360,
+        "y": 1020,
         "wires": [
             [
                 "1b29b8c8846873d6"
@@ -1558,8 +1571,8 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 240,
-        "y": 1160,
+        "x": 220,
+        "y": 1500,
         "wires": [
             [
                 "7af8344f8b7fed41"
@@ -1579,11 +1592,12 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 490,
-        "y": 1160,
+        "x": 470,
+        "y": 1500,
         "wires": [
             [
-                "69b677011b73a8d9"
+                "69b677011b73a8d9",
+                "f2ca15d02ba90fa1"
             ]
         ]
     },
@@ -1595,8 +1609,8 @@
         "name": "saveCombinationOut",
         "statusCode": "200",
         "headers": {},
-        "x": 1600,
-        "y": 1120,
+        "x": 1580,
+        "y": 1460,
         "wires": []
     },
     {
@@ -1611,8 +1625,8 @@
         "name": "",
         "field": "uuid",
         "fieldType": "msg",
-        "x": 970,
-        "y": 1220,
+        "x": 950,
+        "y": 1560,
         "wires": [
             [
                 "9b76a8c05b3d673d"
@@ -1642,8 +1656,8 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 760,
-        "y": 1160,
+        "x": 740,
+        "y": 1500,
         "wires": [
             [
                 "6f9fcb45d8ed78a1"
@@ -1666,8 +1680,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1000,
-        "y": 1100,
+        "x": 980,
+        "y": 1440,
         "wires": [
             [
                 "1a80ba819d609353"
@@ -1687,8 +1701,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1150,
-        "y": 1200,
+        "x": 1130,
+        "y": 1540,
         "wires": [
             [
                 "1a80ba819d609353"
@@ -1708,8 +1722,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1460,
-        "y": 1200,
+        "x": 1440,
+        "y": 1540,
         "wires": [
             [
                 "eacb6c47c7152ce5"
@@ -1727,8 +1741,8 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 260,
-        "y": 1280,
+        "x": 240,
+        "y": 1620,
         "wires": [
             [
                 "0155688f05cdb5e9"
@@ -1743,8 +1757,8 @@
         "name": "responseGetDevice",
         "statusCode": "200",
         "headers": {},
-        "x": 750,
-        "y": 1280,
+        "x": 730,
+        "y": 1620,
         "wires": []
     },
     {
@@ -1756,8 +1770,8 @@
         "sqlquery": "fixed",
         "sql": "\n\nSELECT * FROM combination ORDER BY updated_at DESC",
         "name": "获取combination",
-        "x": 510,
-        "y": 1280,
+        "x": 490,
+        "y": 1620,
         "wires": [
             [
                 "ac1673d22cb4ec60"
@@ -1773,8 +1787,8 @@
         "sqlquery": "prepared",
         "sql": "INSERT OR REPLACE INTO combination (id, name,deviceType, description) VALUES ($id, $name, $deviceType,$description)",
         "name": "combinationDB",
-        "x": 1280,
-        "y": 1100,
+        "x": 1260,
+        "y": 1440,
         "wires": [
             [
                 "0df45154e0c5264d"
@@ -1791,8 +1805,8 @@
         "sqlquery": "fixed",
         "sql": "CREATE TABLE IF NOT EXISTS combination (\n    id TEXT PRIMARY KEY,\n    name TEXT,\n    deviceType TEXT,\n    description TEXT,\n    created_at  TEXT DEFAULT (datetime('now', 'localtime')),\n    updated_at  TEXT DEFAULT (datetime('now', 'localtime'))\n)",
         "name": "CreateCombinationDB",
-        "x": 1700,
-        "y": 1360,
+        "x": 1680,
+        "y": 1700,
         "wires": [
             []
         ]
@@ -1819,8 +1833,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1510,
-        "y": 1360,
+        "x": 1490,
+        "y": 1700,
         "wires": [
             [
                 "491d8f3d1b34e5f8"
@@ -1839,7 +1853,7 @@
         "skipBodyParsing": false,
         "swaggerDoc": "",
         "x": 220,
-        "y": 1580,
+        "y": 1980,
         "wires": [
             [
                 "06bcdab41d263cf3"
@@ -1860,7 +1874,7 @@
         "finalize": "",
         "libs": [],
         "x": 490,
-        "y": 1580,
+        "y": 1980,
         "wires": [
             [
                 "6c1a428b399e1e31"
@@ -1878,7 +1892,7 @@
             "content-type": "application/json"
         },
         "x": 1620,
-        "y": 1520,
+        "y": 1920,
         "wires": []
     },
     {
@@ -1894,7 +1908,7 @@
         "field": "uuid",
         "fieldType": "msg",
         "x": 890,
-        "y": 1640,
+        "y": 2040,
         "wires": [
             [
                 "3cc5dffc73567df4"
@@ -1925,7 +1939,7 @@
         "repair": false,
         "outputs": 2,
         "x": 720,
-        "y": 1580,
+        "y": 1980,
         "wires": [
             [
                 "3cc5dffc73567df4"
@@ -1949,7 +1963,7 @@
         "finalize": "",
         "libs": [],
         "x": 1060,
-        "y": 1560,
+        "y": 1960,
         "wires": [
             [
                 "ecd68c439a07e9a6"
@@ -1968,7 +1982,7 @@
         "skipBodyParsing": false,
         "swaggerDoc": "",
         "x": 220,
-        "y": 1760,
+        "y": 2160,
         "wires": [
             [
                 "d362d2a9bf18faca"
@@ -1984,7 +1998,7 @@
         "statusCode": "200",
         "headers": {},
         "x": 1160,
-        "y": 1760,
+        "y": 2160,
         "wires": []
     },
     {
@@ -1997,7 +2011,7 @@
         "sql": "\n\nSELECT * FROM config ORDER BY updated_at DESC",
         "name": "获取config",
         "x": 430,
-        "y": 1760,
+        "y": 2160,
         "wires": [
             [
                 "7a49ac2a0709ebf1"
@@ -2014,7 +2028,7 @@
         "sql": "",
         "name": "ConfigDB",
         "x": 1260,
-        "y": 1520,
+        "y": 1920,
         "wires": [
             [
                 "95f0c68d95e826d6",
@@ -2033,7 +2047,7 @@
         "sql": "CREATE TABLE IF NOT EXISTS config (\n    id TEXT PRIMARY KEY,\n    name TEXT,\n    description TEXT,\n    created_at  TEXT DEFAULT (datetime('now', 'localtime')),\n    updated_at  TEXT DEFAULT (datetime('now', 'localtime'))\n)",
         "name": "ConfigDB",
         "x": 480,
-        "y": 1900,
+        "y": 2300,
         "wires": [
             []
         ]
@@ -2061,7 +2075,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 260,
-        "y": 1920,
+        "y": 2320,
         "wires": [
             [
                 "bf699477709440cd",
@@ -2080,7 +2094,7 @@
         "sql": "  CREATE TABLE config_relays (\n    id            TEXT PRIMARY KEY,\n    config_id TEXT NOT NULL REFERENCES config(id) ON DELETE CASCADE,\n    relay_name    TEXT NOT NULL,         -- KA1, KA2, X1 ...\n    default_status INTEGER NOT NULL DEFAULT 0,  -- 1 / 0\n    sort_order    INTEGER DEFAULT 0,\n    UNIQUE(config_id, relay_name)\n  );\n",
         "name": "Config_relays",
         "x": 500,
-        "y": 1940,
+        "y": 2340,
         "wires": [
             []
         ]
@@ -2099,7 +2113,7 @@
         "finalize": "",
         "libs": [],
         "x": 1440,
-        "y": 1520,
+        "y": 1920,
         "wires": [
             [
                 "633e8979244a2edf"
@@ -2116,7 +2130,7 @@
         "sql": "",
         "name": "查询relays",
         "x": 850,
-        "y": 1760,
+        "y": 2160,
         "wires": [
             [
                 "ad20ce19291bd677"
@@ -2137,7 +2151,7 @@
         "finalize": "",
         "libs": [],
         "x": 650,
-        "y": 1760,
+        "y": 2160,
         "wires": [
             [
                 "d07f84451c9327e0"
@@ -2158,7 +2172,7 @@
         "finalize": "",
         "libs": [],
         "x": 1000,
-        "y": 1760,
+        "y": 2160,
         "wires": [
             [
                 "35884c18bdafe0f3"
@@ -2176,8 +2190,8 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 250,
-        "y": 2220,
+        "x": 230,
+        "y": 2620,
         "wires": [
             [
                 "6b9ba2a0b663ec04"
@@ -2194,8 +2208,8 @@
         "headers": {
             "content-type": "application/json"
         },
-        "x": 1120,
-        "y": 2220,
+        "x": 1100,
+        "y": 2620,
         "wires": []
     },
     {
@@ -2209,8 +2223,8 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 250,
-        "y": 2340,
+        "x": 230,
+        "y": 2720,
         "wires": [
             [
                 "ac1f666eb13f236b"
@@ -2225,8 +2239,8 @@
         "name": "response",
         "statusCode": "200",
         "headers": {},
-        "x": 1580,
-        "y": 2320,
+        "x": 1560,
+        "y": 2720,
         "wires": []
     },
     {
@@ -2238,8 +2252,8 @@
         "sqlquery": "msg.topic",
         "sql": "\n\nSELECT * FROM config ORDER BY updated_at DESC",
         "name": "获取config",
-        "x": 770,
-        "y": 2320,
+        "x": 750,
+        "y": 2720,
         "wires": [
             [
                 "612c348feedb361b"
@@ -2256,8 +2270,8 @@
         "sqlquery": "fixed",
         "sql": "  CREATE TABLE device_combination_bindings (\n    device_id      TEXT NOT NULL,\n    combination_id TEXT NOT NULL,\n    PRIMARY KEY (device_id, combination_id),\n    FOREIGN KEY (device_id)      REFERENCES device(id) ON DELETE CASCADE,\n    FOREIGN KEY (combination_id) REFERENCES combinations(id)  ON DELETE CASCADE\n  );\n",
         "name": "deviceCombinationBindings",
-        "x": 560,
-        "y": 2480,
+        "x": 540,
+        "y": 2880,
         "wires": [
             []
         ]
@@ -2284,8 +2298,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 280,
-        "y": 2500,
+        "x": 260,
+        "y": 2900,
         "wires": [
             [
                 "301539b662ced6cd",
@@ -2303,8 +2317,8 @@
         "sqlquery": "fixed",
         "sql": "  CREATE TABLE combination_config_bindings (\n    binding_id      TEXT NOT NULL,   -- device_id + combination_id 联合标识\n    config_id   TEXT NOT NULL,\n    PRIMARY KEY (binding_id, config_id),\n    FOREIGN KEY (config_id) REFERENCES config(id) ON DELETE CASCADE\n  );\n",
         "name": "combinationConfigBindings",
-        "x": 560,
-        "y": 2520,
+        "x": 540,
+        "y": 2920,
         "wires": [
             []
         ]
@@ -2322,8 +2336,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 550,
-        "y": 2220,
+        "x": 530,
+        "y": 2620,
         "wires": [
             [
                 "5209cd9f7de03baa"
@@ -2339,8 +2353,8 @@
         "sqlquery": "batch",
         "sql": "",
         "name": "Bingings",
-        "x": 760,
-        "y": 2220,
+        "x": 740,
+        "y": 2620,
         "wires": [
             [
                 "91f27410ce833066"
@@ -2360,8 +2374,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 940,
-        "y": 2220,
+        "x": 920,
+        "y": 2620,
         "wires": [
             [
                 "021e664962df98d0"
@@ -2380,7 +2394,7 @@
         "skipBodyParsing": false,
         "swaggerDoc": "",
         "x": 240,
-        "y": 2700,
+        "y": 3320,
         "wires": [
             [
                 "1babbb8260091973"
@@ -2397,7 +2411,7 @@
         "sql": "SELECT * FROM device ORDER BY created_at DESC\n\n",
         "name": "查询deviceList",
         "x": 500,
-        "y": 2700,
+        "y": 3320,
         "wires": [
             [
                 "486dc1816ebaddc7",
@@ -2417,7 +2431,7 @@
             "content-type": "application/json"
         },
         "x": 760,
-        "y": 2700,
+        "y": 3320,
         "wires": []
     },
     {
@@ -2432,7 +2446,7 @@
         "skipBodyParsing": false,
         "swaggerDoc": "",
         "x": 280,
-        "y": 2800,
+        "y": 3420,
         "wires": [
             [
                 "f1346434d3b50664"
@@ -2453,7 +2467,7 @@
         "finalize": "",
         "libs": [],
         "x": 550,
-        "y": 2880,
+        "y": 3500,
         "wires": [
             [
                 "cd4630254b36b65e"
@@ -2470,7 +2484,7 @@
         "sql": "SELECT * FROM combination",
         "name": "查询deviceList下的Combination",
         "x": 880,
-        "y": 2880,
+        "y": 3500,
         "wires": [
             [
                 "ee6733dcfc2e6bb3"
@@ -2488,7 +2502,7 @@
             "content-type": "application/json"
         },
         "x": 1160,
-        "y": 2780,
+        "y": 3400,
         "wires": []
     },
     {
@@ -2503,7 +2517,7 @@
         "skipBodyParsing": false,
         "swaggerDoc": "",
         "x": 280,
-        "y": 3180,
+        "y": 3800,
         "wires": [
             [
                 "a6b0007bc85dc551"
@@ -2542,7 +2556,7 @@
         "finalize": "",
         "libs": [],
         "x": 680,
-        "y": 3180,
+        "y": 3800,
         "wires": [
             [
                 "b3acce0fafad168d"
@@ -2559,7 +2573,7 @@
         "sql": "",
         "name": "查询devie下combination下的config",
         "x": 1040,
-        "y": 3180,
+        "y": 3800,
         "wires": [
             [
                 "6324453b6150690d"
@@ -2577,7 +2591,7 @@
             "content-type": "application/json"
         },
         "x": 1380,
-        "y": 3180,
+        "y": 3800,
         "wires": []
     },
     {
@@ -2591,8 +2605,8 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 273,
-        "y": 3631.5,
+        "x": 260,
+        "y": 4320,
         "wires": [
             [
                 "800b8a3740666e3c"
@@ -2612,8 +2626,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 580,
-        "y": 3640,
+        "x": 567,
+        "y": 4328.5,
         "wires": [
             [
                 "16191a1dbf02c2b9"
@@ -2629,8 +2643,8 @@
         "sqlquery": "msg.topic",
         "sql": "",
         "name": "根据configId获取configList",
-        "x": 920,
-        "y": 3640,
+        "x": 907,
+        "y": 4328.5,
         "wires": [
             [
                 "f5d0dae114e0f986"
@@ -2650,8 +2664,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1170,
-        "y": 3640,
+        "x": 1157,
+        "y": 4328.5,
         "wires": [
             [
                 "f030e2abf8cf18ec"
@@ -2667,8 +2681,8 @@
         "sqlquery": "msg.topic",
         "sql": "",
         "name": "根据configId获取configList",
-        "x": 1420,
-        "y": 3640,
+        "x": 1407,
+        "y": 4328.5,
         "wires": [
             [
                 "26fcf6a914564605"
@@ -2685,8 +2699,8 @@
         "headers": {
             "content-type": "application/json"
         },
-        "x": 1660,
-        "y": 3640,
+        "x": 1647,
+        "y": 4328.5,
         "wires": []
     },
     {
@@ -2696,8 +2710,8 @@
         "g": "4fe4dfbb2cfd361b",
         "name": "机型资产管理",
         "info": "",
-        "x": 230,
-        "y": 620,
+        "x": 210,
+        "y": 920,
         "wires": []
     },
     {
@@ -2707,8 +2721,8 @@
         "g": "4da623926d6c77a5",
         "name": "组合方式管理",
         "info": "",
-        "x": 230,
-        "y": 1100,
+        "x": 210,
+        "y": 1440,
         "wires": []
     },
     {
@@ -2719,7 +2733,7 @@
         "name": "测试机型管理",
         "info": "",
         "x": 230,
-        "y": 1520,
+        "y": 1920,
         "wires": []
     },
     {
@@ -2729,8 +2743,8 @@
         "g": "a42bb8bd1ff9df38",
         "name": "绑定配置",
         "info": "",
-        "x": 240,
-        "y": 2160,
+        "x": 220,
+        "y": 2560,
         "wires": []
     },
     {
@@ -2741,7 +2755,7 @@
         "name": "首页设备列表",
         "info": "",
         "x": 230,
-        "y": 2640,
+        "y": 3260,
         "wires": []
     },
     {
@@ -2752,7 +2766,7 @@
         "name": "配置项选择",
         "info": "",
         "x": 220,
-        "y": 3120,
+        "y": 3740,
         "wires": []
     },
     {
@@ -2762,8 +2776,8 @@
         "g": "8bf8286c4001ee60",
         "name": "测试机型",
         "info": "",
-        "x": 220,
-        "y": 3580,
+        "x": 207,
+        "y": 4268.5,
         "wires": []
     },
     {
@@ -2773,8 +2787,8 @@
         "g": "a78c98a47184b2fa",
         "name": "modbus读取",
         "info": "",
-        "x": 250,
-        "y": 380,
+        "x": 210,
+        "y": 520,
         "wires": []
     },
     {
@@ -2801,8 +2815,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 510,
-        "y": 2320,
+        "x": 490,
+        "y": 2720,
         "wires": [
             [
                 "1a3de2fb60e01829"
@@ -2822,8 +2836,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1030,
-        "y": 2320,
+        "x": 1010,
+        "y": 2720,
         "wires": [
             [
                 "2ffa9d691edaad3a"
@@ -2839,8 +2853,8 @@
         "sqlquery": "msg.topic",
         "sql": "\n\nSELECT * FROM config ORDER BY updated_at DESC",
         "name": "获取config",
-        "x": 1250,
-        "y": 2320,
+        "x": 1230,
+        "y": 2720,
         "wires": [
             [
                 "4c3f2dd3204c5ae9"
@@ -2860,8 +2874,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1410,
-        "y": 2320,
+        "x": 1390,
+        "y": 2720,
         "wires": [
             [
                 "44326690c377145a"
@@ -2880,7 +2894,7 @@
         "skipBodyParsing": false,
         "swaggerDoc": "",
         "x": 260,
-        "y": 2380,
+        "y": 2800,
         "wires": [
             [
                 "1bd5dbf68a7fa75a"
@@ -2900,8 +2914,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 600,
-        "y": 2400,
+        "x": 580,
+        "y": 2800,
         "wires": [
             [
                 "3427115dcda3a7c8"
@@ -2917,8 +2931,8 @@
         "sqlquery": "msg.topic",
         "sql": "",
         "name": "1",
-        "x": 810,
-        "y": 2400,
+        "x": 790,
+        "y": 2800,
         "wires": [
             [
                 "4aa1290d9f72520d"
@@ -2935,8 +2949,8 @@
         "headers": {
             "content-type": "application/json"
         },
-        "x": 1200,
-        "y": 2400,
+        "x": 1180,
+        "y": 2800,
         "wires": []
     },
     {
@@ -2951,7 +2965,7 @@
         "skipBodyParsing": false,
         "swaggerDoc": "",
         "x": 280,
-        "y": 3240,
+        "y": 3860,
         "wires": [
             [
                 "6875ec1c93a59739"
@@ -2972,7 +2986,7 @@
         "finalize": "",
         "libs": [],
         "x": 660,
-        "y": 3240,
+        "y": 3860,
         "wires": [
             [
                 "2dd14a1ca92d70b3"
@@ -2989,7 +3003,7 @@
         "sql": "",
         "name": "查询devie下combination下的config",
         "x": 1020,
-        "y": 3240,
+        "y": 3860,
         "wires": [
             [
                 "ef684b82cc5416f1"
@@ -3007,7 +3021,7 @@
             "content-type": "application/json"
         },
         "x": 1360,
-        "y": 3240,
+        "y": 3860,
         "wires": []
     },
     {
@@ -3019,8 +3033,8 @@
         "sqlquery": "msg.topic",
         "sql": "\n\n",
         "name": "获取device",
-        "x": 630,
-        "y": 900,
+        "x": 610,
+        "y": 1200,
         "wires": [
             [
                 "13bd6c3aed222bb4"
@@ -3038,8 +3052,8 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 230,
-        "y": 900,
+        "x": 210,
+        "y": 1200,
         "wires": [
             [
                 "af69ccc6c4f50f0f"
@@ -3054,8 +3068,8 @@
         "name": "responseGetDevice",
         "statusCode": "200",
         "headers": {},
-        "x": 990,
-        "y": 900,
+        "x": 970,
+        "y": 1200,
         "wires": []
     },
     {
@@ -3071,8 +3085,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 420,
-        "y": 900,
+        "x": 400,
+        "y": 1200,
         "wires": [
             [
                 "888665f10992f316"
@@ -3092,8 +3106,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 800,
-        "y": 900,
+        "x": 780,
+        "y": 1200,
         "wires": [
             [
                 "f40fdbba500c4671"
@@ -3111,8 +3125,8 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 270,
-        "y": 1340,
+        "x": 250,
+        "y": 1680,
         "wires": [
             [
                 "36279db1fb28575f"
@@ -3127,8 +3141,8 @@
         "name": "responseGetDevice",
         "statusCode": "200",
         "headers": {},
-        "x": 1150,
-        "y": 1340,
+        "x": 1130,
+        "y": 1680,
         "wires": []
     },
     {
@@ -3140,8 +3154,8 @@
         "sqlquery": "msg.topic",
         "sql": "\n\nSELECT * FROM combination ORDER BY updated_at DESC",
         "name": "获取combination",
-        "x": 750,
-        "y": 1340,
+        "x": 730,
+        "y": 1680,
         "wires": [
             [
                 "63f1d2ef59c0e768"
@@ -3161,8 +3175,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 500,
-        "y": 1340,
+        "x": 480,
+        "y": 1680,
         "wires": [
             [
                 "5e160c43aa72cdb7"
@@ -3182,8 +3196,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 960,
-        "y": 1340,
+        "x": 940,
+        "y": 1680,
         "wires": [
             [
                 "2586687dbbbce16b"
@@ -3201,8 +3215,8 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 273,
-        "y": 3731.5,
+        "x": 267,
+        "y": 4408.5,
         "wires": [
             [
                 "3b2fa1bd2beb72ff"
@@ -3222,8 +3236,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 580,
-        "y": 3740,
+        "x": 567,
+        "y": 4408.5,
         "wires": [
             [
                 "681dd78b7c7c7cf7"
@@ -3239,8 +3253,8 @@
         "sqlquery": "msg.topic",
         "sql": "",
         "name": "根据configId获取configList",
-        "x": 900,
-        "y": 3740,
+        "x": 887,
+        "y": 4408.5,
         "wires": [
             [
                 "bbda677f348284b1"
@@ -3257,8 +3271,8 @@
         "headers": {
             "content-type": "application/json"
         },
-        "x": 1280,
-        "y": 3740,
+        "x": 1267,
+        "y": 4408.5,
         "wires": []
     },
     {
@@ -3274,8 +3288,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1120,
-        "y": 3740,
+        "x": 1107,
+        "y": 4408.5,
         "wires": [
             [
                 "0405412e7ae4198d"
@@ -3289,8 +3303,8 @@
         "name": "",
         "scope": null,
         "uncaught": false,
-        "x": 260,
-        "y": 3960,
+        "x": 1500,
+        "y": 4620,
         "wires": [
             [
                 "a622718cfb27d050"
@@ -3308,8 +3322,8 @@
         "createDir": false,
         "overwriteFile": "false",
         "encoding": "utf8",
-        "x": 800,
-        "y": 3960,
+        "x": 2040,
+        "y": 4620,
         "wires": [
             []
         ]
@@ -3326,8 +3340,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 500,
-        "y": 3960,
+        "x": 1740,
+        "y": 4620,
         "wires": [
             [
                 "703262395864eb9e"
@@ -3349,38 +3363,6 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 1370,
-        "y": 1640,
-        "wires": []
-    },
-    {
-        "id": "d742a1bb3c5e35c7",
-        "type": "catch",
-        "z": "e4bbd3713100fe17",
-        "name": "",
-        "scope": null,
-        "uncaught": false,
-        "x": 760,
-        "y": 2040,
-        "wires": [
-            [
-                "afd0265cf68d91bc"
-            ]
-        ]
-    },
-    {
-        "id": "afd0265cf68d91bc",
-        "type": "debug",
-        "z": "e4bbd3713100fe17",
-        "name": "debug 2",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 930,
         "y": 2040,
         "wires": []
     },
@@ -3399,7 +3381,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 670,
-        "y": 2780,
+        "y": 3400,
         "wires": []
     },
     {
@@ -3417,7 +3399,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 650,
-        "y": 2660,
+        "y": 3280,
         "wires": []
     },
     {
@@ -3431,8 +3413,8 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 290,
-        "y": 4180,
+        "x": 230,
+        "y": 4740,
         "wires": [
             [
                 "4ef7dc1649620198",
@@ -3454,8 +3436,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 530,
-        "y": 4180,
+        "x": 470,
+        "y": 4740,
         "wires": []
     },
     {
@@ -3471,46 +3453,13 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 480,
-        "y": 4140,
+        "x": 420,
+        "y": 4700,
         "wires": [
             [
                 "f0e807248014ea5d"
             ]
         ]
-    },
-    {
-        "id": "f44c6125ad32c744",
-        "type": "catch",
-        "z": "e4bbd3713100fe17",
-        "g": "8f47e2e3400d33b2",
-        "name": "",
-        "scope": null,
-        "uncaught": false,
-        "x": 1070,
-        "y": 4460,
-        "wires": [
-            [
-                "e963dc1339a0a52f"
-            ]
-        ]
-    },
-    {
-        "id": "e963dc1339a0a52f",
-        "type": "debug",
-        "z": "e4bbd3713100fe17",
-        "name": "debug 9",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1260,
-        "y": 4460,
-        "wires": []
     },
     {
         "id": "f0e807248014ea5d",
@@ -3521,8 +3470,8 @@
         "sqlquery": "prepared",
         "sql": "  INSERT INTO operation_records\n    (device_name, combination_name, config_name, op_type, status, peak_current, valley_current, curve_file)\n  VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         "name": "",
-        "x": 800,
-        "y": 4140,
+        "x": 740,
+        "y": 4700,
         "wires": [
             [
                 "1c125f2e5bf7d17f",
@@ -3543,8 +3492,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1080,
-        "y": 4140,
+        "x": 1020,
+        "y": 4700,
         "wires": [
             [
                 "7616693109f924fc"
@@ -3561,8 +3510,8 @@
         "headers": {
             "content-type": "application/json"
         },
-        "x": 1260,
-        "y": 4180,
+        "x": 1200,
+        "y": 4740,
         "wires": []
     },
     {
@@ -3579,8 +3528,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 980,
-        "y": 4540,
+        "x": 920,
+        "y": 5100,
         "wires": []
     },
     {
@@ -3590,8 +3539,8 @@
         "g": "8f47e2e3400d33b2",
         "name": "历史记录",
         "info": "",
-        "x": 280,
-        "y": 4120,
+        "x": 220,
+        "y": 4680,
         "wires": []
     },
     {
@@ -3605,8 +3554,8 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 330,
-        "y": 4360,
+        "x": 270,
+        "y": 4920,
         "wires": [
             [
                 "a246ecd9553dfb91"
@@ -3622,8 +3571,8 @@
         "sqlquery": "fixed",
         "sql": "SELECT * FROM operation_records ORDER BY created_at DESC",
         "name": "",
-        "x": 540,
-        "y": 4360,
+        "x": 480,
+        "y": 4920,
         "wires": [
             [
                 "708e32731ad70d8d"
@@ -3640,8 +3589,8 @@
         "headers": {
             "content-type": "application/json"
         },
-        "x": 740,
-        "y": 4360,
+        "x": 680,
+        "y": 4920,
         "wires": []
     },
     {
@@ -3655,8 +3604,8 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 300,
-        "y": 4480,
+        "x": 240,
+        "y": 5040,
         "wires": [
             [
                 "efb9644129d40d17",
@@ -3678,8 +3627,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 580,
-        "y": 4460,
+        "x": 520,
+        "y": 5020,
         "wires": []
     },
     {
@@ -3688,15 +3637,15 @@
         "z": "e4bbd3713100fe17",
         "g": "8f47e2e3400d33b2",
         "name": "function 13",
-        "func": "const fs = global.get('fs');\n  const path = global.get('path');\n  const rootPath = global.get('rootPath');\n\n  const rawPath = decodeURIComponent(msg.req.path);\n  const filePath = path.join(rootPath, 'data', rawPath);\nconsole.log(filePath)\n  if (fs.existsSync(filePath)) {\n      const raw = fs.readFileSync(filePath, 'utf8');\n      msg.payload = JSON.parse(raw);\n  } else {\n      msg.statusCode = 404;\n      msg.payload = {};\n  }\n  return msg;",
+        "func": "const fs = global.get('fs');\n  const path = global.get('path');\n  const rootPath = global.get('rootPath');\n\n  const rawPath = decodeURIComponent(msg.req.path);\n  const filePath = path.join(rootPath, 'data', rawPath);\n  if (fs.existsSync(filePath)) {\n      const raw = fs.readFileSync(filePath, 'utf8');\n      msg.payload = JSON.parse(raw);\n  } else {\n      msg.statusCode = 404;\n      msg.payload = {};\n  }\n  return msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 480,
-        "y": 4520,
+        "x": 420,
+        "y": 5080,
         "wires": [
             [
                 "dbe61619444831dc",
@@ -3714,8 +3663,8 @@
         "headers": {
             "content-type": "application/json"
         },
-        "x": 720,
-        "y": 4520,
+        "x": 660,
+        "y": 5080,
         "wires": []
     },
     {
@@ -3732,8 +3681,529 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 610,
-        "y": 4560,
+        "x": 550,
+        "y": 5120,
+        "wires": []
+    },
+    {
+        "id": "e6291d3e2a42a9c5",
+        "type": "catch",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "",
+        "scope": "group",
+        "uncaught": false,
+        "x": 1230,
+        "y": 700,
+        "wires": [
+            [
+                "cd2082966920c8aa"
+            ]
+        ]
+    },
+    {
+        "id": "cd2082966920c8aa",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "debug 18",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1440,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "f2ca15d02ba90fa1",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "name": "debug 20",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 640,
+        "y": 1440,
+        "wires": []
+    },
+    {
+        "id": "8a0180eacd5e090f",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "name": "deleteCombinationById",
+        "url": "/deleteCombination/:combinationId",
+        "method": "delete",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 260,
+        "y": 1720,
+        "wires": [
+            [
+                "d534274548d1f2d3"
+            ]
+        ]
+    },
+    {
+        "id": "d9abc241b1255248",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "name": "responseGetDevice",
+        "statusCode": "200",
+        "headers": {},
+        "x": 1130,
+        "y": 1720,
+        "wires": []
+    },
+    {
+        "id": "f641d22c61a26ba2",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "\n\nSELECT * FROM combination ORDER BY updated_at DESC",
+        "name": "获取combination",
+        "x": 730,
+        "y": 1720,
+        "wires": [
+            [
+                "8a1b5602bae74db5"
+            ]
+        ]
+    },
+    {
+        "id": "d534274548d1f2d3",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "name": "deleteCombinationById",
+        "func": "\nconst combinationId = msg.req.params.combinationId\nmsg.topic = `\nDELETE FROM combination WHERE id = \"${combinationId}\"\n`\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 490,
+        "y": 1720,
+        "wires": [
+            [
+                "f641d22c61a26ba2"
+            ]
+        ]
+    },
+    {
+        "id": "8a1b5602bae74db5",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "4da623926d6c77a5",
+        "name": "处理数据",
+        "func": "  msg.payload = {\n    code:200,\n    message: \"删除成功\"\n  }\n  return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 940,
+        "y": 1720,
+        "wires": [
+            [
+                "d9abc241b1255248"
+            ]
+        ]
+    },
+    {
+        "id": "818aacc27e5b81ef",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "deleteConfigById",
+        "url": "/deleteConfig/:configId",
+        "method": "delete",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 250,
+        "y": 2240,
+        "wires": [
+            [
+                "d23078b7ff3639a1"
+            ]
+        ]
+    },
+    {
+        "id": "da74eea6dfacf5dc",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {},
+        "x": 1100,
+        "y": 2240,
+        "wires": []
+    },
+    {
+        "id": "29b11a13b9d1df26",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "\n\nSELECT * FROM combination ORDER BY updated_at DESC",
+        "name": "删除combination",
+        "x": 730,
+        "y": 2240,
+        "wires": [
+            [
+                "e49fe0cf135dc9f1"
+            ]
+        ]
+    },
+    {
+        "id": "d23078b7ff3639a1",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "deleteCombinationById",
+        "func": "\nconst configId = msg.req.params.configId\nmsg.topic = `\nDELETE FROM config WHERE id = \"${configId}\"\n`\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 510,
+        "y": 2240,
+        "wires": [
+            [
+                "29b11a13b9d1df26"
+            ]
+        ]
+    },
+    {
+        "id": "e49fe0cf135dc9f1",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "处理数据",
+        "func": "  msg.payload = {\n    code:200,\n    message: \"删除成功\"\n  }\n  return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 910,
+        "y": 2240,
+        "wires": [
+            [
+                "da74eea6dfacf5dc"
+            ]
+        ]
+    },
+    {
+        "id": "b9e9e730fd72a501",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "name": "查询被绑定的config",
+        "url": "/getBoundConfigsIds",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 230,
+        "y": 4480,
+        "wires": [
+            [
+                "1db4db4994250a9c"
+            ]
+        ]
+    },
+    {
+        "id": "1db4db4994250a9c",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "name": "查询被绑定的configId",
+        "func": "// 查询所有被绑定的配置ID列表\nmsg.topic = `SELECT DISTINCT config_id FROM combination_config_bindings;`\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 547,
+        "y": 4488.5,
+        "wires": [
+            [
+                "97ed6a75d77b5ef1"
+            ]
+        ]
+    },
+    {
+        "id": "97ed6a75d77b5ef1",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "根据configId获取configList",
+        "x": 887,
+        "y": 4488.5,
+        "wires": [
+            [
+                "10f94d18ee7e2792"
+            ]
+        ]
+    },
+    {
+        "id": "b3e064fe5e839749",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 1267,
+        "y": 4488.5,
+        "wires": []
+    },
+    {
+        "id": "10f94d18ee7e2792",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "name": "function 15",
+        "func": "const idArr = msg.payload.map(item => item.config_id)\nmsg.payload = {\n    code: 200,\n    data: idArr\n}\nreturn msg",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1097,
+        "y": 4488.5,
+        "wires": [
+            [
+                "b3e064fe5e839749"
+            ]
+        ]
+    },
+    {
+        "id": "c194d4594844291b",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "\n\nSELECT * FROM device ORDER BY updated_at DESC",
+        "name": "获取device",
+        "x": 650,
+        "y": 1240,
+        "wires": [
+            [
+                "738abefbb2957d43"
+            ]
+        ]
+    },
+    {
+        "id": "62fc6c706b4a34a3",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "name": "deleteDevice",
+        "url": "/deleteDevice/:id",
+        "method": "delete",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 210,
+        "y": 1240,
+        "wires": [
+            [
+                "caea35e23c8b331a"
+            ]
+        ]
+    },
+    {
+        "id": "8a559de294823de1",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "name": "responseGetDevice",
+        "statusCode": "200",
+        "headers": {},
+        "x": 1210,
+        "y": 1240,
+        "wires": []
+    },
+    {
+        "id": "caea35e23c8b331a",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "name": "function 16",
+        "func": "const id = msg.req.params.id\nmsg.topic =`\nDELETE FROM device WHERE id = '${id}'\n`\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 430,
+        "y": 1240,
+        "wires": [
+            [
+                "c194d4594844291b"
+            ]
+        ]
+    },
+    {
+        "id": "738abefbb2957d43",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "4fe4dfbb2cfd361b",
+        "name": "function 17",
+        "func": "\n\nmsg.payload = { \n    code: 200,\n    message: '操作成功'\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 890,
+        "y": 1240,
+        "wires": [
+            [
+                "8a559de294823de1"
+            ]
+        ]
+    },
+    {
+        "id": "8ce3da23a457bf4e",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "error",
+        "func": "\nmsg.sendData = {\n    type: \"modbusStatus\",\n    connected: false,\n    msg: \"通讯异常：\" + msg.error.message,\n    color: \"red\",\n    lastTime: new Date().toLocaleString()\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 850,
+        "y": 640,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "8e1b1384a53df828",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "heartbeat",
+        "func": "\nglobal.set(\"modbus_last_tick\", Date.now());\nmsg.sendData = {\n    type: \"modbusStatus\",\n    connected: true,\n    msg: \"Modbus设备通讯正常，正在收发数据\",\n    color: \"green\",\n    lastTime: new Date().toLocaleString()\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 860,
+        "y": 460,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "7f34b1f515817ece",
+        "type": "inject",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "2",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 240,
+        "y": 720,
+        "wires": [
+            [
+                "15c676bbf274830b"
+            ]
+        ]
+    },
+    {
+        "id": "15c676bbf274830b",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "func_check_timeout",
+        "func": "\nconst lastTick = global.get(\"modbus_last_tick\") || 0;\nconst now = Date.now();\nconst timeout = 1000;\n\nlet sendData = {};\n\n// 情况1：从未收到过任何数据（完全没连上）\nif (lastTick === 0) {\n    sendData = {\n        type: \"modbusStatus\",\n        connected: false,\n        msg: \"未建立Modbus连接，无任何数据返回\",\n        color: \"orange\",\n        lastTime: \"--\"\n    };\n}\n// 情况2：3秒内有数据，在线\nelse if (now - lastTick < timeout) {\n    sendData = {\n        type: \"modbusStatus\",\n        connected: true,\n        msg: \"通讯正常\",\n        color: \"green\",\n        lastTime: new Date(lastTick).toLocaleString()\n    };\n}\n// 情况3：超过3秒无新数据，设备断开（flex-getter无输出）\nelse {\n    sendData = {\n        type: \"modbusStatus\",\n        connected: false,\n        msg: \"Modbus通讯中断，设备无应答\",\n        color: \"red\",\n        lastTime: new Date(lastTick).toLocaleString()\n    };\n}\n\nmsg.sendData = sendData;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 800,
+        "y": 720,
+        "wires": [
+            [
+                "d50b53f9cf0907c2"
+            ]
+        ]
+    },
+    {
+        "id": "cf9d948032b912ce",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "debug 2",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1080,
+        "y": 480,
         "wires": []
     }
 ]

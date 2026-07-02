@@ -263,20 +263,22 @@ watch(selectedDeviceId, (newVal) => {
 });
 
 onMounted(async () => {
-  await Promise.all([
-    fetchDevices(),
-    fetchCombinations(),
-    fetchConfigs(),
-    fetchBindings(),
-  ]);
-  if (devices.value.length > 0 && !selectedDeviceId.value) {
-    const preferId = route.query.deviceId as string;
-    if (preferId && devices.value.some((d) => d.id === preferId)) {
-      selectedDeviceId.value = preferId;
-    } else {
-      selectedDeviceId.value = devices.value[0].id;
+  await withLoading(async () => {
+    await Promise.all([
+      fetchDevices(),
+      fetchCombinations(),
+      fetchConfigs(),
+      fetchBindings(),
+    ]);
+    if (devices.value.length > 0 && !selectedDeviceId.value) {
+      const preferId = route.query.deviceId as string;
+      if (preferId && devices.value.some((d) => d.id === preferId)) {
+        selectedDeviceId.value = preferId;
+      } else {
+        selectedDeviceId.value = devices.value[0].id;
+      }
     }
-  }
+  }, "数据加载成功");
 });
 </script>
 
