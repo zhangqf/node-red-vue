@@ -12,7 +12,7 @@ import { useToast } from "@/composables/useToast";
 
 const route = useRoute();
 const router = useRouter();
-const { withLoading } = useToast();
+const { withLoading, showToast } = useToast();
 
 const ws = useSocket(WEBSOCKET_URL);
 ws.connect();
@@ -22,6 +22,20 @@ const rawWsMsg = ref<string | null>(null);
 // 分别缓存线圈、寄存器最新有效值
 const lastCoilArr = ref<number[]>([]);
 const lastRegisterArr = ref<number[]>([]);
+
+interface ActionRelays {
+  DC: string[];
+  FC: string[];
+  DWBS: string[];
+  EJCDDWBS: string[];
+  EJCDFWBS: string[];
+  FWBS: string[];
+  YJCDDWBS: string[];
+  YJCDFWBS: string[];
+}
+
+const configActionRelays = ref<ActionRelays | null>(null);
+
 interface WSSTATUS {
   color: string;
   connected: boolean;
@@ -43,11 +57,10 @@ function parseWsData(raw: string | null) {
   }
 }
 
-// 单独定义类型接口
 export interface TestItem {
   name: string;
   type: string;
-  status: boolean | number;
+  status: boolean | number | string;
 }
 
 const testResults = ref<TestItem[]>([]);
@@ -68,36 +81,42 @@ const funWsRealData = (data) => {
     }
   }
   if (data.unitId === 3) {
+    const relayData = configActionRelays.value;
+    if (!relayData) {
+      testResults.value = [];
+      return;
+    }
+    const { DWBS, FWBS, EJCDFWBS, EJCDDWBS, YJCDFWBS, YJCDDWBS } = relayData;
     const tempList = [
       {
         name: "定位表示",
         type: "GreenLight",
-        status: data.data[6],
+        status: DWBS[0],
       },
       {
         name: "反位表示",
         type: "YellowLight",
-        status: data.data[7],
+        status: FWBS[0],
       },
       {
         name: "二级传动反位",
         type: "SecondaryTransmissionInReversePosition",
-        status: data.data[3],
+        status: EJCDFWBS[0],
       },
       {
         name: "二级传动定位",
         type: "SecondaryTransmissionPositioning",
-        status: data.data[2],
+        status: EJCDDWBS[0],
       },
       {
         name: "一级传动反位",
         type: "PrimaryTransmissionInReversePosition",
-        status: data.data[1],
+        status: YJCDFWBS[0],
       },
       {
         name: "一级传动定位",
         type: "PrimaryTransmissionPositioning",
-        status: data.data[0],
+        status: YJCDDWBS[0],
       },
     ];
 
@@ -161,6 +180,26 @@ const powerData = ref({
   lockPower: "0",
 });
 const butItemStatus = ref("");
+const contact13Closed = ref<ActionRelays>({
+  DC: [],
+  FC: [],
+  DWBS: [],
+  EJCDDWBS: [],
+  EJCDFWBS: [],
+  FWBS: [],
+  YJCDDWBS: [],
+  YJCDFWBS: [],
+});
+const contact24Closed = ref<ActionRelays>({
+  DC: [],
+  FC: [],
+  DWBS: [],
+  EJCDDWBS: [],
+  EJCDFWBS: [],
+  FWBS: [],
+  YJCDDWBS: [],
+  YJCDFWBS: [],
+});
 const itemConfig = ref<any[]>([]);
 
 export type RelayKey = string;
@@ -208,6 +247,7 @@ const findNode = (relay_name: string, default_status: number) => {
 };
 
 const batchUpdateTerminal = (nameList: string[], status: number) => {
+  console.log(nameList);
   terminals.value
     .filter((item) => nameList.includes(item.relay_name))
     .forEach((item) => {
@@ -215,21 +255,23 @@ const batchUpdateTerminal = (nameList: string[], status: number) => {
     });
 };
 
-interface ActionRelays {
-  DC: string[];
-  FC: string[];
-  CD: string[];
-  HX: string[];
-  JD: string[];
-}
+const handleContact13Closed = () => {
+  configActionRelays.value = contact13Closed.value;
+};
 
-const configActionRelays = ref<ActionRelays>({
-  DC: [],
-  FC: [],
-  CD: [],
-  HX: [],
-  JD: [],
-});
+const handleContact24Closed = () => {
+  configActionRelays.value = contact24Closed.value;
+};
+const handleContactConfigClick = (type: string) => {
+  switch (type) {
+    case "contact13Closed":
+      handleContact13Closed();
+      break;
+    case "contact24Closed":
+      handleContact24Closed();
+      break;
+  }
+};
 
 const isAction = ref(false);
 
@@ -274,7 +316,9 @@ const saveRecord = async (relay: keyof ActionRelays) => {
 };
 
 const handleRelayAction = (key: keyof ActionRelays) => {
-  const relay = configActionRelays.value[key];
+  console.log(configActionRelays);
+  const relay = configActionRelays.value![key];
+  console.log(key);
   batchUpdateTerminal(relay, 1);
   handleDo();
   startRecord();
@@ -298,6 +342,7 @@ const handleFC = () => {
 
 const handleDo = () => {
   updateConfigData();
+  console.log(wsSendData.value);
   sendCmd(wsSendData.value);
 };
 
@@ -308,9 +353,9 @@ function sendCmd(data: number[] | null) {
 const buttonItemConfig = [
   { name: "定操", type: "DC" },
   { name: "反操", type: "FC" },
-  { name: "传动", type: "CD" },
-  { name: "混线", type: "HX" },
-  { name: "接地", type: "JD" },
+  // { name: "传动", type: "CD" },
+  // { name: "混线", type: "HX" },
+  // { name: "接地", type: "JD" },
 ];
 
 const updateConfigData = () => {
@@ -325,7 +370,12 @@ const butItemIsDisable = ref(false);
 const nextDoTime = ref(10);
 let timerId: number | null = null;
 const handleOpe = (type: string) => {
+  console.log(configActionRelays.value);
+  if (!configActionRelays.value) {
+    return showToast("请先选择闭合方式", "error");
+  }
   if (butItemIsDisable.value) return;
+
   const exposed = currentCurveRef.value;
   exposed?.resetData();
   butItemStatus.value = type;
@@ -376,7 +426,9 @@ async function getList() {
     combinationName.value = comboData.name || "";
 
     const configData = await configRes.json();
-    configActionRelays.value = configData.actionRelays || {};
+    // configActionRelays.value = configData.actionRelays || {};
+    contact13Closed.value = configData.contact13Closed || {};
+    contact24Closed.value = configData.contact24Closed || {};
     configName.value = configData.name || "";
   } catch {}
 }
@@ -396,6 +448,7 @@ onMounted(async () => {
       :config-name="configName"
       :item-config="itemConfig"
       v-model:active="active"
+      @contactConfigClick="handleContactConfigClick"
       @back="router.back()" />
 
     <div class="main-content">
@@ -414,71 +467,69 @@ onMounted(async () => {
         :convert-power="powerData.convertPower"
         :lock-power="powerData.lockPower" /> -->
 
-      <TestResults :tests="testResults" />
-    </div>
-    <div class="terminal-button">
-      <!-- <div class="terminal-bar-header">
-        <span class="terminal-bar-title">期望端子</span>
-        <span class="terminal-bar-title">状态</span>
-      </div> -->
-      <div class="action-buttons">
-        <!-- {{ butItemIsDisable }} -->
-        <span class="action-light">
-          <span v-if="butItemStatus === 'DC'" class="light light-green"></span>
-          <span v-if="butItemStatus === 'FC'" class="light light-yellow"></span>
-        </span>
-        <button
-          v-for="item in buttonItemConfig"
-          class="action-btn"
-          :disabled="butItemIsDisable"
-          :class="butItemStatus === item.type ? 'active' : ''"
-          @click="handleOpe(item.type)">
-          {{ item.name }}
-        </button>
-        <span class="action-tips" v-if="butItemIsDisable">
-          {{ nextDoTime }}s后可以再次操作</span
-        >
-      </div>
-    </div>
-    <div class="terminal-bar">
-      <div class="terminal-bar-header">
-        <span class="terminal-bar-title">期望端子</span>
-        <span class="terminal-bar-title">状态</span>
-      </div>
-      <div class="terminal-bar-grid">
-        <div
-          v-for="t in terminals"
-          :key="t.id"
-          class="terminal-bar-item"
-          :class="[t.default_status ? 'ok' : 'ng']">
-          <span
-            class="terminal-bar-dot"
-            :class="[t.default_status ? 'ok' : 'ng']"></span>
-          <span class="terminal-bar-name">{{ t.relay_name }}</span>
+      <div class="right-panel">
+        <TestResults :tests="testResults" />
+        <div class="action-buttons">
+          <span class="action-light">
+            <span
+              v-if="butItemStatus === 'DC'"
+              class="light light-green"></span>
+            <span
+              v-if="butItemStatus === 'FC'"
+              class="light light-yellow"></span>
+          </span>
+          <button
+            v-for="item in buttonItemConfig"
+            class="action-btn"
+            :disabled="butItemIsDisable"
+            :class="butItemStatus === item.type ? 'active' : ''"
+            @click="handleOpe(item.type)">
+            {{ item.name }}
+          </button>
+          <span class="action-tips" v-if="butItemIsDisable">
+            {{ nextDoTime }}s后可以再次操作</span
+          >
         </div>
       </div>
     </div>
     <div class="terminal-bar">
-      <div class="terminal-bar-header">
-        <span class="terminal-bar-title">端子实时</span>
-        <span class="terminal-bar-title">状态</span>
+      <span class="terminal-bar-title">期望端子状态</span>
+      <!-- <div class="terminal-bar-grid"> -->
+      <div
+        v-for="t in terminals"
+        :key="t.id"
+        class="terminal-bar-item"
+        :class="[t.default_status ? 'ok' : 'ng']">
+        <span class="terminal-bar-name">{{ t.relay_name }}</span>
+        <span
+          class="terminal-bar-dot"
+          :class="[t.default_status ? 'ok' : 'ng']"></span>
+        <!-- </div> -->
       </div>
+    </div>
+    <div class="terminal-bar">
+      <span class="terminal-bar-title">端子实时状态</span>
+      <!-- <div class="terminal-bar-grid"> -->
       <div
         v-for="(t, index) in coilArr"
         :key="index"
         class="terminal-bar-item"
         :class="{ ok: t, ng: !t }">
-        <span class="terminal-bar-dot" :class="{ ok: t, ng: !t }"></span>
         <span class="terminal-bar-name">{{
           terminals[index]?.relay_name
         }}</span>
+        <span class="terminal-bar-dot" :class="{ ok: t, ng: !t }"></span>
+        <!-- </div> -->
       </div>
     </div>
     <div class="status-bar">
       <span class="status-text">{{ ws.status }}</span>
-      <span class="status-message" :class="modbusStatus.color">{{
-        modbusStatus.msg
-      }}</span>
+      <span
+        v-if="modbusStatus"
+        class="status-message"
+        :class="modbusStatus.color"
+        >{{ modbusStatus.msg }}</span
+      >
     </div>
   </div>
 </template>
@@ -489,6 +540,7 @@ onMounted(async () => {
   flex-direction: column;
   height: 100vh;
   background: #051424;
+  overflow: hidden;
 }
 
 .main-content {
@@ -506,42 +558,56 @@ onMounted(async () => {
   overflow: hidden;
 }
 
-.terminal-button {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 100px;
-  background: #0b1d33;
-  border-top: 1px solid #1a2d44;
-  border-bottom: 1px solid #1a2d44;
-  margin: 0 10px;
-  padding: 0 20px;
-  flex-shrink: 0;
-}
-
 .terminal-bar {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 48px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  height: 50px;
+  overflow-y: auto;
   background: #0b1d33;
   border-top: 1px solid #1a2d44;
   border-bottom: 1px solid #1a2d44;
-  padding: 0 20px;
+  padding: 4px 20px;
   flex-shrink: 0;
+  scrollbar-width: thin;
+  scrollbar-color: #1a3350 transparent;
+}
+
+.terminal-bar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.terminal-bar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.terminal-bar::-webkit-scrollbar-thumb {
+  background: #1a3350;
+  border-radius: 2px;
 }
 
 .action-buttons {
   display: flex;
+  align-items: center;
   gap: 20px;
-  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.right-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .action-btn {
   background: rgba(90, 146, 208, 0.1);
   border: 1px solid #2a4a68;
   color: #7a8fa0;
-  font-size: 40px;
+  font-size: 26px;
   padding: 4px 16px;
   border-radius: 3px;
   cursor: pointer;
@@ -566,52 +632,45 @@ onMounted(async () => {
   opacity: 0.4;
   cursor: not-allowed;
 }
-.terminal-bar-header {
-  display: flex;
-  gap: 16px;
-  margin-right: 8px;
-}
 
 .terminal-bar-title {
   font-size: 11px;
-  color: #5a7288;
-}
-
-.terminal-bar-title:first-child {
   color: #8fb4d8;
+  flex-shrink: 0;
+  margin-right: 8px;
 }
 
 .terminal-bar-grid {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   align-items: center;
 }
 
 .terminal-bar-item {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .terminal-bar-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: #5a7288;
 }
 
 .terminal-bar-dot.ok {
   background: #34d399;
-  box-shadow: 0 0 6px rgba(52, 211, 153, 0.6);
+  box-shadow: 0 0 4px rgba(52, 211, 153, 0.6);
 }
 
 .terminal-bar-dot.ng {
   background: #f87171;
-  box-shadow: 0 0 6px rgba(248, 113, 113, 0.6);
+  box-shadow: 0 0 4px rgba(248, 113, 113, 0.6);
 }
 
 .terminal-bar-name {
-  font-size: 12px;
+  font-size: 11px;
   color: #8a9fb0;
 }
 

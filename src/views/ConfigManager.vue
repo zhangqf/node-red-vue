@@ -17,16 +17,30 @@ interface Config {
   description: string;
   relaysNum?: number;
   relays: Relay[];
-  actionRelays?: Record<string, string[]>;
+  indicationRelays: Relay[];
+  contact_13_closed?: Record<string, string[]>;
+  contact_24_closed?: Record<string, string[]>;
 }
 
-const operationGroups = ["DC", "FC", "CD", "HX", "JD"];
-const groupLabels: Record<string, string> = {
+const actionGroups = ["DC", "FC"];
+const indicationGroups = [
+  "DWBS",
+  "FWBS",
+  "YJCDDWBS",
+  "YJCDFWBS",
+  "EJCDDWBS",
+  "EJCDFWBS",
+];
+const contactGroups = [...actionGroups, ...indicationGroups];
+const contactGroupLabels: Record<string, string> = {
   DC: "定操",
   FC: "反操",
-  CD: "传动",
-  HX: "混线",
-  JD: "接地",
+  DWBS: "定位表示",
+  FWBS: "反位表示",
+  YJCDDWBS: "一级传动定位表示",
+  YJCDFWBS: "一级传动反位表示",
+  EJCDDWBS: "二级传动定位表示",
+  EJCDFWBS: "二级传动反位表示",
 };
 
 /* ---- 折叠 ---- */
@@ -51,49 +65,7 @@ function cloneRelays(list: Relay[] | undefined | null): Relay[] {
   return list.map((r) => ({ ...r }));
 }
 
-const configs = ref<Config[]>([
-  // {
-  //   id: "1",
-  //   name: "定位→反位 拉力曲线",
-  //   description: "标准拉力曲线检测参数",
-  //   relaysNum: 12,
-  //   relays: [
-  //     { relay_name: "KA1", default_status: 0, sort_order: 1 },
-  //     { relay_name: "KA2", default_status: 0, sort_order: 2 },
-  //     { relay_name: "KA3", default_status: 0, sort_order: 3 },
-  //     { relay_name: "KA4", default_status: 1, sort_order: 4 },
-  //     { relay_name: "KA5", default_status: 0, sort_order: 5 },
-  //     { relay_name: "KA6", default_status: 0, sort_order: 6 },
-  //     { relay_name: "KA7", default_status: 0, sort_order: 7 },
-  //     { relay_name: "KA8", default_status: 0, sort_order: 8 },
-  //     { relay_name: "KA9", default_status: 0, sort_order: 9 },
-  //     { relay_name: "KA10", default_status: 0, sort_order: 10 },
-  //     { relay_name: "KA11", default_status: 0, sort_order: 11 },
-  //     { relay_name: "KA12", default_status: 0, sort_order: 12 },
-  //   ],
-  // },
-  // {
-  //   id: "2",
-  //   name: "驱动回路 导通检测",
-  //   description: "X1-C1, X2-C10 回路导通参数",
-  //   relaysNum: 12,
-  //   relays: [
-  //     { relay_name: "X1", default_status: 1, sort_order: 1 },
-  //     { relay_name: "X2", default_status: 1, sort_order: 2 },
-  //     { relay_name: "X3", default_status: 0, sort_order: 3 },
-  //   ],
-  // },
-  // {
-  //   id: "3",
-  //   name: "表示回路 导通检测",
-  //   description: "X1, X2 回路导通参数",
-  //   relaysNum: ,
-  //   relays: [
-  //     { relay_name: "X1", default_status: 1, sort_order: 1 },
-  //     { relay_name: "X2", default_status: 1, sort_order: 2 },
-  //   ],
-  // },
-]);
+const configs = ref<Config[]>([]);
 
 const showModal = ref(false);
 const isEdit = ref(false);
@@ -102,7 +74,9 @@ const form = ref({
   name: "",
   description: "",
   relays: [] as Relay[],
-  actionRelays: {} as Record<string, string[]>,
+  indicationRelays: [] as Relay[],
+  contact_13_closed: {} as Record<string, string[]>,
+  contact_24_closed: {} as Record<string, string[]>,
 });
 
 /* ---- 绑定状态 ---- */
@@ -144,14 +118,59 @@ function toggleRelayStatus(index: number) {
   r.default_status = r.default_status === 1 ? 0 : 1;
 }
 
+/* ---- 表示继电器编辑 ---- */
+const indicationTableRef = ref<HTMLElement | null>(null);
+
+function addIndicationRelay() {
+  const nextOrder = form.value.indicationRelays.length + 1;
+  form.value.indicationRelays.push({
+    relay_name: "",
+    default_status: 0,
+    sort_order: nextOrder,
+  });
+  nextTick(() => {
+    if (indicationTableRef.value) {
+      indicationTableRef.value.scrollTop =
+        indicationTableRef.value.scrollHeight;
+    }
+  });
+}
+
+function removeIndicationRelay(index: number) {
+  form.value.indicationRelays.splice(index, 1);
+  form.value.indicationRelays.forEach((r, i) => (r.sort_order = i + 1));
+}
+
+function toggleIndicationRelayStatus(index: number) {
+  const r = form.value.indicationRelays[index];
+  r.default_status = r.default_status === 1 ? 0 : 1;
+}
+
 function relayNames(): string[] {
   return form.value.relays.filter((r) => r.relay_name).map((r) => r.relay_name);
 }
 
-function toggleActionRelay(group: string, name: string) {
-  const arr = form.value.actionRelays[group];
+function indicationNames(): string[] {
+  return form.value.indicationRelays
+    .filter((r) => r.relay_name)
+    .map((r) => r.relay_name);
+}
+
+function isIndicationGroup(g: string): boolean {
+  return indicationGroups.includes(g);
+}
+
+function getContactData(target: "13" | "24"): Record<string, string[]> {
+  return target === "13"
+    ? form.value.contact_13_closed
+    : form.value.contact_24_closed;
+}
+
+function toggleActionRelay(target: "13" | "24", group: string, name: string) {
+  const data = getContactData(target);
+  const arr = data[group];
   if (!arr) {
-    form.value.actionRelays[group] = [name];
+    data[group] = [name];
     return;
   }
   const idx = arr.indexOf(name);
@@ -162,14 +181,18 @@ function toggleActionRelay(group: string, name: string) {
   }
 }
 
-function isActionRelaySelected(group: string, name: string): boolean {
-  return form.value.actionRelays[group]?.includes(name) ?? false;
+function isActionRelaySelected(
+  target: "13" | "24",
+  group: string,
+  name: string,
+): boolean {
+  return getContactData(target)[group]?.includes(name) ?? false;
 }
 
 /* ---- 增/改/查 ---- */
-function emptyActionRelays(): Record<string, string[]> {
+function emptyContactData(): Record<string, string[]> {
   const map: Record<string, string[]> = {};
-  operationGroups.forEach((g) => (map[g] = []));
+  contactGroups.forEach((g) => (map[g] = []));
   return map;
 }
 
@@ -180,18 +203,28 @@ function openAdd() {
     name: "",
     description: "",
     relays: [],
-    actionRelays: emptyActionRelays(),
+    indicationRelays: [],
+    contact_13_closed: emptyContactData(),
+    contact_24_closed: emptyContactData(),
   };
   showModal.value = true;
 }
 
-function normalizeActionRelays(
-  raw: Record<string, string | string[]> | undefined,
+function normalizeContactData(
+  raw: string | Record<string, string | string[]> | undefined,
 ): Record<string, string[]> {
-  const base = emptyActionRelays();
+  const base = emptyContactData();
   if (!raw) return base;
-  for (const g of operationGroups) {
-    const val = raw[g];
+  let data = raw;
+  if (typeof raw === "string") {
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      return base;
+    }
+  }
+  for (const g of contactGroups) {
+    const val = (data as Record<string, any>)[g];
     if (Array.isArray(val)) {
       base[g] = val;
     } else if (typeof val === "string" && val) {
@@ -208,7 +241,9 @@ function openEdit(cfg: Config) {
     name: cfg.name,
     description: cfg.description,
     relays: cloneRelays(cfg.relays),
-    actionRelays: normalizeActionRelays(cfg.actionRelays),
+    indicationRelays: cloneRelays(cfg.indicationRelays),
+    contact_13_closed: normalizeContactData(cfg.contact_13_closed),
+    contact_24_closed: normalizeContactData(cfg.contact_24_closed),
   };
   showModal.value = true;
 }
@@ -220,7 +255,9 @@ function viewDetail(cfg: Config) {
     name: cfg.name,
     description: cfg.description,
     relays: cloneRelays(cfg.relays),
-    actionRelays: normalizeActionRelays(cfg.actionRelays),
+    indicationRelays: cloneRelays(cfg.indicationRelays),
+    contact_13_closed: normalizeContactData(cfg.contact_13_closed),
+    contact_24_closed: normalizeContactData(cfg.contact_24_closed),
   };
   showModal.value = true;
 }
@@ -232,20 +269,26 @@ function saveAsCopy(cfg: Config) {
     name: cfg.name + " (副本)",
     description: cfg.description,
     relays: cloneRelays(cfg.relays),
-    actionRelays: normalizeActionRelays(cfg.actionRelays),
+    indicationRelays: cloneRelays(cfg.indicationRelays),
+    contact_13_closed: normalizeContactData(cfg.contact_13_closed),
+    contact_24_closed: normalizeContactData(cfg.contact_24_closed),
   };
   showModal.value = true;
 }
 
 async function save() {
   console.log(form.value);
-  const payload = {
-    id: isEdit.value ? editId.value : "",
+  const payload: Record<string, any> = {
     name: form.value.name,
     description: form.value.description,
     relays: form.value.relays.map((r) => ({ ...r })),
-    actionRelays: { ...form.value.actionRelays },
+    indicationRelays: form.value.indicationRelays.map((r) => ({ ...r })),
+    contact_13_closed: { ...form.value.contact_13_closed },
+    contact_24_closed: { ...form.value.contact_24_closed },
   };
+  if (isEdit.value) {
+    payload.id = editId.value;
+  }
 
   if (isEdit.value && !boundIds.value.has(editId.value)) {
     const idx = configs.value.findIndex((c) => c.id === editId.value);
@@ -255,6 +298,7 @@ async function save() {
         name: payload.name,
         description: payload.description,
         relays: form.value.relays,
+        indicationRelays: form.value.indicationRelays,
       };
     }
   } else {
@@ -263,6 +307,7 @@ async function save() {
       name: payload.name,
       description: payload.description,
       relays: form.value.relays,
+      indicationRelays: form.value.indicationRelays,
     });
   }
 
@@ -299,12 +344,9 @@ const deleteList = async (id: string) => {
 };
 
 async function remove(id: string) {
-  // 包装loading
   const delAction = withLoading(async () => {
     const res = await deleteList(id);
-    // 接口成功后：1.本地过滤列表 2.成功提示
     configs.value = configs.value.filter((c) => c.id !== id);
-
     return res;
   }, "正在删除...");
   try {
@@ -344,7 +386,7 @@ onMounted(async () => {
         <tr>
           <th>配置名称</th>
           <th>描述</th>
-          <th style="width: 80px; text-align: center">继电器数</th>
+          <th style="width: 120px; text-align: center">动作继电器数</th>
           <th style="width: 160px">操作</th>
         </tr>
       </thead>
@@ -392,17 +434,22 @@ onMounted(async () => {
           }}
         </h3>
         <div class="modal-body">
-          <label>配置名称</label>
-          <input
-            v-model="form.name"
-            class="modal-input"
-            :disabled="boundIds.has(editId)" />
-
-          <label>描述</label>
-          <input
-            v-model="form.description"
-            class="modal-input"
-            :disabled="boundIds.has(editId)" />
+          <div class="form-row">
+            <div class="form-col">
+              <label>配置名称</label>
+              <input
+                v-model="form.name"
+                class="modal-input"
+                :disabled="boundIds.has(editId)" />
+            </div>
+            <div class="form-col">
+              <label>描述</label>
+              <input
+                v-model="form.description"
+                class="modal-input"
+                :disabled="boundIds.has(editId)" />
+            </div>
+          </div>
 
           <div class="section-header">
             <span class="section-label">继电器配置</span>
@@ -421,12 +468,13 @@ onMounted(async () => {
 
           <div class="relay-layout">
             <div class="relay-left">
+              <div class="relay-label">动作继电器</div>
               <div ref="relayTableRef" class="relay-table-wrapper">
                 <table class="relay-table">
                   <thead>
                     <tr>
                       <th style="width: 30px">#</th>
-                      <th style="width: 95px">名称</th>
+                      <th style="width: 100px">名称</th>
                       <th style="text-align: center">状态</th>
                       <th v-if="!boundIds.has(editId)" style="width: 28px"></th>
                     </tr>
@@ -498,41 +546,212 @@ onMounted(async () => {
                 v-if="!boundIds.has(editId)"
                 class="add-relay-btn"
                 @click="addRelay">
-                + 添加继电器
+                + 添加动作继电器
+              </button>
+
+              <div class="relay-label" style="margin-top: 10px">表示继电器</div>
+              <div ref="indicationTableRef" class="relay-table-wrapper">
+                <table class="relay-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 30px">#</th>
+                      <th style="width: 100px">名称</th>
+                      <th style="text-align: center">状态</th>
+                      <th v-if="!boundIds.has(editId)" style="width: 28px"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(r, i) in form.indicationRelays" :key="i">
+                      <td class="sort-cell">{{ r.sort_order }}</td>
+                      <td>
+                        <input
+                          v-model="r.relay_name"
+                          class="relay-input"
+                          placeholder="DB1"
+                          :disabled="boundIds.has(editId)" />
+                      </td>
+                      <td class="status-cell">
+                        <div class="status-parts">
+                          <button
+                            v-if="showOkNg"
+                            class="status-chip"
+                            :class="{
+                              ok: r.default_status === 1,
+                              ng: r.default_status === 0,
+                            }"
+                            :disabled="boundIds.has(editId)"
+                            @click="toggleIndicationRelayStatus(i)">
+                            {{ r.default_status === 1 ? "OK" : "NG" }}
+                          </button>
+                          <button
+                            v-if="showTrueFalse"
+                            class="status-chip"
+                            :class="{
+                              ok: r.default_status === 1,
+                              ng: r.default_status === 0,
+                            }"
+                            :disabled="boundIds.has(editId)"
+                            @click="toggleIndicationRelayStatus(i)">
+                            {{ r.default_status === 1 ? "TRUE" : "FALSE" }}
+                          </button>
+                          <button
+                            v-if="showArrow"
+                            class="status-chip arrow-icon"
+                            :class="{
+                              ok: r.default_status === 1,
+                              ng: r.default_status === 0,
+                            }"
+                            :disabled="boundIds.has(editId)"
+                            @click="toggleIndicationRelayStatus(i)">
+                            {{ r.default_status === 1 ? "↑" : "↓" }}
+                          </button>
+                        </div>
+                      </td>
+                      <td
+                        v-if="!boundIds.has(editId)"
+                        style="text-align: center">
+                        <button
+                          class="relay-remove-btn"
+                          @click="removeIndicationRelay(i)">
+                          ×
+                        </button>
+                      </td>
+                    </tr>
+                    <tr v-if="form.indicationRelays.length === 0">
+                      <td colspan="4" class="relay-empty">暂无继电器</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <button
+                v-if="!boundIds.has(editId)"
+                class="add-relay-btn"
+                @click="addIndicationRelay">
+                + 添加表示继电器
               </button>
             </div>
 
-            <div class="action-relays">
-              <div class="action-header">动作继电器</div>
-              <div v-for="g in operationGroups" :key="g" class="action-group">
-                <button
-                  class="action-group-label"
-                  :disabled="boundIds.has(editId)"
-                  @click="toggleGroup(g)">
-                  <span
-                    class="group-arrow"
-                    :class="{ open: isGroupExpanded(g) }"
-                    >▸</span
-                  >
-                  <span>{{ groupLabels[g] }}</span>
-                  <span class="group-count">{{
-                    (form.actionRelays[g] || []).length
-                  }}</span>
-                </button>
-                <div v-if="isGroupExpanded(g)" class="action-checks">
-                  <label
-                    v-for="name in relayNames()"
-                    :key="name"
-                    class="action-check">
-                    <input
-                      type="checkbox"
-                      :checked="isActionRelaySelected(g, name)"
-                      :disabled="boundIds.has(editId)"
-                      @change="toggleActionRelay(g, name)" />
-                    <span>{{ name }}</span>
-                  </label>
-                  <div v-if="relayNames().length === 0" class="action-empty">
-                    暂无继电器
+            <div class="contact-panels">
+              <!-- 触点 1,3 闭合 -->
+              <div class="contact-section">
+                <div class="contact-header">触点 1、3 闭合</div>
+                <div
+                  v-for="g in contactGroups"
+                  :key="'13_' + g"
+                  class="action-group">
+                  <button
+                    class="action-group-label"
+                    :disabled="boundIds.has(editId)"
+                    @click="toggleGroup('13_' + g)">
+                    <span
+                      class="group-arrow"
+                      :class="{ open: isGroupExpanded('13_' + g) }"
+                      >&#9654;</span
+                    >
+                    <span>{{ contactGroupLabels[g] }}</span>
+                    <span class="group-count">{{
+                      (form.contact_13_closed[g] || []).length
+                    }}</span>
+                  </button>
+                  <div v-if="isGroupExpanded('13_' + g)" class="action-checks">
+                    <template v-if="isIndicationGroup(g)">
+                      <label
+                        v-for="name in indicationNames()"
+                        :key="name"
+                        class="action-check">
+                        <input
+                          type="checkbox"
+                          :checked="isActionRelaySelected('13', g, name)"
+                          :disabled="boundIds.has(editId)"
+                          @change="toggleActionRelay('13', g, name)" />
+                        <span>{{ name }}</span>
+                      </label>
+                      <div
+                        v-if="indicationNames().length === 0"
+                        class="action-empty">
+                        暂无表示继电器
+                      </div>
+                    </template>
+                    <template v-else>
+                      <label
+                        v-for="name in relayNames()"
+                        :key="name"
+                        class="action-check">
+                        <input
+                          type="checkbox"
+                          :checked="isActionRelaySelected('13', g, name)"
+                          :disabled="boundIds.has(editId)"
+                          @change="toggleActionRelay('13', g, name)" />
+                        <span>{{ name }}</span>
+                      </label>
+                      <div
+                        v-if="relayNames().length === 0"
+                        class="action-empty">
+                        暂无继电器
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 触点 2,4 闭合 -->
+              <div class="contact-section">
+                <div class="contact-header">触点 2、4 闭合</div>
+                <div
+                  v-for="g in contactGroups"
+                  :key="'24_' + g"
+                  class="action-group">
+                  <button
+                    class="action-group-label"
+                    :disabled="boundIds.has(editId)"
+                    @click="toggleGroup('24_' + g)">
+                    <span
+                      class="group-arrow"
+                      :class="{ open: isGroupExpanded('24_' + g) }"
+                      >&#9654;</span
+                    >
+                    <span>{{ contactGroupLabels[g] }}</span>
+                    <span class="group-count">{{
+                      (form.contact_24_closed[g] || []).length
+                    }}</span>
+                  </button>
+                  <div v-if="isGroupExpanded('24_' + g)" class="action-checks">
+                    <template v-if="isIndicationGroup(g)">
+                      <label
+                        v-for="name in indicationNames()"
+                        :key="name"
+                        class="action-check">
+                        <input
+                          type="checkbox"
+                          :checked="isActionRelaySelected('24', g, name)"
+                          :disabled="boundIds.has(editId)"
+                          @change="toggleActionRelay('24', g, name)" />
+                        <span>{{ name }}</span>
+                      </label>
+                      <div
+                        v-if="indicationNames().length === 0"
+                        class="action-empty">
+                        暂无表示继电器
+                      </div>
+                    </template>
+                    <template v-else>
+                      <label
+                        v-for="name in relayNames()"
+                        :key="name"
+                        class="action-check">
+                        <input
+                          type="checkbox"
+                          :checked="isActionRelaySelected('24', g, name)"
+                          :disabled="boundIds.has(editId)"
+                          @change="toggleActionRelay('24', g, name)" />
+                        <span>{{ name }}</span>
+                      </label>
+                      <div
+                        v-if="relayNames().length === 0"
+                        class="action-empty">
+                        暂无继电器
+                      </div>
+                    </template>
                   </div>
                 </div>
               </div>
@@ -702,8 +921,8 @@ onMounted(async () => {
   border: 1px solid #1a2d44;
   border-radius: 8px;
   padding: 24px;
-  width: 620px;
-  max-height: 82vh;
+  width: 980px;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
 }
@@ -724,14 +943,20 @@ onMounted(async () => {
   min-height: 0;
 }
 
-.modal-body > label {
-  font-size: 12px;
-  color: #5a7288;
-  margin-top: 8px;
+.form-row {
+  display: flex;
+  gap: 12px;
 }
 
-.modal-body > label:first-child {
-  margin-top: 0;
+.form-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-col > label {
+  font-size: 12px;
+  color: #5a7288;
 }
 
 .modal-input {
@@ -811,11 +1036,17 @@ onMounted(async () => {
 }
 
 .relay-left {
-  flex: 1;
+  flex: 0 0 300px;
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
+}
+
+.relay-label {
+  font-size: 12px;
+  color: #5a7288;
+  padding: 2px 0;
 }
 
 .relay-table-wrapper {
@@ -823,7 +1054,7 @@ onMounted(async () => {
   border: 1px solid #1a2d44;
   border-radius: 4px;
   overflow: hidden;
-  max-height: 240px;
+  max-height: 210px;
   overflow-y: auto;
   min-width: 0;
   scrollbar-width: thin;
@@ -891,15 +1122,15 @@ onMounted(async () => {
   background: rgba(248, 113, 113, 0.12);
   color: #f87171;
   border: 1px solid rgba(248, 113, 113, 0.3);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  padding: 5px 10px;
+  padding: 4px 6px;
   border-radius: 3px;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
-  min-width: 40px;
-  min-height: 30px;
+  min-width: 34px;
+  min-height: 28px;
   text-align: center;
 }
 
@@ -915,9 +1146,9 @@ onMounted(async () => {
 }
 
 .status-chip.arrow-icon {
-  font-size: 16px;
-  min-width: 32px;
-  padding: 3px 8px;
+  font-size: 14px;
+  min-width: 24px;
+  padding: 2px 4px;
 }
 
 .relay-remove-btn {
@@ -960,43 +1191,52 @@ onMounted(async () => {
   background: rgba(52, 211, 153, 0.1);
 }
 
-/* 动作继电器 */
-.action-relays {
-  width: 180px;
-  flex-shrink: 0;
+/* 触点面板 */
+.contact-panels {
+  flex: 1;
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+
+.contact-section {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   border: 1px solid #1a2d44;
   border-radius: 4px;
   padding: 8px;
-  max-height: 290px;
+  max-height: 500px;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #1a3350 #051424;
 }
 
-.action-relays::-webkit-scrollbar {
+.contact-section::-webkit-scrollbar {
   width: 5px;
 }
 
-.action-relays::-webkit-scrollbar-track {
+.contact-section::-webkit-scrollbar-track {
   background: #051424;
 }
 
-.action-relays::-webkit-scrollbar-thumb {
+.contact-section::-webkit-scrollbar-thumb {
   background: #1a3350;
   border-radius: 3px;
 }
 
-.action-relays::-webkit-scrollbar-thumb:hover {
+.contact-section::-webkit-scrollbar-thumb:hover {
   background: #254670;
 }
 
-.action-header {
+.contact-header {
   font-size: 12px;
-  color: #5a7288;
+  color: #34d399;
+  font-weight: 600;
   margin-bottom: 2px;
+  padding: 2px 4px;
+  border-bottom: 1px solid #1a2d44;
 }
 
 .action-group {

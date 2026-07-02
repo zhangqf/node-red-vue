@@ -1,9 +1,16 @@
 <script setup lang="ts">
+import { ref } from "vue";
+
 interface ItemConfigItem {
   name: string;
   type: string;
   id: string | number;
 }
+const emit = defineEmits<{
+  "update:active": [val: string];
+  back: [];
+  contactConfigClick: [type: string];
+}>();
 
 const props = defineProps<{
   deviceName?: string;
@@ -13,10 +20,26 @@ const props = defineProps<{
   itemConfig: ItemConfigItem[];
 }>();
 
-const emit = defineEmits<{
-  "update:active": [val: string];
-  back: [];
-}>();
+const contactConfig = [
+  {
+    id: 1,
+    name: "1、3闭合",
+    type: "contact13Closed",
+  },
+  {
+    id: 1,
+    name: "2、4闭合",
+    type: "contact24Closed",
+  },
+];
+
+const contactConfigActive = ref("");
+
+// 触点点击事件
+const handleContactConfigClick = (type: string) => {
+  contactConfigActive.value = type;
+  emit("contactConfigClick", type);
+};
 
 const handleButtonClick = (id: string) => {
   emit("update:active", id);
@@ -37,6 +60,16 @@ const handleButtonClick = (id: string) => {
         <span class="info-label">测试机型</span>
         <span class="info-value highlight">{{ configName || "-" }}</span>
       </div>
+      <div style="margin-left: 20px">
+        <button
+          v-for="item in contactConfig"
+          class="contactConfig-btn"
+          :key="item.id"
+          :class="contactConfigActive === item.type ? 'active' : ''"
+          @click="handleContactConfigClick(item.type)">
+          {{ item.name }}
+        </button>
+      </div>
     </div>
     <!-- <div class="switch-bar">
       <div class="switch-buttons">
@@ -45,7 +78,7 @@ const handleButtonClick = (id: string) => {
           class="switch-btn"
           :key="item.id"
           :class="props.active === item.id ? 'active' : ''"
-          @click="handleButtonClick(item.id)">
+          @click="handleButtonClick(item.type)">
           {{ item.name }}
         </button>
       </div>
@@ -62,7 +95,7 @@ const handleButtonClick = (id: string) => {
 .info-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* justify-content: space-between; */
   height: 36px;
   background: #0b1d33;
   padding: 0 20px;
@@ -79,13 +112,12 @@ const handleButtonClick = (id: string) => {
   background: transparent;
   border: 1px solid #1a2d44;
   color: #8fb4d8;
-  font-size: 13px;
-  padding: 5px 14px;
-  border-radius: 4px;
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 3px;
   cursor: pointer;
   transition: background 0.2s;
-  margin-right: 10px;
-  min-height: 30px;
+  margin-right: 8px;
 }
 
 .back-btn:hover {
@@ -132,6 +164,23 @@ const handleButtonClick = (id: string) => {
   border-radius: 3px;
   cursor: pointer;
   transition: all 0.2s;
+}
+
+.contactConfig-btn {
+  background: rgba(90, 146, 208, 0.08);
+  border: 1px solid #1a2d44;
+  color: #7a8fa0;
+  font-size: 12px;
+  padding: 2px 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin: 0 10px;
+}
+.contactConfig-btn.active {
+  background: rgba(90, 146, 208, 0.2);
+  border-color: #5a92d0;
+  color: #fff;
 }
 
 .switch-btn.active {

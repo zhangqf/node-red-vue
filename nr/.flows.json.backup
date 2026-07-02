@@ -249,7 +249,13 @@
             "818aacc27e5b81ef",
             "da74eea6dfacf5dc",
             "d23078b7ff3639a1",
-            "e49fe0cf135dc9f1"
+            "e49fe0cf135dc9f1",
+            "5036c681aaeb387c",
+            "6e3938f3cd24814c",
+            "56c17c9fb2420a2c",
+            "bd3da8eca19022f2",
+            "5db3076c30108108",
+            "c2dd2878083352c3"
         ],
         "x": 134,
         "y": 1879,
@@ -385,12 +391,13 @@
             "1db4db4994250a9c",
             "97ed6a75d77b5ef1",
             "b3e064fe5e839749",
-            "10f94d18ee7e2792"
+            "10f94d18ee7e2792",
+            "d3afc5582d6ea853"
         ],
         "x": 114,
-        "y": 4227.5,
+        "y": 4219,
         "w": 1619,
-        "h": 302
+        "h": 310.5
     },
     {
         "id": "8f47e2e3400d33b2",
@@ -877,6 +884,36 @@
         "addressOffset": ""
     },
     {
+        "id": "42688c3ce081f271",
+        "type": "modbus-client",
+        "name": "",
+        "clienttype": "simpleser",
+        "bufferCommands": true,
+        "stateLogEnabled": false,
+        "queueLogEnabled": false,
+        "failureLogEnabled": true,
+        "tcpHost": "127.0.0.1",
+        "tcpPort": 502,
+        "tcpType": "DEFAULT",
+        "serialPort": "/dev/tty.usbserial-2140",
+        "serialType": "RTU-BUFFERD",
+        "serialBaudrate": "115200",
+        "serialDatabits": 8,
+        "serialStopbits": 1,
+        "serialParity": "none",
+        "serialConnectionDelay": 100,
+        "serialAsciiResponseStartDelimiter": "0x3A",
+        "unit_id": 1,
+        "commandDelay": 1,
+        "clientTimeout": 1000,
+        "reconnectOnTimeout": true,
+        "reconnectTimeout": 2000,
+        "parallelUnitIdsAllowed": true,
+        "showErrors": false,
+        "showWarnings": true,
+        "showLogs": true
+    },
+    {
         "id": "33892c68efc7c072",
         "type": "ui-control",
         "z": "5be343417955c941",
@@ -1316,8 +1353,8 @@
         "showErrors": true,
         "showWarnings": true,
         "logIOActivities": true,
-        "server": "018e6b14623da357",
-        "useIOFile": true,
+        "server": "42688c3ce081f271",
+        "useIOFile": false,
         "ioFile": "e48b41b20ada34b1",
         "useIOForPayload": true,
         "emptyMsgOnFail": true,
@@ -1375,7 +1412,7 @@
         "z": "e4bbd3713100fe17",
         "g": "9e2d670578adbe41",
         "name": "debug 10",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -1393,7 +1430,7 @@
         "z": "e4bbd3713100fe17",
         "g": "9e2d670578adbe41",
         "name": "debug 11",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -1414,12 +1451,12 @@
         "showStatusActivities": false,
         "showErrors": false,
         "showWarnings": true,
-        "server": "018e6b14623da357",
+        "server": "42688c3ce081f271",
         "emptyMsgOnFail": false,
         "keepMsgProperties": false,
         "delayOnStart": false,
         "startDelayTime": "",
-        "x": 1530,
+        "x": 1510,
         "y": 220,
         "wires": [
             [
@@ -1955,7 +1992,7 @@
         "z": "e4bbd3713100fe17",
         "g": "ee922bcc4e4be091",
         "name": "handleUpdate",
-        "func": " const data = msg.req.body;\n const cid = data.id || msg.uuid || Date.now().toString();\n\n  const relayList = data.relays || [];\n\nconst action_relays = JSON.stringify(data.actionRelays);\n\n\n  let sql = `DELETE FROM config_relays WHERE config_id = '${cid}';\\n`;\nsql += `INSERT OR REPLACE INTO config (id, name, description,action_relays) VALUES ('${cid}', '${(data.name ?? \"\").replace(/'/g, \"''\")}', '${(data.description ?? \"\").replace(/'/g, \"''\")}','${action_relays}');\\n`;\n\n  relayList.forEach(r => {\n      sql += `INSERT OR REPLACE INTO config_relays (id, config_id, relay_name, default_status, sort_order)\n  VALUES ('${cid}_${r.relay_name}', '${cid}', '${r.relay_name}', ${r.default_status}, ${r.sort_order});\\n`;\n  });\n\n  msg.topic = sql;\n  msg.payloadOut = { code: 200, message: \"保存成功\" };\n  return msg;\n\n\n// msg.params = {\n//     $id: msg.payload.id,\n//     $name: msg.payload.name,\n//     $description: msg.payload.description,\n// }\n\n\n\n// return msg;",
+        "func": " const data = msg.req.body;\n const cid = data.id || msg.uuid || Date.now().toString();\n\nconst relayList = data.relays || [];\n\n\nconst indicationRelays = data.indicationRelays || []\nconst contact_13_closed = JSON.stringify(data.contact_13_closed);\nconst contact_24_closed = JSON.stringify(data.contact_24_closed);\n\n\n\n  let sql = `DELETE FROM config_relays WHERE config_id = '${cid}';\\n`;\n   sql += `DELETE FROM config_indication_relays WHERE config_id = '${cid}';\\n`;\nsql += `INSERT OR REPLACE INTO config (id, name, description,contact_13_closed,contact_24_closed) VALUES ('${cid}', '${(data.name ?? \"\").replace(/'/g, \"''\")}', '${(data.description ?? \"\").replace(/'/g, \"''\")}','${contact_13_closed}','${contact_24_closed}');\\n`;\n\n  relayList.forEach(r => {\n      sql += `INSERT OR REPLACE INTO config_relays (id, config_id, relay_name, default_status, sort_order)\n  VALUES ('${cid}_${r.relay_name}', '${cid}', '${r.relay_name}', ${r.default_status}, ${r.sort_order});\\n`;\n  });\n\n  indicationRelays.forEach(r => {\n      sql += `INSERT OR REPLACE INTO config_indication_relays (id, config_id, relay_name, default_status, sort_order)\n  VALUES ('${cid}_${r.relay_name}', '${cid}', '${r.relay_name}', ${r.default_status}, ${r.sort_order});\\n`;\n  });\n\n  msg.topic = sql;\n  msg.payloadOut = { code: 200, message: \"保存成功\" };\n  return msg;\n\n\n// msg.params = {\n//     $id: msg.payload.id,\n//     $name: msg.payload.name,\n//     $description: msg.payload.description,\n// }\n\n\n\n// return msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -1966,6 +2003,7 @@
         "y": 1960,
         "wires": [
             [
+                "c2dd2878083352c3",
                 "ecd68c439a07e9a6"
             ]
         ]
@@ -1982,7 +2020,7 @@
         "skipBodyParsing": false,
         "swaggerDoc": "",
         "x": 220,
-        "y": 2160,
+        "y": 2100,
         "wires": [
             [
                 "d362d2a9bf18faca"
@@ -2010,11 +2048,12 @@
         "sqlquery": "fixed",
         "sql": "\n\nSELECT * FROM config ORDER BY updated_at DESC",
         "name": "获取config",
-        "x": 430,
-        "y": 2160,
+        "x": 390,
+        "y": 2100,
         "wires": [
             [
-                "7a49ac2a0709ebf1"
+                "7a49ac2a0709ebf1",
+                "5036c681aaeb387c"
             ]
         ]
     },
@@ -2133,7 +2172,8 @@
         "y": 2160,
         "wires": [
             [
-                "ad20ce19291bd677"
+                "ad20ce19291bd677",
+                "6e3938f3cd24814c"
             ]
         ]
     },
@@ -2143,7 +2183,7 @@
         "z": "e4bbd3713100fe17",
         "g": "ee922bcc4e4be091",
         "name": "查询所有的relays",
-        "func": "msg.models = msg.payload;\n  msg.topic = \"SELECT * FROM config_relays ORDER BY config_id, sort_order\";\n  return msg;\n// return msg;",
+        "func": "msg.models = msg.payload;\nmsg.topic = ` SELECT *, 'action' AS type FROM config_relays\n  UNION ALL\n  SELECT *, 'indication' AS type FROM config_indication_relays\n  ORDER BY config_id, type, sort_order`;\n  return msg;\n// return msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -2151,7 +2191,7 @@
         "finalize": "",
         "libs": [],
         "x": 650,
-        "y": 2160,
+        "y": 2100,
         "wires": [
             [
                 "d07f84451c9327e0"
@@ -2164,7 +2204,7 @@
         "z": "e4bbd3713100fe17",
         "g": "ee922bcc4e4be091",
         "name": "封装数据",
-        "func": "const models = msg.models || [];\nconst allRelays = msg.payload || [];\n\nconst map = {};\nallRelays.forEach(r => {\n    if (!map[r.config_id]) map[r.config_id] = [];\n    map[r.config_id].push({\n        relay_name: r.relay_name,\n        default_status: r.default_status,\n        sort_order: r.sort_order\n    });\n});\n\nmsg.payload = models.map(m => {\n    const { action_relays, ...rest } = m;\n    return {\n    ...rest,\n    actionRelays:JSON.parse(m.action_relays),\n    relaysNum:( map[m.id] || []).length,\n    relays: map[m.id] || []\n    }\n});\n\nreturn msg;",
+        "func": "// const models = msg.models || [];\n// const allRelays = msg.payload || [];\n\n// const map = {};\n// allRelays.forEach(r => {\n//     if (!map[r.config_id]) map[r.config_id] = [];\n//     map[r.config_id].push({\n//         relay_name: r.relay_name,\n//         default_status: r.default_status,\n//         sort_order: r.sort_order\n//     });\n// });\n\n// msg.payload = models.map(m => {\n//     const { action_relays, ...rest } = m;\n//     return {\n//     ...rest,\n//     actionRelays:JSON.parse(m.action_relays),\n//     relaysNum:( map[m.id] || []).length,\n//     relays: map[m.id] || []\n//     }\n// });\n\n// return msg;\n\n  const models = msg.models || [];\n  const allRelays = msg.payload || [];\n\n  const actionMap = {};\n  const indicationMap = {};\n\n  allRelays.forEach(r => {\n      if (r.type === 'indication') {\n          if (!indicationMap[r.config_id]) indicationMap[r.config_id] = [];\n          indicationMap[r.config_id].push({\n              relay_name: r.relay_name,\n              default_status: r.default_status,\n              sort_order: r.sort_order\n          });\n      } else {\n          if (!actionMap[r.config_id]) actionMap[r.config_id] = [];\n          actionMap[r.config_id].push({\n              relay_name: r.relay_name,\n              default_status: r.default_status,\n              sort_order: r.sort_order\n          });\n      }\n  });\n\n  msg.payload = models.map(m => ({\n      ...m,\n      contact_13_closed: safeParse(m.contact_13_closed),\n      contact_24_closed: safeParse(m.contact_24_closed),\n      relaysNum: (actionMap[m.id] || []).length,\n      relays: actionMap[m.id] || [],\n      indicationRelays: indicationMap[m.id] || []\n  }));\n\n  function safeParse(v) {\n      if (!v) return {};\n      try { return JSON.parse(v); } catch { return {}; }\n  }\n\n  return msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -2172,10 +2212,11 @@
         "finalize": "",
         "libs": [],
         "x": 1000,
-        "y": 2160,
+        "y": 2120,
         "wires": [
             [
-                "35884c18bdafe0f3"
+                "35884c18bdafe0f3",
+                "56c17c9fb2420a2c"
             ]
         ]
     },
@@ -3253,11 +3294,12 @@
         "sqlquery": "msg.topic",
         "sql": "",
         "name": "根据configId获取configList",
-        "x": 887,
-        "y": 4408.5,
+        "x": 880,
+        "y": 4400,
         "wires": [
             [
-                "bbda677f348284b1"
+                "bbda677f348284b1",
+                "d3afc5582d6ea853"
             ]
         ]
     },
@@ -3281,7 +3323,7 @@
         "z": "e4bbd3713100fe17",
         "g": "8bf8286c4001ee60",
         "name": "处理数据",
-        "func": "const m = msg.payload[0] || {};\n\n// 判断是否为空对象\nif (Object.keys(m).length === 0) {\n  msg.payload = {};\n} else {\n  // 剔除 action_relays 字段，并转换字段\n  const { action_relays, ...rest } = m;\n  let actionRelays = [];\n  try {\n    if (action_relays) actionRelays = JSON.parse(action_relays);\n  } catch (err) {\n    actionRelays = [];\n  }\n  msg.payload = {\n    ...rest,\n    actionRelays,\n  };\n}\n\nreturn msg;",
+        "func": "const m = msg.payload[0] || {};\n\n// 判断是否为空对象\nif (Object.keys(m).length === 0) {\n  msg.payload = {};\n} else {\n  // 剔除 action_relays 字段，并转换字段\n  const { action_relays, contact_13_closed, contact_24_closed, ...rest } = m;\n  // let actionRelays = [];\n  let contact13Closed = []\n  let contact24Closed = []\n  try {\n    // if (action_relays) actionRelays = JSON.parse(action_relays);\n    if (contact_13_closed) contact13Closed = JSON.parse(contact_13_closed);\n    if (contact_24_closed) contact24Closed = JSON.parse(contact_24_closed);\n  } catch (err) {\n    // actionRelays = [];\n    contact13Closed = [];\n     contact24Closed = [];\n  }\n  msg.payload = {\n    ...rest,\n    contact13Closed,\n    contact24Closed\n  };\n}\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -3966,8 +4008,8 @@
         "sqlquery": "msg.topic",
         "sql": "",
         "name": "根据configId获取configList",
-        "x": 887,
-        "y": 4488.5,
+        "x": 860,
+        "y": 4480,
         "wires": [
             [
                 "10f94d18ee7e2792"
@@ -4204,6 +4246,130 @@
         "statusType": "auto",
         "x": 1080,
         "y": 480,
+        "wires": []
+    },
+    {
+        "id": "5036c681aaeb387c",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "debug 9",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 560,
+        "y": 2200,
+        "wires": []
+    },
+    {
+        "id": "6e3938f3cd24814c",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "debug 12",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 950,
+        "y": 2200,
+        "wires": []
+    },
+    {
+        "id": "56c17c9fb2420a2c",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "debug 17",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1120,
+        "y": 2200,
+        "wires": []
+    },
+    {
+        "id": "bd3da8eca19022f2",
+        "type": "catch",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "",
+        "scope": null,
+        "uncaught": false,
+        "x": 880,
+        "y": 2320,
+        "wires": [
+            [
+                "5db3076c30108108"
+            ]
+        ]
+    },
+    {
+        "id": "5db3076c30108108",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "debug 19",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1070,
+        "y": 2320,
+        "wires": []
+    },
+    {
+        "id": "c2dd2878083352c3",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "ee922bcc4e4be091",
+        "name": "debug 21",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1200,
+        "y": 2040,
+        "wires": []
+    },
+    {
+        "id": "d3afc5582d6ea853",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "name": "debug 22",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1090,
+        "y": 4260,
         "wires": []
     }
 ]
