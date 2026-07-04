@@ -103,12 +103,17 @@
             "11836aace9c6d856",
             "8e5bb841558f7674",
             "ad803c27d1464a2e",
-            "6c73b535266f1f23"
+            "6c73b535266f1f23",
+            "f6e9d7e097e60402",
+            "eba6249e5628396f",
+            "010538068717c445",
+            "5048b7ad60c9d529",
+            "e758347c6f96a973"
         ],
-        "x": 974,
+        "x": 854,
         "y": 139,
-        "w": 872,
-        "h": 182
+        "w": 1042,
+        "h": 242
     },
     {
         "id": "bf3f6c3990ea97ae",
@@ -162,7 +167,7 @@
             "cf9d948032b912ce"
         ],
         "x": 114,
-        "y": 419,
+        "y": 479,
         "w": 1432,
         "h": 342
     },
@@ -244,18 +249,13 @@
             "7a49ac2a0709ebf1",
             "ad20ce19291bd677",
             "b5d1bca30d6b413c",
-            "bf8ccbe9969cb576",
             "29b11a13b9d1df26",
             "818aacc27e5b81ef",
             "da74eea6dfacf5dc",
             "d23078b7ff3639a1",
             "e49fe0cf135dc9f1",
-            "5036c681aaeb387c",
-            "6e3938f3cd24814c",
-            "56c17c9fb2420a2c",
             "bd3da8eca19022f2",
-            "5db3076c30108108",
-            "c2dd2878083352c3"
+            "5db3076c30108108"
         ],
         "x": 134,
         "y": 1879,
@@ -392,12 +392,16 @@
             "97ed6a75d77b5ef1",
             "b3e064fe5e839749",
             "10f94d18ee7e2792",
-            "d3afc5582d6ea853"
+            "81bde2a32f1c9411",
+            "e602d5e4e34ed753",
+            "70aa96401d799375",
+            "fb70d3eea5319ee0",
+            "d628ab0df8e42331"
         ],
         "x": 114,
-        "y": 4219,
+        "y": 4199,
         "w": 1619,
-        "h": 310.5
+        "h": 330.5
     },
     {
         "id": "8f47e2e3400d33b2",
@@ -434,6 +438,33 @@
         "y": 4639,
         "w": 1152,
         "h": 522
+    },
+    {
+        "id": "264be9ece447ca9d",
+        "type": "group",
+        "z": "e4bbd3713100fe17",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "50538159a7121897",
+            "d6e3f9de70144c49",
+            "0af2b339ab63608e",
+            "46556195a075bb2a",
+            "148b8a45e307ace5",
+            "c34b5fbd4a102ab1",
+            "7410291c8a0585e6"
+        ],
+        "x": 1614,
+        "y": 359,
+        "w": 1012,
+        "h": 222
     },
     {
         "id": "6030307041b868b9",
@@ -895,7 +926,7 @@
         "tcpHost": "127.0.0.1",
         "tcpPort": 502,
         "tcpType": "DEFAULT",
-        "serialPort": "/dev/tty.usbserial-2140",
+        "serialPort": "/dev/tty.usbserial-2110",
         "serialType": "RTU-BUFFERD",
         "serialBaudrate": "115200",
         "serialDatabits": 8,
@@ -934,12 +965,12 @@
         "name": "socketin",
         "server": "4b736505764b58bb",
         "client": "",
-        "x": 1060,
+        "x": 940,
         "y": 220,
         "wires": [
             [
                 "11836aace9c6d856",
-                "5f829c6a2cbec815"
+                "f6e9d7e097e60402"
             ]
         ]
     },
@@ -1091,7 +1122,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1240,
+        "x": 1280,
         "y": 220,
         "wires": [
             [
@@ -1310,7 +1341,7 @@
         "finalize": "",
         "libs": [],
         "x": 460,
-        "y": 560,
+        "y": 620,
         "wires": [
             [
                 "2cede691de602618"
@@ -1336,7 +1367,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 220,
-        "y": 580,
+        "y": 640,
         "wires": [
             [
                 "24528c2f1d2587f6"
@@ -1353,7 +1384,7 @@
         "showErrors": true,
         "showWarnings": true,
         "logIOActivities": true,
-        "server": "42688c3ce081f271",
+        "server": "018e6b14623da357",
         "useIOFile": false,
         "ioFile": "e48b41b20ada34b1",
         "useIOForPayload": true,
@@ -1363,7 +1394,7 @@
         "enableDeformedMessages": false,
         "startDelayTime": "2",
         "x": 680,
-        "y": 560,
+        "y": 620,
         "wires": [
             [
                 "be1d62f199409815",
@@ -1381,7 +1412,7 @@
         "server": "4b736505764b58bb",
         "client": "",
         "x": 1330,
-        "y": 540,
+        "y": 600,
         "wires": []
     },
     {
@@ -1398,7 +1429,7 @@
         "finalize": "",
         "libs": [],
         "x": 940,
-        "y": 540,
+        "y": 600,
         "wires": [
             [
                 "d50b53f9cf0907c2",
@@ -1420,7 +1451,7 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1360,
+        "x": 1500,
         "y": 280,
         "wires": []
     },
@@ -1438,7 +1469,7 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1170,
+        "x": 1060,
         "y": 280,
         "wires": []
     },
@@ -2003,7 +2034,6 @@
         "y": 1960,
         "wires": [
             [
-                "c2dd2878083352c3",
                 "ecd68c439a07e9a6"
             ]
         ]
@@ -2035,8 +2065,8 @@
         "name": "response",
         "statusCode": "200",
         "headers": {},
-        "x": 1160,
-        "y": 2160,
+        "x": 1460,
+        "y": 2100,
         "wires": []
     },
     {
@@ -2048,12 +2078,11 @@
         "sqlquery": "fixed",
         "sql": "\n\nSELECT * FROM config ORDER BY updated_at DESC",
         "name": "获取config",
-        "x": 390,
+        "x": 410,
         "y": 2100,
         "wires": [
             [
-                "7a49ac2a0709ebf1",
-                "5036c681aaeb387c"
+                "7a49ac2a0709ebf1"
             ]
         ]
     },
@@ -2070,8 +2099,7 @@
         "y": 1920,
         "wires": [
             [
-                "95f0c68d95e826d6",
-                "bf8ccbe9969cb576"
+                "95f0c68d95e826d6"
             ]
         ]
     },
@@ -2168,12 +2196,11 @@
         "sqlquery": "msg.topic",
         "sql": "",
         "name": "查询relays",
-        "x": 850,
-        "y": 2160,
+        "x": 1070,
+        "y": 2100,
         "wires": [
             [
-                "ad20ce19291bd677",
-                "6e3938f3cd24814c"
+                "ad20ce19291bd677"
             ]
         ]
     },
@@ -2182,7 +2209,7 @@
         "type": "function",
         "z": "e4bbd3713100fe17",
         "g": "ee922bcc4e4be091",
-        "name": "查询所有的relays",
+        "name": "查询所有的relays和config_indication_relays",
         "func": "msg.models = msg.payload;\nmsg.topic = ` SELECT *, 'action' AS type FROM config_relays\n  UNION ALL\n  SELECT *, 'indication' AS type FROM config_indication_relays\n  ORDER BY config_id, type, sort_order`;\n  return msg;\n// return msg;",
         "outputs": 1,
         "timeout": 0,
@@ -2190,7 +2217,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 650,
+        "x": 730,
         "y": 2100,
         "wires": [
             [
@@ -2211,12 +2238,11 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1000,
-        "y": 2120,
+        "x": 1300,
+        "y": 2100,
         "wires": [
             [
-                "35884c18bdafe0f3",
-                "56c17c9fb2420a2c"
+                "35884c18bdafe0f3"
             ]
         ]
     },
@@ -2640,7 +2666,7 @@
         "type": "http in",
         "z": "e4bbd3713100fe17",
         "g": "8bf8286c4001ee60",
-        "name": "根据configId获取Config列表",
+        "name": "getConfigRelaysByConfigId",
         "url": "/getConfigRelays/:configId",
         "method": "get",
         "upload": false,
@@ -2650,7 +2676,8 @@
         "y": 4320,
         "wires": [
             [
-                "800b8a3740666e3c"
+                "e602d5e4e34ed753",
+                "f5d0dae114e0f986"
             ]
         ]
     },
@@ -2660,18 +2687,18 @@
         "z": "e4bbd3713100fe17",
         "g": "8bf8286c4001ee60",
         "name": "根据configId获取configList",
-        "func": "  const configId = msg.req.query.id;\n  msg.topic = `SELECT * FROM config WHERE id = '${configId}'`;\n  return msg;\n",
+        "func": "\n  const configId = msg.req.params.configId;\n  msg.topic = `SELECT * FROM config WHERE id = '${configId}'`;\n  return msg;\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 567,
-        "y": 4328.5,
+        "x": 580,
+        "y": 4280,
         "wires": [
             [
-                "16191a1dbf02c2b9"
+                "81bde2a32f1c9411"
             ]
         ]
     },
@@ -2684,12 +2711,10 @@
         "sqlquery": "msg.topic",
         "sql": "",
         "name": "根据configId获取configList",
-        "x": 907,
-        "y": 4328.5,
+        "x": 920,
+        "y": 4280,
         "wires": [
-            [
-                "f5d0dae114e0f986"
-            ]
+            []
         ]
     },
     {
@@ -2698,15 +2723,15 @@
         "z": "e4bbd3713100fe17",
         "g": "8bf8286c4001ee60",
         "name": "function 11",
-        "func": "  const configId = msg.req.params.configId;\n  msg.config = msg.payload[0] || {};\n  msg.topic = `SELECT * FROM config_relays WHERE config_id = '${configId}' ORDER BY sort_order`;\n  return msg;\n",
+        "func": "  // msg.models = msg.payload;\n\nconst configId = msg.req.params.configId;\n\n// msg.topic = ` SELECT *, 'relays' AS type FROM config_relays WHERE config_id = '${configId}'\n//   UNION ALL\n//   SELECT *, 'indication' AS type FROM config_indication_relays WHERE config_id = '${configId}'\n//   ORDER BY config_id, type, sort_order`;\n//   return msg;\n  msg.topic = `SELECT id, config_id, relay_name, default_status, sort_order, 'relays' AS type\n  FROM config_relays WHERE config_id = '${configId}'\n  UNION ALL\n  SELECT id, config_id, relay_name, default_status, sort_order, 'indication' AS type\n  FROM config_indication_relays WHERE config_id = '${configId}'\n  ORDER BY type, sort_order`;\n  return msg;\n  \n    \n\n  \n  \n  // const configId = msg.req.params.configId;\n  // msg.config = msg.payload[0] || {};\n  // msg.topic = `SELECT * FROM config_relays WHERE config_id = '${configId}' ORDER BY sort_order`;\n  // return msg;\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1157,
-        "y": 4328.5,
+        "x": 930,
+        "y": 4340,
         "wires": [
             [
                 "f030e2abf8cf18ec"
@@ -2722,11 +2747,12 @@
         "sqlquery": "msg.topic",
         "sql": "",
         "name": "根据configId获取configList",
-        "x": 1407,
-        "y": 4328.5,
+        "x": 1220,
+        "y": 4320,
         "wires": [
             [
-                "26fcf6a914564605"
+                "fb70d3eea5319ee0",
+                "d628ab0df8e42331"
             ]
         ]
     },
@@ -2829,7 +2855,7 @@
         "name": "modbus读取",
         "info": "",
         "x": 210,
-        "y": 520,
+        "y": 580,
         "wires": []
     },
     {
@@ -3250,17 +3276,18 @@
         "type": "http in",
         "z": "e4bbd3713100fe17",
         "g": "8bf8286c4001ee60",
-        "name": "根据configId获取Config列表",
+        "name": "getConfigList",
         "url": "/getConfigList/:configId",
         "method": "get",
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 267,
+        "x": 217,
         "y": 4408.5,
         "wires": [
             [
-                "3b2fa1bd2beb72ff"
+                "3b2fa1bd2beb72ff",
+                "70aa96401d799375"
             ]
         ]
     },
@@ -3298,8 +3325,7 @@
         "y": 4400,
         "wires": [
             [
-                "bbda677f348284b1",
-                "d3afc5582d6ea853"
+                "bbda677f348284b1"
             ]
         ]
     },
@@ -3389,24 +3415,6 @@
                 "703262395864eb9e"
             ]
         ]
-    },
-    {
-        "id": "bf8ccbe9969cb576",
-        "type": "debug",
-        "z": "e4bbd3713100fe17",
-        "g": "ee922bcc4e4be091",
-        "name": "debug 1",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1370,
-        "y": 2040,
-        "wires": []
     },
     {
         "id": "c02f9c3cda19300b",
@@ -3736,7 +3744,7 @@
         "scope": "group",
         "uncaught": false,
         "x": 1230,
-        "y": 700,
+        "y": 760,
         "wires": [
             [
                 "cd2082966920c8aa"
@@ -3758,7 +3766,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 1440,
-        "y": 700,
+        "y": 760,
         "wires": []
     },
     {
@@ -4155,7 +4163,7 @@
         "finalize": "",
         "libs": [],
         "x": 850,
-        "y": 640,
+        "y": 700,
         "wires": [
             []
         ]
@@ -4174,7 +4182,7 @@
         "finalize": "",
         "libs": [],
         "x": 860,
-        "y": 460,
+        "y": 520,
         "wires": [
             []
         ]
@@ -4202,7 +4210,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 240,
-        "y": 720,
+        "y": 780,
         "wires": [
             [
                 "15c676bbf274830b"
@@ -4223,7 +4231,7 @@
         "finalize": "",
         "libs": [],
         "x": 800,
-        "y": 720,
+        "y": 780,
         "wires": [
             [
                 "d50b53f9cf0907c2"
@@ -4245,61 +4253,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 1080,
-        "y": 480,
-        "wires": []
-    },
-    {
-        "id": "5036c681aaeb387c",
-        "type": "debug",
-        "z": "e4bbd3713100fe17",
-        "g": "ee922bcc4e4be091",
-        "name": "debug 9",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 560,
-        "y": 2200,
-        "wires": []
-    },
-    {
-        "id": "6e3938f3cd24814c",
-        "type": "debug",
-        "z": "e4bbd3713100fe17",
-        "g": "ee922bcc4e4be091",
-        "name": "debug 12",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 950,
-        "y": 2200,
-        "wires": []
-    },
-    {
-        "id": "56c17c9fb2420a2c",
-        "type": "debug",
-        "z": "e4bbd3713100fe17",
-        "g": "ee922bcc4e4be091",
-        "name": "debug 17",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1120,
-        "y": 2200,
+        "y": 540,
         "wires": []
     },
     {
@@ -4337,10 +4291,338 @@
         "wires": []
     },
     {
-        "id": "c2dd2878083352c3",
+        "id": "50538159a7121897",
+        "type": "modbus-flex-getter",
+        "z": "e4bbd3713100fe17",
+        "g": "264be9ece447ca9d",
+        "name": "",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "logIOActivities": false,
+        "server": "42688c3ce081f271",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "enableDeformedMessages": false,
+        "startDelayTime": "",
+        "x": 2080,
+        "y": 500,
+        "wires": [
+            [
+                "0af2b339ab63608e",
+                "148b8a45e307ace5"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "d6e3f9de70144c49",
+        "type": "inject",
+        "z": "e4bbd3713100fe17",
+        "g": "264be9ece447ca9d",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 1710,
+        "y": 500,
+        "wires": [
+            [
+                "46556195a075bb2a"
+            ]
+        ]
+    },
+    {
+        "id": "0af2b339ab63608e",
         "type": "debug",
         "z": "e4bbd3713100fe17",
-        "g": "ee922bcc4e4be091",
+        "g": "264be9ece447ca9d",
+        "name": "debug 23",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2440,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "5048b7ad60c9d529",
+        "type": "modbus-flex-write",
+        "z": "e4bbd3713100fe17",
+        "g": "9e2d670578adbe41",
+        "name": "",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "server": "42688c3ce081f271",
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 1610,
+        "y": 340,
+        "wires": [
+            [
+                "e758347c6f96a973"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "f6e9d7e097e60402",
+        "type": "switch",
+        "z": "e4bbd3713100fe17",
+        "g": "9e2d670578adbe41",
+        "name": "",
+        "property": "type",
+        "propertyType": "jsonata",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "relays",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "collect",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 1110,
+        "y": 220,
+        "wires": [
+            [
+                "5f829c6a2cbec815"
+            ],
+            [
+                "eba6249e5628396f"
+            ]
+        ]
+    },
+    {
+        "id": "eba6249e5628396f",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "9e2d670578adbe41",
+        "name": "function 14",
+        "func": "\n\n\n  msg.payload = {\n    \"fc\":3,\n    \"unitid\":4,\n    \"address\":4086,\n    \"quantity\":124,\n    \"value\": msg.value\n  };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1270,
+        "y": 280,
+        "wires": [
+            [
+                "010538068717c445",
+                "5048b7ad60c9d529"
+            ]
+        ]
+    },
+    {
+        "id": "010538068717c445",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "9e2d670578adbe41",
+        "name": "debug 24",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1400,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "e758347c6f96a973",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "9e2d670578adbe41",
+        "name": "debug 25",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1790,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "46556195a075bb2a",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "264be9ece447ca9d",
+        "name": "function 18",
+        "func": "\n  msg.payload = {\n    \"fc\":3,\n    \"unitid\":4,\n    \"address\":4086,\n    \"quantity\":124\n  };\n\n\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1870,
+        "y": 500,
+        "wires": [
+            [
+                "50538159a7121897"
+            ]
+        ]
+    },
+    {
+        "id": "81bde2a32f1c9411",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 780,
+        "y": 4240,
+        "wires": []
+    },
+    {
+        "id": "e602d5e4e34ed753",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "name": "debug 9",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 450,
+        "y": 4260,
+        "wires": []
+    },
+    {
+        "id": "70aa96401d799375",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "name": "debug 12",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 380,
+        "y": 4380,
+        "wires": []
+    },
+    {
+        "id": "fb70d3eea5319ee0",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "name": "debug 17",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1490,
+        "y": 4240,
+        "wires": []
+    },
+    {
+        "id": "d628ab0df8e42331",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "8bf8286c4001ee60",
+        "name": "封装数据",
+        "func": "const data = msg.payload;\nconst relays = []\nconst indicationRelays = []\nif(data.length > 0) {\n    data.forEach(function(element) {\n        if(element.type === \"indication\") {\n            indicationRelays.push(element)\n        }\n        if(element.type === \"relays\")\n        {\n            relays.push(element)\n        }\n    });\n}\n\nmsg.payload = {\n    relays,\n    indicationRelays\n}\n// .relays = relays\n// msg.payload.indicationRelays = indicationRelays\n\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1450,
+        "y": 4360,
+        "wires": [
+            [
+                "26fcf6a914564605"
+            ]
+        ]
+    },
+    {
+        "id": "148b8a45e307ace5",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "264be9ece447ca9d",
+        "name": "function 19",
+        "func": "// const data = msg.payload;\n\n// const mergeData = []\n\n// for(let index = 0; index < data.length; index++) {\n//     if(index%2) {\n//         const concatData = data[index-1] + \"\" + data[index]\n//         mergeData.push(Number(concatData))\n//     }\n//     // const element = array[index];\n    \n// } \n\nconst data = msg.payload;\nconst mergeData = [];\nif (Array.isArray(data)) {\n    data.reduce((prev, curr, idx) => {\n        if (idx % 2 === 1) mergeData.push(Number(prev + \"\" + curr));\n        return curr;\n    }, null);\n}\nmsg.sendData = {\n    type: \"ThreePhaseACCollector\",\n    value:mergeData\n};\n\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2290,
+        "y": 440,
+        "wires": [
+            [
+                "c34b5fbd4a102ab1",
+                "7410291c8a0585e6"
+            ]
+        ]
+    },
+    {
+        "id": "c34b5fbd4a102ab1",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "264be9ece447ca9d",
         "name": "debug 21",
         "active": true,
         "tosidebar": true,
@@ -4350,26 +4632,20 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1200,
-        "y": 2040,
+        "x": 2520,
+        "y": 440,
         "wires": []
     },
     {
-        "id": "d3afc5582d6ea853",
-        "type": "debug",
+        "id": "7410291c8a0585e6",
+        "type": "websocket out",
         "z": "e4bbd3713100fe17",
-        "g": "8bf8286c4001ee60",
-        "name": "debug 22",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1090,
-        "y": 4260,
+        "g": "264be9ece447ca9d",
+        "name": "三相交流采集器",
+        "server": "4b736505764b58bb",
+        "client": "",
+        "x": 2480,
+        "y": 400,
         "wires": []
     }
 ]

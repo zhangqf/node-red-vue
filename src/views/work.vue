@@ -86,7 +86,10 @@ const funWsRealData = (data) => {
       testResults.value = [];
       return;
     }
+    // 表示寄存器数据 indicationRelay
+    if (indicationRelay.value.length < 1) return;
     const { DWBS, FWBS, EJCDFWBS, EJCDDWBS, YJCDFWBS, YJCDDWBS } = relayData;
+
     const tempList = [
       {
         name: "定位表示",
@@ -133,6 +136,29 @@ const funWsStatus = (data) => {
   modbusStatus.value = data;
 };
 
+const temperature = ref(0);
+const phaseAVoltage = ref(0);
+const phaseBVoltage = ref(0);
+const phaseCVoltage = ref(0);
+
+const phaseACurrent = ref(0);
+const phaseBCurrent = ref(0);
+const phaseCCurrent = ref(0);
+
+const handleCauculate = (data: number, params: number) => {
+  return data / params;
+};
+
+const funThreePhaseACCollector = (data) => {
+  temperature.value = handleCauculate(data[4], 100);
+  phaseAVoltage.value = handleCauculate(data[5], 100);
+  phaseBVoltage.value = handleCauculate(data[6], 100);
+  phaseCVoltage.value = handleCauculate(data[7], 100);
+  phaseACurrent.value = handleCauculate(data[8], 1000);
+  phaseBCurrent.value = handleCauculate(data[9], 1000);
+  phaseCCurrent.value = handleCauculate(data[10], 1000);
+};
+
 // 监听ws消息，自动更新对应缓存，另一个数组保留旧值
 watch(
   () => ws.message.value,
@@ -147,6 +173,8 @@ watch(
           break;
         case "modbusRealData":
           funWsRealData(data.sendData);
+        case "ThreePhaseACCollector":
+          funThreePhaseACCollector(data.sendData.value);
       }
     }
   },
@@ -212,6 +240,7 @@ const active = ref<string>("");
 const deviceId = route.params.deviceId as string;
 const combinationId = route.params.combinationId as string;
 const configId = route.params.configId as string;
+const indicationRelay = ref<any[]>([]);
 
 async function getConfig(itemType: string) {
   try {
@@ -219,7 +248,11 @@ async function getConfig(itemType: string) {
       method: "get",
       headers: { "Content-Type": "application/json" },
     });
-    terminals.value = await response.json();
+    const { indicationRelays, relays } = await response.json();
+    console.log(relays);
+    console.log(indicationRelays);
+    terminals.value = relays;
+    indicationRelay.value = indicationRelays;
   } catch {
     terminals.value = [];
   }
@@ -340,20 +373,27 @@ const handleFC = () => {
   handleRelayAction(key);
 };
 
+const handleCD = () => {
+  // const key = butItemStatus.value as keyof ActionRelays;
+  // handleRelayAction(key);
+  const data = [1, 0, 0, 0, 0];
+  sendCmd(data, "collect");
+};
+
 const handleDo = () => {
   updateConfigData();
   console.log(wsSendData.value);
-  sendCmd(wsSendData.value);
+  sendCmd(wsSendData.value, "relays");
 };
 
-function sendCmd(data: number[] | null) {
-  ws.send({ value: data });
+function sendCmd(data: number[] | null, type: string) {
+  ws.send({ type: type, value: data });
 }
 
 const buttonItemConfig = [
   { name: "定操", type: "DC" },
   { name: "反操", type: "FC" },
-  // { name: "传动", type: "CD" },
+  { name: "传动", type: "CD" },
   // { name: "混线", type: "HX" },
   // { name: "接地", type: "JD" },
 ];
@@ -387,6 +427,9 @@ const handleOpe = (type: string) => {
       break;
     case "FC":
       handleFC();
+      break;
+    case "CD":
+      handleCD();
       break;
   }
 
@@ -530,6 +573,7 @@ onMounted(async () => {
         :class="modbusStatus.color"
         >{{ modbusStatus.msg }}</span
       >
+      <span v-if="temperature">{{ temperature }}℃</span>
     </div>
   </div>
 </template>
