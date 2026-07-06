@@ -147,7 +147,7 @@ const resetAllLock = () => {
 
 const handleWsRelayData = (data: number[]) => {
   const relayData = configActionRelays.value;
-  console.log(relayData);
+
   if (!relayData) {
     testResults.value = [
       {
@@ -194,7 +194,6 @@ const handleWsRelayData = (data: number[]) => {
       };
     })
     .filter(Boolean);
-  console.log(tempList);
   if (tempList.length < 1) {
     testResults.value = [
       {
@@ -408,7 +407,6 @@ const findNode = (relay_name: string, default_status: number) => {
 };
 
 const batchUpdateTerminal = (nameList: string[], status: number) => {
-  console.log(nameList);
   terminals.value
     .filter((item) => nameList.includes(item.relay_name))
     .forEach((item) => {
@@ -455,7 +453,6 @@ const saveRecord = async (relay: keyof ActionRelays) => {
       relayName: item.relayName,
     };
   });
-  console.log(data);
   const exposed = currentCurveRef.value;
   const valley = exposed?.valley_current;
   const peak = exposed?.peak_current;
@@ -481,16 +478,14 @@ const saveRecord = async (relay: keyof ActionRelays) => {
       body: JSON.stringify(tempData),
     });
     const data = await response.json();
-    console.log(data);
   } catch (error) {
     console.error(error);
   }
 };
 
 const handleRelayAction = (key: keyof ActionRelays) => {
-  console.log(configActionRelays);
   const relay = configActionRelays.value![key];
-  console.log(key);
+
   batchUpdateTerminal(relay, 1);
   handleDo();
   startRecord();
@@ -521,7 +516,7 @@ const handleCD = () => {
 
 const handleDo = () => {
   updateConfigData();
-  console.log(wsSendData.value);
+
   sendCmd(wsSendData.value, "relays");
 };
 
@@ -549,7 +544,6 @@ const butItemIsDisable = ref(false);
 const nextDoTime = ref(15);
 let timerId: number | null = null;
 const handleOpe = (type: string) => {
-  console.log(configActionRelays.value);
   if (!configActionRelays.value) {
     return showToast("请先选择闭合方式", "error");
   }
