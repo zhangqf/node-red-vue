@@ -64,7 +64,7 @@ export interface TestItem {
 }
 
 const testResults = ref<TestItem[]>([]);
-
+let tempDate = [];
 const funWsRealData = (data) => {
   // 收到线圈数据 → 只更新线圈缓存，寄存器不动
   if (data.unitId === 2) {
@@ -76,11 +76,44 @@ const funWsRealData = (data) => {
   if (data.unitId === 1) {
     const rawReg = Array.isArray(data.data) ? data.data : [];
     // lastRegisterArr.value = rawReg;
+
+    tempDate.unshift(rawReg);
+
+    // 限制最大20条，超出截断
+    if (tempDate.length > 20) {
+      tempDate = tempDate.slice(0, 20);
+    }
+
     if (isAction.value) {
-      lastRegisterArr.value = rawReg;
+      tempDate.forEach((element) => {
+        lastRegisterArr.value = element;
+      });
+      // lastRegisterArr.value = tempDate;
+      // lastRegisterArr.value = rawReg;
     }
   }
   if (data.unitId === 3) {
+    // 配置  configActionRelays
+    // "DC": [
+    //     "KA1",
+    //     "KA2"
+    // ],
+    // "FC": [
+    //     "KA2",
+    //     "KA3"
+    // ],
+    // "DWBS": [],
+    // "FWBS": [],
+    // "YJCDDWBS": [
+    //     "3"
+    // ],
+    // "YJCDFWBS": [
+    //     "2"
+    // ],
+    // "EJCDDWBS": [
+    //     "1"
+    // ],
+    // "EJCDFWBS": []
     const relayData = configActionRelays.value;
     if (!relayData) {
       testResults.value = [];
@@ -89,6 +122,19 @@ const funWsRealData = (data) => {
     // 表示寄存器数据 indicationRelay
     if (indicationRelay.value.length < 1) return;
     const { DWBS, FWBS, EJCDFWBS, EJCDDWBS, YJCDFWBS, YJCDDWBS } = relayData;
+
+    // // 根据relayData中定义的 获取 具体位置
+    // DWBS.map(v => {
+    //   for (let index = 0; index < indicationRelay.length; index++) {
+    //     if(indicationRelay[index].relay_name === v) {
+
+    //     }
+
+    //   }
+    // })
+
+    // // ws获取来的数据
+    // data.data.
 
     const tempList = [
       {
@@ -173,8 +219,10 @@ watch(
           break;
         case "modbusRealData":
           funWsRealData(data.sendData);
+          break;
         case "ThreePhaseACCollector":
           funThreePhaseACCollector(data.sendData.value);
+          break;
       }
     }
   },
@@ -249,8 +297,6 @@ async function getConfig(itemType: string) {
       headers: { "Content-Type": "application/json" },
     });
     const { indicationRelays, relays } = await response.json();
-    console.log(relays);
-    console.log(indicationRelays);
     terminals.value = relays;
     indicationRelay.value = indicationRelays;
   } catch {
