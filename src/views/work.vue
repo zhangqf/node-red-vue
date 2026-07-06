@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, toRef, watch } from "vue";
+import { computed, onMounted, ref, toRaw, toRef, watch } from "vue";
 import { useSocket } from "@/composables/useSocket";
 import DeviceBar from "@/components/DeviceBar.vue";
 import CurrentCurve from "@/components/CurrentCurve.vue";
@@ -61,7 +61,154 @@ export interface TestItem {
   name: string;
   type: string;
   status: boolean | number | string;
+  realCheck: boolean;
+  relayName: string[];
 }
+// 锁定状态缓存
+const lockStatus = ref<Record<string, boolean>>({
+  GreenLight: false,
+  YellowLight: false,
+  SecondaryTransmissionInReversePosition: false,
+  SecondaryTransmissionPositioning: false,
+  PrimaryTransmissionInReversePosition: false,
+  PrimaryTransmissionPositioning: false,
+});
+
+// 配置映射：名称、type、对应继电器数组字段
+const relayConfigList = [
+  {
+    name: "定位表示",
+    type: "GreenLight",
+    field: "DWBS" as const,
+  },
+  {
+    name: "反位表示",
+    type: "YellowLight",
+    field: "FWBS" as const,
+  },
+  {
+    name: "二级传动反位",
+    type: "SecondaryTransmissionInReversePosition",
+    field: "EJCDFWBS" as const,
+  },
+  {
+    name: "二级传动定位",
+    type: "SecondaryTransmissionPositioning",
+    field: "EJCDDWBS" as const,
+  },
+  {
+    name: "一级传动反位",
+    type: "PrimaryTransmissionInReversePosition",
+    field: "YJCDFWBS" as const,
+  },
+  {
+    name: "一级传动定位",
+    type: "PrimaryTransmissionPositioning",
+    field: "YJCDDWBS" as const,
+  },
+];
+
+const findRelayIndex = (
+  expectedData: string[],
+  realData: number[],
+  sampleData: Array<{ relay_name: string; sort_order: number }>,
+) => {
+  const sortedSample = [...sampleData].sort(
+    (a, b) => a.sort_order - b.sort_order,
+  );
+  const nameToIndex = new Map<string, number>();
+  sortedSample.forEach((item, idx) => nameToIndex.set(item.relay_name, idx));
+
+  const matchIndexes: number[] = [];
+  for (const name of expectedData) {
+    const idx = nameToIndex.get(name);
+    if (idx !== undefined) matchIndexes.push(idx);
+  }
+  if (matchIndexes.length === 0) {
+    return { matchIndexes: [], allClosed: false };
+  }
+  let allClosed = true;
+  for (const idx of matchIndexes) {
+    if (realData[idx] !== 1) {
+      allClosed = false;
+      break;
+    }
+  }
+
+  return { matchIndexes, allClosed, expectedData };
+};
+
+// 重置锁定
+const resetAllLock = () => {
+  Object.keys(lockStatus.value).forEach((key) => {
+    lockStatus.value[key] = false;
+  });
+};
+
+const handleWsRelayData = (data: number[]) => {
+  const relayData = configActionRelays.value;
+  console.log(relayData);
+  if (!relayData) {
+    testResults.value = [
+      {
+        type: "empty",
+        name: "无所需的表示项",
+        status: "NT",
+        realCheck: false,
+        relayName: [],
+      },
+    ];
+    return;
+  }
+
+  const sampleData = indicationRelay.value;
+  if (!Array.isArray(sampleData) || sampleData.length < 1) {
+    return (testResults.value = [
+      {
+        type: "empty",
+        name: "无所需的表示项",
+        status: "NT",
+        realCheck: false,
+        relayName: [],
+      },
+    ]);
+  }
+  const realData = data;
+
+  const tempList = relayConfigList
+    .map((item) => {
+      // 取出对应继电器数组
+      const targetArr = relayData[item.field];
+      if (targetArr.length < 1) return;
+      const res = findRelayIndex(targetArr, realData, sampleData);
+      // 未锁定且当前满足，打上永久锁定标记
+      if (!lockStatus.value[item.type] && res.allClosed) {
+        lockStatus.value[item.type] = true;
+      }
+      return {
+        relayName: toRaw(res.expectedData),
+        name: item.name,
+        type: item.type,
+        status: lockStatus.value[item.type] ? true : res.allClosed,
+        realCheck: res.allClosed,
+      };
+    })
+    .filter(Boolean);
+  console.log(tempList);
+  if (tempList.length < 1) {
+    testResults.value = [
+      {
+        type: "empty",
+        name: "无所需的表示项",
+        status: "NT",
+        realCheck: false,
+        relayName: [],
+      },
+    ];
+  } else {
+    testResults.value = tempList;
+  }
+};
 
 const testResults = ref<TestItem[]>([]);
 let tempDate = [];
@@ -93,83 +240,9 @@ const funWsRealData = (data) => {
     }
   }
   if (data.unitId === 3) {
-    // 配置  configActionRelays
-    // "DC": [
-    //     "KA1",
-    //     "KA2"
-    // ],
-    // "FC": [
-    //     "KA2",
-    //     "KA3"
-    // ],
-    // "DWBS": [],
-    // "FWBS": [],
-    // "YJCDDWBS": [
-    //     "3"
-    // ],
-    // "YJCDFWBS": [
-    //     "2"
-    // ],
-    // "EJCDDWBS": [
-    //     "1"
-    // ],
-    // "EJCDFWBS": []
-    const relayData = configActionRelays.value;
-    if (!relayData) {
-      testResults.value = [];
-      return;
+    if (isAction.value) {
+      handleWsRelayData(data.data);
     }
-    // 表示寄存器数据 indicationRelay
-    if (indicationRelay.value.length < 1) return;
-    const { DWBS, FWBS, EJCDFWBS, EJCDDWBS, YJCDFWBS, YJCDDWBS } = relayData;
-
-    // // 根据relayData中定义的 获取 具体位置
-    // DWBS.map(v => {
-    //   for (let index = 0; index < indicationRelay.length; index++) {
-    //     if(indicationRelay[index].relay_name === v) {
-
-    //     }
-
-    //   }
-    // })
-
-    // // ws获取来的数据
-    // data.data.
-
-    const tempList = [
-      {
-        name: "定位表示",
-        type: "GreenLight",
-        status: DWBS[0],
-      },
-      {
-        name: "反位表示",
-        type: "YellowLight",
-        status: FWBS[0],
-      },
-      {
-        name: "二级传动反位",
-        type: "SecondaryTransmissionInReversePosition",
-        status: EJCDFWBS[0],
-      },
-      {
-        name: "二级传动定位",
-        type: "SecondaryTransmissionPositioning",
-        status: EJCDDWBS[0],
-      },
-      {
-        name: "一级传动反位",
-        type: "PrimaryTransmissionInReversePosition",
-        status: YJCDFWBS[0],
-      },
-      {
-        name: "一级传动定位",
-        type: "PrimaryTransmissionPositioning",
-        status: YJCDDWBS[0],
-      },
-    ];
-
-    testResults.value = tempList;
   }
 };
 
@@ -240,6 +313,15 @@ const device = ref({
 });
 const combinationName = ref("");
 const configName = ref("");
+
+const showContactDialog = ref(true);
+const selectedContactType = ref("");
+
+const handleContactDialogSelect = (type: string) => {
+  selectedContactType.value = type;
+  handleContactConfigClick(type);
+  showContactDialog.value = false;
+};
 
 const currentData = ref({
   currentValue: 3.8,
@@ -342,6 +424,8 @@ const handleContact24Closed = () => {
   configActionRelays.value = contact24Closed.value;
 };
 const handleContactConfigClick = (type: string) => {
+  resetAllLock();
+  selectedContactType.value = type;
   switch (type) {
     case "contact13Closed":
       handleContact13Closed();
@@ -364,6 +448,14 @@ const stopRecord = () => {
 const currentCurveRef = ref<InstanceType<typeof CurrentCurve>>();
 
 const saveRecord = async (relay: keyof ActionRelays) => {
+  const data = toRaw(testResults.value).map((item) => {
+    return {
+      status: item.status,
+      name: item.name,
+      relayName: item.relayName,
+    };
+  });
+  console.log(data);
   const exposed = currentCurveRef.value;
   const valley = exposed?.valley_current;
   const peak = exposed?.peak_current;
@@ -379,6 +471,7 @@ const saveRecord = async (relay: keyof ActionRelays) => {
     valley_current: valley,
     curve_data: history,
     time_data: xLabels,
+    result: data,
   };
 
   try {
@@ -406,7 +499,7 @@ const handleRelayAction = (key: keyof ActionRelays) => {
     handleDo();
     stopRecord();
     saveRecord(key);
-  }, 6000);
+  }, 13000);
 };
 
 const handleDC = () => {
@@ -453,7 +546,7 @@ const updateConfigData = () => {
 
 const butItemIsDisable = ref(false);
 
-const nextDoTime = ref(10);
+const nextDoTime = ref(15);
 let timerId: number | null = null;
 const handleOpe = (type: string) => {
   console.log(configActionRelays.value);
@@ -464,6 +557,7 @@ const handleOpe = (type: string) => {
 
   const exposed = currentCurveRef.value;
   exposed?.resetData();
+  testResults.value = [];
   butItemStatus.value = type;
   butItemIsDisable.value = true;
 
@@ -530,12 +624,32 @@ onMounted(async () => {
 </script>
 
 <template>
+  <!-- 触点选择弹框 -->
+  <div v-if="showContactDialog" class="contact-overlay">
+    <div class="contact-dialog">
+      <div class="contact-dialog-title">请选择闭合方式</div>
+      <div class="contact-dialog-buttons">
+        <button
+          class="contact-dialog-btn"
+          @click="handleContactDialogSelect('contact13Closed')">
+          1、3闭合
+        </button>
+        <button
+          class="contact-dialog-btn"
+          @click="handleContactDialogSelect('contact24Closed')">
+          2、4闭合
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="dashboard">
     <DeviceBar
       :device-name="device.name"
       :combination-name="combinationName"
       :config-name="configName"
       :item-config="itemConfig"
+      :contact-active="selectedContactType"
       v-model:active="active"
       @contactConfigClick="handleContactConfigClick"
       @back="router.back()" />
@@ -557,7 +671,7 @@ onMounted(async () => {
         :lock-power="powerData.lockPower" /> -->
 
       <div class="right-panel">
-        <TestResults :tests="testResults" />
+        <TestResults :tests="testResults" :isAction="isAction" />
         <div class="action-buttons">
           <span class="action-light">
             <span
@@ -818,5 +932,55 @@ onMounted(async () => {
 .light-yellow {
   background: #facc15;
   box-shadow: 0 0 6px rgba(250, 204, 21, 0.6);
+}
+
+/* 触点选择弹框 */
+.contact-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.contact-dialog {
+  background: #0b1d33;
+  border: 1px solid #1a2d44;
+  border-radius: 12px;
+  padding: 40px 48px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.contact-dialog-title {
+  font-size: 20px;
+  color: #e0e8f0;
+  margin-bottom: 32px;
+}
+
+.contact-dialog-buttons {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+}
+
+.contact-dialog-btn {
+  background: rgba(90, 146, 208, 0.1);
+  border: 1px solid #2a4a68;
+  color: #c0d0e0;
+  font-size: 18px;
+  padding: 12px 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.contact-dialog-btn:hover {
+  background: rgba(90, 146, 208, 0.25);
+  border-color: #5a92d0;
+  color: #fff;
 }
 </style>

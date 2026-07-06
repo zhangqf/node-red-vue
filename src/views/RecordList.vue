@@ -16,6 +16,7 @@ interface RecordItem {
   valley_current: number;
   curve_file: string;
   created_at: string;
+  result?: string;
 }
 
 const records = ref<RecordItem[]>([]);
@@ -49,23 +50,25 @@ async function openDetail(record: RecordItem) {
   detailVisible.value = true;
 }
 const chartOpt = computed(() => {
-  const data = curveData.value.data;
-  if (data.length === 0) {
-    return {
-      xAxis: { type: "category", data: [] },
-      yAxis: { type: "value" },
-      series: [],
-    };
-  }
+  const data = curveData.value.data || [];
+  const hasData = data.length > 0;
 
-  const maxVal = Math.max(...data, 0.01);
-  const minVal = Math.min(...data, 0);
-  const padding = (maxVal - minVal) * 0.15 || 0.5;
+  if (hasData) {
+    const maxVal = Math.max(...data, 0.01);
+    const minVal = Math.min(...data, 0);
+    const padding = (maxVal - minVal) * 0.15 || 0.5;
+    return fullChartOpt(data, maxVal, minVal, padding);
+  }
+  return fullChartOpt(data, 10, 0, 0.5);
+});
+
+function fullChartOpt(data: number[], maxVal: number, minVal: number, padding: number) {
+  const hasData = data.length > 0;
   return {
-    tooltip: {
+    tooltip: hasData ? {
       trigger: "axis",
       axisPointer: { type: "cross" },
-    },
+    } : undefined,
     backgroundColor: "transparent",
     grid: {
       left: 55,
@@ -75,7 +78,7 @@ const chartOpt = computed(() => {
     },
     xAxis: {
       type: "category",
-      data: curveData.value.time,
+      data: curveData.value.time || [],
       axisLine: { lineStyle: { color: "#1a2d44" } },
       axisTick: { show: false },
       splitLine: {
@@ -85,7 +88,7 @@ const chartOpt = computed(() => {
       axisLabel: {
         color: "#5a7288",
         fontSize: 10,
-        interval: Math.max(Math.floor(data.length / 6), 0),
+        interval: hasData ? Math.max(Math.floor(data.length / 6), 0) : 0,
       },
     },
     yAxis: {
@@ -128,7 +131,7 @@ const chartOpt = computed(() => {
       },
     ],
   };
-});
+}
 onMounted(async () => {
   await withLoading(async () => {
     await getList();
@@ -151,6 +154,7 @@ onMounted(async () => {
           <th>配置</th>
           <th>操作类型</th>
           <th>状态</th>
+          <th>检测结果</th>
           <th>峰值电流</th>
           <th>谷值电流</th>
           <th>时间</th>
@@ -175,6 +179,18 @@ onMounted(async () => {
               {{ r.status === "success" ? "成功" : "失败" }}
             </span>
           </td>
+          <td>
+            <div class="result-cell" v-if="r.result">
+              <span
+                v-for="(item, idx) in JSON.parse(r.result)"
+                :key="idx"
+                class="result-tag"
+                :class="item.status ? 'pass' : 'fail'">
+                {{ item.name }}
+              </span>
+            </div>
+            <span v-else class="no-data">-</span>
+          </td>
           <td>{{ r.peak_current }}A</td>
           <td>{{ r.valley_current }}A</td>
           <td>{{ r.created_at }}</td>
@@ -183,7 +199,7 @@ onMounted(async () => {
           </td>
         </tr>
         <tr v-if="records.length === 0">
-          <td colspan="10" class="empty-row">暂无记录</td>
+          <td colspan="11" class="empty-row">暂无记录</td>
         </tr>
       </tbody>
     </table>
@@ -205,6 +221,18 @@ onMounted(async () => {
           <span>峰值: {{ currentRecord?.peak_current }}A</span>
           <span>谷值: {{ currentRecord?.valley_current }}A</span>
           <span>{{ currentRecord?.created_at }}</span>
+        </div>
+        <div class="detail-result" v-if="currentRecord?.result">
+          <span
+            v-for="(item, idx) in JSON.parse(currentRecord.result)"
+            :key="idx"
+            class="result-tag"
+            :class="item.status ? 'pass' : 'fail'">
+            {{ item.name }} {{ item.status ? "✓" : "✗" }}
+            <span class="relay-name" v-if="item.relayName?.length">
+              ({{ item.relayName.join(", ") }})
+            </span>
+          </span>
         </div>
         <div class="curve-table-wrap">
           <!-- <table class="curve-table">
@@ -398,9 +426,24 @@ onMounted(async () => {
 .detail-info {
   display: flex;
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   font-size: 12px;
   color: #5a7288;
+}
+
+.detail-result {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+.relay-name {
+  color: #5a7288;
+  font-size: 10px;
 }
 
 .curve-table-wrap {
@@ -430,6 +473,34 @@ onMounted(async () => {
 
 .curve-table td {
   color: #8a9fb0;
+}
+
+/* 检测结果标签 */
+.result-cell {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.result-tag {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+}
+
+.result-tag.pass {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.15);
+}
+
+.result-tag.fail {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.15);
+}
+
+.no-data {
+  color: #5a7288;
 }
 
 .chart-container {

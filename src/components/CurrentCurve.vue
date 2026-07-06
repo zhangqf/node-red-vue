@@ -35,25 +35,22 @@ watch(
 
 const chartOpt = computed(() => {
   const data = currentHistory.value;
-  if (data.length === 0) {
-    return {
-      xAxis: { type: "category", data: [] },
-      yAxis: { type: "value" },
-      series: [],
-    };
+  const hasData = data.length > 0;
+
+  if (hasData) {
+    peak_current.value = Math.max(...data);
+    valley_current.value = Math.min(...data);
   }
 
-  peak_current.value = Math.max(...data);
-  valley_current.value = Math.min(...data);
-
-  const maxVal = Math.max(...data, 0.01);
-  const minVal = Math.min(...data, 0);
+  const maxVal = hasData ? Math.max(...data, 0.01) : 10;
+  const minVal = hasData ? Math.min(...data, 0) : 0;
   const padding = (maxVal - minVal) * 0.15 || 0.5;
+
   return {
-    tooltip: {
+    tooltip: hasData ? {
       trigger: "axis",
       axisPointer: { type: "cross" },
-    },
+    } : undefined,
     backgroundColor: "transparent",
     grid: {
       left: 55,
@@ -63,7 +60,7 @@ const chartOpt = computed(() => {
     },
     xAxis: {
       type: "category",
-      data: xLabels.value,
+      data: hasData ? xLabels.value : [],
       axisLine: { lineStyle: { color: "#1a2d44" } },
       axisTick: { show: false },
       splitLine: {
@@ -73,7 +70,7 @@ const chartOpt = computed(() => {
       axisLabel: {
         color: "#5a7288",
         fontSize: 10,
-        interval: Math.max(Math.floor(data.length / 6), 0),
+        interval: hasData ? Math.max(Math.floor(data.length / 6), 0) : 0,
       },
     },
     yAxis: {
@@ -113,6 +110,26 @@ const chartOpt = computed(() => {
             ],
           },
         },
+        markPoint: hasData ? {
+          data: [
+            {
+              type: "max",
+              name: "最大值",
+              symbol: "pin",
+              symbolSize: 40,
+              itemStyle: { color: "#f59e0b" },
+              label: { formatter: "最高\n{c}", fontSize: 10 },
+            },
+            {
+              type: "min",
+              name: "最小值",
+              symbol: "pin",
+              symbolSize: 40,
+              itemStyle: { color: "#34d399" },
+              label: { formatter: "最低\n{c}", fontSize: 10 },
+            },
+          ],
+        } : undefined,
       },
     ],
   };

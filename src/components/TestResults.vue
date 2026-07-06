@@ -2,19 +2,21 @@
 export interface TestItem {
   name: string;
   type: string;
-  status: boolean | number;
+  status: boolean | "NT";
+  realCheck: boolean;
+  relayName: string[];
 }
-
 defineProps<{
   tests?: TestItem[];
 }>();
 
 const defaultTests = [
-  { name: "驱动回路", type: "X1-C1:OK,X2-C10:OK", status: "ok" as const },
-  { name: "表示回路", type: "X1:OK,X2:OK", status: "ok" as const },
-  { name: "传动回路", type: "X1:OK,X2:OK", status: "ok" as const },
-  { name: "混线测试", type: "X1:OK,X2:OK", status: "ok" as const },
-  { name: "接地测试", type: "X1:OK,X2:OK", status: "ok" as const },
+  { name: "定位表示", type: "X1-C1:OK,X2-C10:OK", status: "NT" as const },
+  { name: "反位表示", type: "X1:OK,X2:OK", status: "NT" as const },
+  { name: "一级传动定位表示", type: "X1:OK,X2:OK", status: "NT" as const },
+  { name: "一级传动反位表示", type: "X1:OK,X2:OK", status: "NT" as const },
+  { name: "二传动定位表示", type: "X1:OK,X2:OK", status: "NT" as const },
+  { name: "二级传动反位表示", type: "X1:OK,X2:OK", status: "NT" as const },
 ];
 </script>
 
@@ -23,14 +25,22 @@ const defaultTests = [
     <div class="panel-header">
       <span class="panel-title">测试结果</span>
     </div>
-
     <div class="test-list">
+      <h4
+        v-if="tests && tests?.length > 0 && tests[0].type === 'empty'"
+        style="color: #c18232">
+        暂无表示继电器配置，跳过该组状态校验
+      </h4>
       <div
         v-for="(test, idx) in tests?.length ? tests : defaultTests"
         :key="idx"
         class="test-item">
         <div class="test-header">
-          <span class="test-dot" :class="test.status ? 'ok' : 'ng'"></span>
+          <span
+            class="test-dot"
+            :class="
+              test.status == 'NT' ? '' : test.status ? 'ok' : 'ng'
+            "></span>
           <span class="test-name">{{ test.name }}</span>
         </div>
         <div v-if="test?.type === 'GreenLight' || test?.type === 'YellowLight'">
@@ -43,9 +53,13 @@ const defaultTests = [
               }"></span>
           </span>
         </div>
-        <div v-else class="test-result" :class="test.status ? 'ok' : 'ng'">
-          {{ test.status ? "OK" : "NG" }}
+        <div
+          v-else
+          class="test-result"
+          :class="test.status == 'NT' ? '' : test.status ? 'ok' : 'ng'">
+          {{ test.status == "NT" ? "--" : test.status ? "OK" : "NG" }}
         </div>
+        <div v-if="test.realCheck"></div>
       </div>
     </div>
   </div>

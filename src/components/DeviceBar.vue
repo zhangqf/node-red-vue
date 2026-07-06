@@ -18,6 +18,7 @@ const props = defineProps<{
   configName?: string;
   active?: string;
   itemConfig: ItemConfigItem[];
+  contactActive?: string;
 }>();
 
 const contactConfig = [
@@ -65,7 +66,7 @@ const handleButtonClick = (id: string) => {
           v-for="item in contactConfig"
           class="contactConfig-btn"
           :key="item.id"
-          :class="contactConfigActive === item.type ? 'active' : ''"
+          :class="contactActive === item.type ? 'active' : ''"
           @click="handleContactConfigClick(item.type)">
           {{ item.name }}
         </button>

@@ -20782,3 +20782,4 @@ DELETE * FROM combination WHERE id = "89398b93-7332-46ef-9ac1-5fd44d6c4945"
 
 {"unitid":2,"fc":1,"address":0,"quantity":32,"emptyMsgOnFail":true,"keepMsgProperties":true,"enableDeformedMessages":false,"messageId":"6a48d42f824804561be97bd5"}
 
+{"device_name":"01","combination_name":"单动单机","config_name":"二动J机","op_type":"DC","status":"success","peak_current":0,"valley_current":0,"curve_data":[],"time_data":[]}

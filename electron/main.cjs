@@ -50,18 +50,17 @@ async function startNodeRED() {
     if (fs.existsSync(srcFlow) && !fs.existsSync(destFlow)) {
       fs.copyFileSync(srcFlow, destFlow);
     }
-    // Copy data/
+    // Copy data/ from read-only Resources to writable userData on every launch,
+    // so re-packaged db files always take effect.
     const srcData = path.join(srcNr, "data");
     const destData = path.join(destNr, "data");
-    if (!fs.existsSync(destData)) {
-      fs.mkdirSync(destData, { recursive: true });
-      if (fs.existsSync(srcData)) {
-        for (const file of fs.readdirSync(srcData)) {
-          const src = path.join(srcData, file);
-          const dest = path.join(destData, file);
-          if (fs.statSync(src).isFile()) {
-            fs.copyFileSync(src, dest);
-          }
+    fs.mkdirSync(destData, { recursive: true });
+    if (fs.existsSync(srcData)) {
+      for (const file of fs.readdirSync(srcData)) {
+        const src = path.join(srcData, file);
+        const dest = path.join(destData, file);
+        if (fs.statSync(src).isFile()) {
+          fs.copyFileSync(src, dest);
         }
       }
     }
