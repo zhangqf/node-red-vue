@@ -243,7 +243,10 @@ onMounted(async () => {
           <td>{{ r.created_at }}</td>
           <td>
             <button class="action-btn edit" @click="openDetail(r)">曲线</button>
-            <button class="action-btn edit" @click="handleDelete(r)">
+            <button
+              class="action-btn delete"
+              style="margin: 10px"
+              @click="handleDelete(r)">
               删除
             </button>
           </td>
@@ -556,5 +559,13 @@ onMounted(async () => {
 .chart-container {
   width: 100%;
   height: 400px;
+}
+.action-btn.delete {
+  background: rgba(217, 48, 37, 0.2);
+  color: #f87171;
+}
+
+.action-btn.delete:hover {
+  background: rgba(217, 48, 37, 0.4);
 }
 </style>
