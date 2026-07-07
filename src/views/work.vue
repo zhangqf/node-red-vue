@@ -527,7 +527,7 @@ function sendCmd(data: number[] | null, type: string) {
 const buttonItemConfig = [
   { name: "定操", type: "DC" },
   { name: "反操", type: "FC" },
-  { name: "传动", type: "CD" },
+  // { name: "传动", type: "CD" },
   // { name: "混线", type: "HX" },
   // { name: "接地", type: "JD" },
 ];

@@ -1,4 +1,6 @@
 import { createRouter, createWebHashHistory, createWebHistory } from "vue-router";
+import Home from "@/views/Home.vue";
+import Station from "@/views/Station.vue";
 import DeviceList from "@/views/deviceList.vue";
 import Configure from "@/views/configure.vue";
 import Work from "@/views/work.vue";
@@ -12,8 +14,10 @@ const isElectron = !!(window as any).electronAPI;
 const router = createRouter({
   history: isElectron ? createWebHashHistory() : createWebHistory(),
   routes: [
-    { path: "/", name: "deviceList", component: DeviceList },
-    { path: "/devices", name: "device-manager", component: DeviceManager },
+    { path: "/", name: "home", component: Home },
+    { path: "/station", name: "station", component: Station },
+    { path: "/devices", name: "devices", component: DeviceList },
+    { path: "/device-manager", name: "device-manager", component: DeviceManager },
     { path: "/configs", name: "config-manager", component: ConfigManager },
     {
       path: "/combinations",

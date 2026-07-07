@@ -11,7 +11,7 @@ const activeMenu = ref("home");
 function onMenuClick(menu: string) {
   switch (menu) {
     case "home":
-      router.push({ name: "deviceList" });
+      router.push({ name: "home" });
       break;
     case "device-manager":
       router.push({ name: "device-manager" });
@@ -33,7 +33,7 @@ function onMenuClick(menu: string) {
   }
 }
 
-const homeRoutes = ["deviceList", "configure", "work"];
+const homeRoutes = ["home", "station", "devices", "configure", "work"];
 const assetRoutes = ["device-manager", "combination-manager", "config-manager", "binding-manager"];
 
 watch(
