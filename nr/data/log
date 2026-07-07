@@ -17658,3 +17658,4 @@ INSERT OR REPLACE INTO config_relays (id, config_id, relay_name, default_status,
 {"unitid":2,"fc":1,"address":0,"quantity":32,"emptyMsgOnFail":true,"keepMsgProperties":true,"enableDeformedMessages":false,"messageId":"6a4cd060c0fa717968fa5ba9"}
 
 
+{"value":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"unitid":2,"fc":15,"address":0,"quantity":32,"messageId":"6a4ce0cfc0fa717968fa5ff7"}
