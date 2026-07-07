@@ -62,13 +62,20 @@ const chartOpt = computed(() => {
   return fullChartOpt(data, 10, 0, 0.5);
 });
 
-function fullChartOpt(data: number[], maxVal: number, minVal: number, padding: number) {
+function fullChartOpt(
+  data: number[],
+  maxVal: number,
+  minVal: number,
+  padding: number,
+) {
   const hasData = data.length > 0;
   return {
-    tooltip: hasData ? {
-      trigger: "axis",
-      axisPointer: { type: "cross" },
-    } : undefined,
+    tooltip: hasData
+      ? {
+          trigger: "axis",
+          axisPointer: { type: "cross" },
+        }
+      : undefined,
     backgroundColor: "transparent",
     grid: {
       left: 55,
@@ -132,6 +139,46 @@ function fullChartOpt(data: number[], maxVal: number, minVal: number, padding: n
     ],
   };
 }
+const deleteList = async (id: string, curve_file: string) => {
+  const response = await fetch(`${HTTP_URL}/deleteRecord/${id}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      filename: curve_file,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`请求失败，状态码：${response.status}`);
+  }
+
+  const data = await response.json();
+  console.log("删除接口返回：", data);
+
+  if (data.code !== 200 && data.code !== 0) {
+    throw new Error(data.msg || "删除失败");
+  }
+  return data;
+};
+
+async function handleDelete(item) {
+  const id = item.id;
+  const curve_file = item.curve_file;
+
+  console.log(id, curve_file);
+  // 包装loading
+  const delAction = withLoading(async () => {
+    const res = await deleteList(id, curve_file);
+    records.value = records.value.filter((c) => c.id !== id);
+    return res;
+  }, "正在删除...");
+  try {
+    await delAction();
+  } catch (error: any) {
+    console.error("删除操作异常：", error);
+  }
+}
+
 onMounted(async () => {
   await withLoading(async () => {
     await getList();
@@ -196,6 +243,9 @@ onMounted(async () => {
           <td>{{ r.created_at }}</td>
           <td>
             <button class="action-btn edit" @click="openDetail(r)">曲线</button>
+            <button class="action-btn edit" @click="handleDelete(r)">
+              删除
+            </button>
           </td>
         </tr>
         <tr v-if="records.length === 0">

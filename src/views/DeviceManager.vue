@@ -58,20 +58,6 @@ async function save() {
     if (idx !== -1) {
       devices.value[idx] = { id: editId.value, ...form.value };
     }
-    console.log(toRaw(form.value));
-    // try {
-    //   const response = await fetch(HTTP_URL + "/saveDevice", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({ data: form.value }),
-    //   });
-    //   const data = await response.json();
-    //   console.log("Node-RED回应:", data);
-    // } catch (error) {
-    //   console.error("提交失败:", error);
-    // }
-
-    // console.log(devices.value);
   } else {
     const newId = String(Date.now());
     devices.value.push({ id: newId, ...form.value });

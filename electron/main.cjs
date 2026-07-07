@@ -71,6 +71,9 @@ async function startNodeRED() {
 
     // Set CWD to userData/nr so ./data/device.db resolves to writable copy
     process.chdir(destNr);
+  } else {
+    // Dev: also chdir to nr/ so ./data/device.db resolves to nr/data/device.db
+    process.chdir(path.join(__dirname, "..", "nr"));
   }
 
   const expressApp = express();
@@ -111,7 +114,7 @@ function createWindow() {
     width: 1400,
     height: 900,
     fullscreen: true,
-    icon: path.join(__dirname, "../build/icon.png"),
+    icon: path.join(__dirname, "../png/512x512.png"),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
