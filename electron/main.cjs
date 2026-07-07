@@ -111,10 +111,7 @@ function createWindow() {
     width: 1400,
     height: 900,
     fullscreen: true,
-    icon:
-      process.env.NODE_ENV === "development"
-        ? path.join(__dirname, "../build/icon.png")
-        : path.join(process.resourcesPath, "build/icon.png"),
+    icon: path.join(__dirname, "../build/icon.png"),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),

@@ -39,6 +39,6 @@ __screenshots__/
 *.timestamp-*-*.mjs
 
 release/
-build/
+
 
 .node-red-runtime/
