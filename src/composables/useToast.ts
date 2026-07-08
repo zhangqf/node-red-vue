@@ -3,7 +3,7 @@ import { ref } from "vue";
 export interface ToastItem {
   id: number;
   message: string;
-  type: "success" | "error";
+  type: "success" | "error" | "warning";
 }
 
 const toasts = ref<ToastItem[]>([]);

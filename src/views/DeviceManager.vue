@@ -110,15 +110,13 @@ async function remove(id: string) {
 }
 
 const getList = async () => {
-  try {
-    const response = await fetch(HTTP_URL + "/getDevice", {
-      method: "get",
-      headers: { "Content-Type": "application/json" },
-    });
-    const data = await response.json();
-    devices.value = data;
-    console.log(data);
-  } catch (error) {}
+  const response = await fetch(HTTP_URL + "/getDevice", {
+    method: "get",
+    headers: { "Content-Type": "application/json" },
+  });
+  const data = await response.json();
+  devices.value = data;
+  console.log(data);
 };
 
 onMounted(async () => {

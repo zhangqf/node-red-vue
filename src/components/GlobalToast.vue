@@ -20,7 +20,7 @@ const { toasts, loading } = useToast();
         class="toast-item"
         :class="t.type"
       >
-        <span class="toast-icon">{{ t.type === "success" ? "✓" : "✕" }}</span>
+        <span class="toast-icon">{{ t.type === "success" ? "✓" : t.type === "warning" ? "!" : "✕" }}</span>
         {{ t.message }}
       </div>
     </div>
@@ -89,6 +89,15 @@ const { toasts, loading } = useToast();
 .toast-item.error {
   background: #331111;
   border: 1px solid #7a2828;
+}
+
+.toast-item.warning {
+  background: #332a0f;
+  border: 1px solid #7a6828;
+}
+
+.toast-item.warning .toast-icon {
+  color: #fbbf24;
 }
 
 .toast-icon {

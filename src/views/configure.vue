@@ -33,7 +33,11 @@ async function selectCombination(combo: any) {
   router.replace({ query: { comboId: combo.id } });
   try {
     const res = await fetch(
-      HTTP_URL + "/getConfigsByBinding/" + route.params.deviceId + "/" + combo.id
+      HTTP_URL +
+        "/getConfigsByBinding/" +
+        route.params.deviceId +
+        "/" +
+        combo.id,
     );
     configs.value = await res.json();
   } catch {
@@ -42,8 +46,11 @@ async function selectCombination(combo: any) {
     configsLoading.value = false;
   }
 }
+const selectedConfig = ref<any>(null);
 
 function onConfigClick(configId: string) {
+  selectedConfig.value = configId;
+
   router.push({
     name: "work",
     params: {
@@ -77,11 +84,17 @@ onMounted(async () => {
       <button class="back-btn" @click="router.back()">← 返回</button>
       <h2 class="page-title">选择组合方式</h2>
       <div class="step-indicator">
-        <span class="step active">1. 组合方式</span>
+        <span
+          class="step"
+          :class="[!selectedCombination && !selectedConfig ? 'active' : '']"
+          >1. 组合方式</span
+        >
         <span class="step-divider">→</span>
-        <span class="step">2. 测试机型</span>
-        <span class="step-divider">→</span>
-        <span class="step">3. 工作台</span>
+        <span
+          class="step"
+          :class="[selectedCombination && !selectedConfig ? 'active' : '']"
+          >2. 测试机型</span
+        >
       </div>
     </div>
 
@@ -94,16 +107,62 @@ onMounted(async () => {
     <!-- Error -->
     <div v-else-if="error" class="state-box">
       <div class="state-icon-box error">
-        <svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="20" stroke="#f87171" stroke-width="2" opacity="0.4"/><line x1="24" y1="14" x2="24" y2="26" stroke="#f87171" stroke-width="2.5" stroke-linecap="round"/><circle cx="24" cy="32" r="1.5" fill="#f87171"/></svg>
+        <svg viewBox="0 0 48 48" fill="none">
+          <circle
+            cx="24"
+            cy="24"
+            r="20"
+            stroke="#f87171"
+            stroke-width="2"
+            opacity="0.4" />
+          <line
+            x1="24"
+            y1="14"
+            x2="24"
+            y2="26"
+            stroke="#f87171"
+            stroke-width="2.5"
+            stroke-linecap="round" />
+          <circle cx="24" cy="32" r="1.5" fill="#f87171" />
+        </svg>
       </div>
       <p class="state-text">{{ error }}</p>
-      <button class="state-btn" @click="getCombinations(route.params.deviceId as string)">重试</button>
+      <button
+        class="state-btn"
+        @click="getCombinations(route.params.deviceId as string)">
+        重试
+      </button>
     </div>
 
     <!-- Empty -->
     <div v-else-if="combinations.length === 0" class="state-box">
       <div class="state-icon-box">
-        <svg viewBox="0 0 48 48" fill="none"><rect x="8" y="10" width="32" height="28" rx="5" stroke="#1a3350" stroke-width="2"/><line x1="14" y1="20" x2="34" y2="20" stroke="#1a3350" stroke-width="2" opacity="0.5"/><line x1="14" y1="28" x2="28" y2="28" stroke="#1a3350" stroke-width="2" opacity="0.3"/></svg>
+        <svg viewBox="0 0 48 48" fill="none">
+          <rect
+            x="8"
+            y="10"
+            width="32"
+            height="28"
+            rx="5"
+            stroke="#1a3350"
+            stroke-width="2" />
+          <line
+            x1="14"
+            y1="20"
+            x2="34"
+            y2="20"
+            stroke="#1a3350"
+            stroke-width="2"
+            opacity="0.5" />
+          <line
+            x1="14"
+            y1="28"
+            x2="28"
+            y2="28"
+            stroke="#1a3350"
+            stroke-width="2"
+            opacity="0.3" />
+        </svg>
       </div>
       <p class="state-title">该设备尚未绑定任何组合方式</p>
       <p class="state-desc">请先在「绑定配置」中为当前设备关联组合方式</p>
@@ -126,20 +185,69 @@ onMounted(async () => {
             :class="{ active: selectedCombination?.id === combo.id }"
             @click="selectCombination(combo)">
             <div class="combo-icon">
-              <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="4" y="6" width="28" height="24" rx="4" stroke="#5a92d0" stroke-width="1.5" fill="none"/>
-                <line x1="4" y1="15" x2="32" y2="15" stroke="#5a92d0" stroke-width="1" opacity="0.3"/>
-                <circle cx="12" cy="10.5" r="1.5" fill="#5a92d0" opacity="0.5"/>
-                <circle cx="18" cy="10.5" r="1.5" fill="#5a92d0" opacity="0.3"/>
+              <svg
+                viewBox="0 0 36 36"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg">
+                <rect
+                  x="4"
+                  y="6"
+                  width="28"
+                  height="24"
+                  rx="4"
+                  stroke="#5a92d0"
+                  stroke-width="1.5"
+                  fill="none" />
+                <line
+                  x1="4"
+                  y1="15"
+                  x2="32"
+                  y2="15"
+                  stroke="#5a92d0"
+                  stroke-width="1"
+                  opacity="0.3" />
+                <circle
+                  cx="12"
+                  cy="10.5"
+                  r="1.5"
+                  fill="#5a92d0"
+                  opacity="0.5" />
+                <circle
+                  cx="18"
+                  cy="10.5"
+                  r="1.5"
+                  fill="#5a92d0"
+                  opacity="0.3" />
               </svg>
             </div>
             <div class="combo-body">
               <div class="combo-name">{{ combo.name }}</div>
-              <div v-if="combo.deviceType" class="combo-tag">{{ combo.deviceType }}</div>
-              <div v-if="combo.description" class="combo-desc">{{ combo.description }}</div>
+              <div v-if="combo.deviceType" class="combo-tag">
+                {{ combo.deviceType }}
+              </div>
+              <div v-if="combo.description" class="combo-desc">
+                {{ combo.description }}
+              </div>
             </div>
-            <div class="combo-check" v-if="selectedCombination?.id === combo.id">
-              <svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" fill="#34d399" opacity="0.15" stroke="#34d399" stroke-width="1.5"/><path d="M6 10L9 13L14 7" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div
+              class="combo-check"
+              v-if="selectedCombination?.id === combo.id">
+              <svg viewBox="0 0 20 20" fill="none">
+                <circle
+                  cx="10"
+                  cy="10"
+                  r="9"
+                  fill="#34d399"
+                  opacity="0.15"
+                  stroke="#34d399"
+                  stroke-width="1.5" />
+                <path
+                  d="M6 10L9 13L14 7"
+                  stroke="#34d399"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
             </div>
           </div>
         </div>
@@ -149,12 +257,26 @@ onMounted(async () => {
       <div class="column right-col">
         <div class="column-header">
           <h3 class="column-title">测试机型</h3>
-          <span v-if="configs.length && !configsLoading" class="column-count">{{ configs.length }} 项</span>
+          <span v-if="configs.length && !configsLoading" class="column-count"
+            >{{ configs.length }} 项</span
+          >
         </div>
 
         <div v-if="!selectedCombination" class="placeholder">
           <div class="placeholder-icon">
-            <svg viewBox="0 0 48 48" fill="none"><path d="M10 24L38 24" stroke="#1a3350" stroke-width="2" stroke-linecap="round"/><path d="M20 14L10 24L20 34" stroke="#1a3350" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg viewBox="0 0 48 48" fill="none">
+              <path
+                d="M10 24L38 24"
+                stroke="#1a3350"
+                stroke-width="2"
+                stroke-linecap="round" />
+              <path
+                d="M20 14L10 24L20 34"
+                stroke="#1a3350"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
           </div>
           <p>请先选择左侧组合方式</p>
         </div>
@@ -166,7 +288,32 @@ onMounted(async () => {
 
         <div v-else-if="configs.length === 0" class="placeholder">
           <div class="placeholder-icon">
-            <svg viewBox="0 0 48 48" fill="none"><rect x="10" y="12" width="28" height="24" rx="5" stroke="#1a3350" stroke-width="2"/><line x1="16" y1="22" x2="32" y2="22" stroke="#1a3350" stroke-width="2" opacity="0.4"/><line x1="16" y1="28" x2="26" y2="28" stroke="#1a3350" stroke-width="2" opacity="0.25"/></svg>
+            <svg viewBox="0 0 48 48" fill="none">
+              <rect
+                x="10"
+                y="12"
+                width="28"
+                height="24"
+                rx="5"
+                stroke="#1a3350"
+                stroke-width="2" />
+              <line
+                x1="16"
+                y1="22"
+                x2="32"
+                y2="22"
+                stroke="#1a3350"
+                stroke-width="2"
+                opacity="0.4" />
+              <line
+                x1="16"
+                y1="28"
+                x2="26"
+                y2="28"
+                stroke="#1a3350"
+                stroke-width="2"
+                opacity="0.25" />
+            </svg>
           </div>
           <p>该组合方式下暂无测试机型</p>
           <p class="placeholder-hint">请先在「绑定配置」中关联测试机型</p>
@@ -179,18 +326,43 @@ onMounted(async () => {
             class="card-item config-card"
             @click="onConfigClick(cfg.id)">
             <div class="config-icon">
-              <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="18" cy="18" r="13" stroke="#5a92d0" stroke-width="1.5" fill="none"/>
-                <circle cx="18" cy="18" r="7" stroke="#5a92d0" stroke-width="1" fill="none" opacity="0.5"/>
-                <circle cx="18" cy="18" r="2.5" fill="#34d399"/>
+              <svg
+                viewBox="0 0 36 36"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg">
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="13"
+                  stroke="#5a92d0"
+                  stroke-width="1.5"
+                  fill="none" />
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="7"
+                  stroke="#5a92d0"
+                  stroke-width="1"
+                  fill="none"
+                  opacity="0.5" />
+                <circle cx="18" cy="18" r="2.5" fill="#34d399" />
               </svg>
             </div>
             <div class="config-body">
               <div class="config-name">{{ cfg.name }}</div>
-              <div v-if="cfg.description" class="config-desc">{{ cfg.description }}</div>
+              <div v-if="cfg.description" class="config-desc">
+                {{ cfg.description }}
+              </div>
             </div>
             <div class="config-arrow">
-              <svg viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="#5a7288" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <svg viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M6 4L10 8L6 12"
+                  stroke="#5a7288"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
             </div>
           </div>
         </div>

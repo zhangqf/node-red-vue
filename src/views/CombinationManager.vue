@@ -114,14 +114,12 @@ async function remove(id: string) {
 }
 
 const getList = async () => {
-  try {
-    const response = await fetch(HTTP_URL + "/getCombination", {
-      method: "get",
-      headers: { "Content-Type": "application/json" },
-    });
-    const data = await response.json();
-    combinations.value = data;
-  } catch (error) {}
+  const response = await fetch(HTTP_URL + "/getCombination", {
+    method: "get",
+    headers: { "Content-Type": "application/json" },
+  });
+  const data = await response.json();
+  combinations.value = data;
 };
 
 onMounted(async () => {

@@ -34,13 +34,11 @@ function onDeviceClick(deviceId: string) {
 }
 
 async function getList() {
-  try {
-    const response = await fetch(HTTP_URL + "/deviceList", {
-      method: "get",
-      headers: { "Content-Type": "application/json" },
-    });
-    devices.value = await response.json();
-  } catch {}
+  const response = await fetch(HTTP_URL + "/deviceList", {
+    method: "get",
+    headers: { "Content-Type": "application/json" },
+  });
+  devices.value = await response.json();
 }
 
 onMounted(async () => {

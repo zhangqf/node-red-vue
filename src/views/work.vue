@@ -366,9 +366,13 @@ const terminals = ref<any[]>([]);
 const wsSendData = ref<number[] | null>(null);
 
 const active = ref<string>("");
+
 const deviceId = route.params.deviceId as string;
 const combinationId = route.params.combinationId as string;
 const configId = route.params.configId as string;
+
+const opeModel = route.query.opeModel as string;
+const codeName = route.query.name as string;
 const indicationRelay = ref<any[]>([]);
 
 async function getConfig(itemType: string) {
@@ -380,7 +384,8 @@ async function getConfig(itemType: string) {
     const { indicationRelays, relays } = await response.json();
     terminals.value = relays;
     indicationRelay.value = indicationRelays;
-  } catch {
+  } catch (e) {
+    console.error("加载配置失败:", e);
     terminals.value = [];
   }
 }
@@ -480,6 +485,7 @@ const saveRecord = async (relay: keyof ActionRelays) => {
     const data = await response.json();
   } catch (error) {
     console.error(error);
+    showToast("保存记录失败", "error");
   }
 };
 
@@ -582,6 +588,7 @@ const handleOpe = (type: string) => {
 };
 
 async function getList() {
+  console.log("4");
   try {
     const [itemRes, deviceRes, comboRes, configRes] = await Promise.all([
       fetch(HTTP_URL + "/getConfig/" + deviceId + "/" + combinationId),
@@ -591,6 +598,7 @@ async function getList() {
     ]);
 
     itemConfig.value = await itemRes.json();
+    console.log(itemConfig.value);
 
     if (itemConfig.value.length > 0) {
       active.value = itemConfig.value.filter((v) => v.id === configId)[0].id;
@@ -607,13 +615,50 @@ async function getList() {
     contact13Closed.value = configData.contact13Closed || {};
     contact24Closed.value = configData.contact24Closed || {};
     configName.value = configData.name || "";
-  } catch {}
+  } catch (e) {
+    console.error("加载数据失败:", e);
+    throw e;
+  }
+}
+
+async function getCodeDeviceList() {
+  console.log("code");
+  try {
+    const [comboRes, configRes] = await Promise.all([
+      fetch(HTTP_URL + "/getCombination/" + combinationId),
+      fetch(HTTP_URL + "/getConfigList/" + configId),
+    ]);
+
+    active.value = configId;
+
+    device.value.name = codeName;
+
+    const comboData = await comboRes.json();
+    combinationName.value = comboData.name || "";
+
+    const configData = await configRes.json();
+    // configActionRelays.value = configData.actionRelays || {};
+    contact13Closed.value = configData.contact13Closed || {};
+    contact24Closed.value = configData.contact24Closed || {};
+    configName.value = configData.name || "";
+  } catch (e) {
+    console.error("加载数据失败:", e);
+    throw e;
+  }
 }
 
 onMounted(async () => {
   await withLoading(async () => {
-    await getList();
-  });
+    switch (opeModel) {
+      case "code":
+        await getCodeDeviceList();
+        break;
+      default:
+        await getList();
+        break;
+    }
+    // await getList();
+  }, "数据加载成功");
 });
 </script>
 

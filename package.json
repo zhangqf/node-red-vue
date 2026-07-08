@@ -80,6 +80,7 @@
     "@stfi/node-red-contrib-mqtt-broker": "~0.5.0",
     "@vueuse/core": "^14.3.0",
     "echarts": "^6.1.0",
+    "exceljs": "^4.4.0",
     "express": "^4.22.2",
     "mqtt-vue-hook": "^1.2.20",
     "node-red": "^4.1.0",
@@ -90,7 +91,8 @@
     "node-red-node-sqlite": "~2.0.1",
     "vue": "^3.5.32",
     "vue-echarts": "^8.0.1",
-    "vue-router": "^4.6.4"
+    "vue-router": "^4.6.4",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tsconfig/node24": "^24.0.4",

@@ -88,7 +88,9 @@ async function fetchBoundIds() {
     const { data } = await res.json();
     const ids: string[] = data;
     boundIds.value = new Set(ids);
-  } catch {}
+  } catch {
+    console.error("获取绑定配置失败");
+  }
 }
 
 /* ---- 继电器编辑 ---- */
@@ -358,13 +360,11 @@ async function remove(id: string) {
 
 const getList = async () => {
   fetchBoundIds();
-  try {
-    const response = await fetch(HTTP_URL + "/getConfig", {
-      method: "get",
-      headers: { "Content-Type": "application/json" },
-    });
-    configs.value = await response.json();
-  } catch {}
+  const response = await fetch(HTTP_URL + "/getConfig", {
+    method: "get",
+    headers: { "Content-Type": "application/json" },
+  });
+  configs.value = await response.json();
 };
 
 onMounted(async () => {
