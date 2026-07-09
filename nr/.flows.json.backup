@@ -803,14 +803,6 @@
         "mode": "RWC"
     },
     {
-        "id": "e48b41b20ada34b1",
-        "type": "modbus-io-config",
-        "name": "modbusLog",
-        "path": "./data/modbus/log.log",
-        "format": "utf8",
-        "addressOffset": ""
-    },
-    {
         "id": "5e01bd079e34d6cc",
         "type": "modbus-client",
         "name": "",
@@ -1101,7 +1093,7 @@
         "logIOActivities": true,
         "server": "5e01bd079e34d6cc",
         "useIOFile": true,
-        "ioFile": "e48b41b20ada34b1",
+        "ioFile": "",
         "useIOForPayload": true,
         "emptyMsgOnFail": true,
         "keepMsgProperties": true,
@@ -1115,7 +1107,9 @@
                 "be1d62f199409815",
                 "8e1b1384a53df828"
             ],
-            []
+            [
+                "8ce3da23a457bf4e"
+            ]
         ]
     },
     {
@@ -1126,8 +1120,8 @@
         "name": "ws 发送数据",
         "server": "4b736505764b58bb",
         "client": "",
-        "x": 1390,
-        "y": 160,
+        "x": 1410,
+        "y": 140,
         "wires": []
     },
     {
@@ -4077,7 +4071,7 @@
                 "p": "payload"
             }
         ],
-        "repeat": "1",
+        "repeat": "0.2",
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
@@ -4098,7 +4092,7 @@
         "z": "e4bbd3713100fe17",
         "g": "a78c98a47184b2fa",
         "name": "function 20",
-        "func": "\n\nmsg.sendData = \n  {\n    \"fc\":1,\n    \"unitId\":3,\n    \"address\":0,\n    \"quantity\":32,\n    \"data\":[0,0,1,0,0,0],\n    \"type\":\"modbusRealData\"\n\n  }\n\nreturn msg;",
+        "func": "\n\n// msg.sendData = \n//   {\n//     \"fc\":1,\n//     \"unitId\":3,\n//     \"address\":0,\n//     \"quantity\":32,\n//     \"data\":[0,0,1,0,0,0],\n//     \"type\":\"modbusRealData\"\n\n//   }\n\n\nconst currentData = [\n    2.5,\n    5.4,\n    8.1,\n    10.6,\n    12.9,\n    15,\n    16.9,\n    18.6,\n    20.1,\n    21.4,\n    22.5,\n    23.4,\n    24.1,\n    24.6,\n    24.9,\n    25,\n    24.9,\n    24.6,\n    24.1,\n    23.4,\n    22.5,\n    21.4,\n    20.1,\n    18.6,\n    16.9,\n    15,\n    12.9,\n    10.6,\n    8.1,\n    5.4,\n    2.5,\n    5.00,\n    5.02,\n    5.035,\n    5.048,\n    5.056,\n    5.062,\n    5.067,\n    5.070,\n    5.072,\n    5.0735,\n    5.0745,\n    5.0752,\n    5.0758,\n    5.0762,\n    5.0765,\n    5.0767,\n    5.0768,\n    5.0769,\n    5.07695,\n    5.0770,\n    5.0770,\n    5.0770,\n    5.0770,\n    5.0770,\n    5.0770,\n    2,2,2,2,2,2,2,2,\n    6,6,6,6,6,6,6,6,\n    2,2,2,2,2,2,2,2,\n    6,6,6,6,6,6,6,6,\n    2,2,2,2,2,2,2,2\n]\n\n\nconst len = currentData.length;\nlet idx = context.get('idx')||0;\n\n\nmsg.payload = currentData[idx];\n\n\n\nmsg.sendData = {\n    data:msg.payload,\n    type:\"modbusRealData\",\n    unitId: 1,\n\tfc: 3,\n\taddress:14,\n\tquantity: 1,\n}\n\nidx = idx + 1;\nif(idx >= currentData.length){\n    idx = 0;\n}\ncontext.set(\"idx\", idx);\n\n\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -4108,7 +4102,9 @@
         "x": 1230,
         "y": 240,
         "wires": [
-            []
+            [
+                "d50b53f9cf0907c2"
+            ]
         ]
     },
     {

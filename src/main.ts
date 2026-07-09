@@ -13,6 +13,7 @@ import {
   LegendComponent, // 图例
   DatasetComponent,
   TransformComponent,
+  GraphicComponent,
 } from "echarts/components";
 import { LabelLayout, UniversalTransition } from "echarts/features";
 // 必须引入渲染器
@@ -28,6 +29,7 @@ echarts.use([
   LegendComponent,
   DatasetComponent,
   TransformComponent,
+  GraphicComponent,
   LabelLayout,
   UniversalTransition,
   CanvasRenderer,

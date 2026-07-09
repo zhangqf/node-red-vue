@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { HTTP_URL } from "@/config/config";
 import { useToast } from "@/composables/useToast";
 
@@ -23,6 +23,28 @@ const records = ref<RecordItem[]>([]);
 const detailVisible = ref(false);
 const currentRecord = ref<RecordItem | null>(null);
 const curveData = ref<{ t: number; v: number }[]>([]);
+const chartContainer = ref<HTMLElement | null>(null);
+const chartSize = ref({ width: 0, height: 0 });
+
+let sizeObserver: ResizeObserver | null = null;
+
+watch(chartContainer, (el) => {
+  if (sizeObserver) {
+    sizeObserver.disconnect();
+    sizeObserver = null;
+  }
+  if (!el) return;
+  const update = () => {
+    chartSize.value = { width: el.clientWidth, height: el.clientHeight };
+  };
+  update();
+  sizeObserver = new ResizeObserver(update);
+  sizeObserver.observe(el);
+});
+
+onUnmounted(() => {
+  if (sizeObserver) sizeObserver.disconnect();
+});
 
 const opTypeLabels: Record<string, string> = {
   DC: "定操",
@@ -48,51 +70,264 @@ async function openDetail(record: RecordItem) {
   detailVisible.value = true;
 }
 
-const chartOpt = computed(() => {
-  const data = curveData.value.data || [];
-  const hasData = data.length > 0;
+const COLORS = {
+  parabolic: "#f04b4b",
+  flat: "#4dabf7",
+  square: "#51cf66",
+};
 
-  if (hasData) {
-    const maxVal = Math.max(...data, 0.01);
-    const minVal = Math.min(...data, 0);
-    const padding = (maxVal - minVal) * 0.15 || 0.5;
-    return fullChartOpt(data, maxVal, minVal, padding);
-  }
-  return fullChartOpt(data, 10, 0, 0.5);
-});
+function gradient(hex: string, alpha: number) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
 
-function fullChartOpt(
+function makeSeries(
   data: number[],
-  maxVal: number,
-  minVal: number,
-  padding: number,
+  labels: string[],
+  name: string,
+  key: "parabolic" | "flat" | "square",
+  match: (l: string) => boolean,
 ) {
-  const hasData = data.length > 0;
+  const result = new Array(data.length).fill(null);
+  let i = 0;
+  while (i < data.length) {
+    if (match(labels[i])) {
+      if (i > 0) result[i - 1] = data[i - 1];
+      while (i < data.length && match(labels[i])) {
+        result[i] = data[i];
+        i++;
+      }
+      if (i < data.length) result[i] = data[i];
+    } else {
+      i++;
+    }
+  }
   return {
+    name,
+    type: "line",
+    data: result,
+    smooth: false,
+    symbol: "none",
+    color: COLORS[key],
+    itemStyle: { color: COLORS[key] },
+    lineStyle: {
+      color: COLORS[key],
+      width: 2,
+      shadowBlur: 6,
+      shadowColor: gradient(COLORS[key], 0.35),
+    },
+    areaStyle: {
+      color: {
+        type: "linear",
+        x: 0,
+        y: 0,
+        x2: 0,
+        y2: 1,
+        colorStops: [
+          { offset: 0, color: gradient(COLORS[key], 0.18) },
+          { offset: 1, color: gradient(COLORS[key], 0.01) },
+        ],
+      },
+    },
+    connectNulls: false,
+  };
+}
+
+const chartOpt = computed(() => {
+  const data: number[] = curveData.value.data || [];
+  const timeLabels: string[] = curveData.value.time || [];
+  const hasData = data.length > 0;
+
+  const maxVal = hasData ? Math.max(...data, 0.01) : 10;
+  const minVal = hasData ? Math.min(...data, 0) : 0;
+  const padding = (maxVal - minVal) * 0.15 || 0.5;
+
+  let paraEnd = 0;
+  let flatEnd = data.length;
+  let labels: string[] = [];
+
+  if (hasData && data.length > 10) {
+    for (let i = Math.floor(data.length * 0.15); i < data.length - 2; i++) {
+      const d1 = Math.abs(data[i] - data[i - 1]);
+      const d2 = Math.abs(data[i + 1] - data[i]);
+      if (d1 < 0.15 && d2 < 0.15 && data[i] > 1) {
+        paraEnd = i;
+        break;
+      }
+    }
+    for (let i = paraEnd + 1; i < data.length - 1; i++) {
+      if (Math.abs(data[i] - data[i - 1]) > 1.0) {
+        flatEnd = i;
+        break;
+      }
+    }
+
+    const HALF_WIN = 12;
+    const rawLabels = data.map((_, i) => {
+      const ws = Math.max(0, i - HALF_WIN);
+      const we = Math.min(data.length - 1, i + HALF_WIN);
+      const win = data.slice(ws, we + 1);
+      if (win.length < 6) return "flat";
+
+      const wRange = Math.max(...win) - Math.min(...win);
+
+      let largeJumps = 0;
+      let signChanges = 0;
+      let lastSign = 0;
+      for (let j = 1; j < win.length; j++) {
+        const d = win[j] - win[j - 1];
+        if (d > 1.0) {
+          largeJumps++;
+          if (lastSign < 0) signChanges++;
+          lastSign = 1;
+        } else if (d < -1.0) {
+          largeJumps++;
+          if (lastSign > 0) signChanges++;
+          lastSign = -1;
+        }
+      }
+      if (
+        largeJumps >= 2 &&
+        signChanges >= 1 &&
+        signChanges / largeJumps >= 0.4
+      )
+        return "square";
+
+      if (wRange < 0.2) return "flat";
+
+      const diffs: number[] = [];
+      for (let j = 1; j < win.length; j++) diffs.push(win[j] - win[j - 1]);
+      const dd: number[] = [];
+      for (let j = 1; j < diffs.length; j++) dd.push(diffs[j] - diffs[j - 1]);
+      const pos = dd.filter((d) => d > 0).length;
+      const neg = dd.filter((d) => d < 0).length;
+      if (Math.max(pos, neg) >= dd.length * 0.45 && wRange > 1)
+        return "parabolic";
+
+      return "flat";
+    });
+
+    for (let i = 0; i < rawLabels.length; i++) {
+      if (rawLabels[i] === "parabolic") {
+        const ls = Math.max(0, i - 2);
+        const le = Math.min(data.length - 1, i + 2);
+        let maxLocalDiff = 0;
+        for (let j = ls; j < le; j++) {
+          maxLocalDiff = Math.max(
+            maxLocalDiff,
+            Math.abs(data[j + 1] - data[j]),
+          );
+        }
+        if (maxLocalDiff < 0.2) rawLabels[i] = "flat";
+      }
+    }
+
+    labels = rawLabels.map((_, i) => {
+      const votes: Record<string, number> = {
+        parabolic: 0,
+        flat: 0,
+        square: 0,
+      };
+      for (
+        let j = Math.max(0, i - 2);
+        j <= Math.min(data.length - 1, i + 2);
+        j++
+      )
+        votes[rawLabels[j]]++;
+      return Object.entries(votes).sort((a, b) => b[1] - a[1])[0][0];
+    });
+  }
+
+  const seriesArr = [
+    makeSeries(data, labels, "启动电流", "parabolic", (l) => l === "parabolic"),
+    makeSeries(data, labels, "工作电流", "flat", (l) => l === "flat"),
+    makeSeries(data, labels, "摩擦电流", "square", (l) => l === "square"),
+  ];
+
+  const graphic: any[] = [];
+  if (hasData && data.length > 1 && chartSize.value.width > 0) {
+    const GRID = { left: 55, right: 20, top: 20, bottom: 50 };
+    const gw = chartSize.value.width - GRID.left - GRID.right;
+    const gh = chartSize.value.height - GRID.top - GRID.bottom;
+    const yMin = Math.max(0, minVal - padding);
+    const yMax = maxVal + padding;
+    const yRange = yMax - yMin || 1;
+
+    const maxV = Math.max(...data);
+    const minV = Math.min(...data);
+    const maxIdx = data.indexOf(maxV);
+    const minIdx = data.indexOf(minV);
+
+    const toX = (i: number) => GRID.left + (i / (data.length - 1)) * gw;
+    const toY = (v: number) => GRID.top + (1 - (v - yMin) / yRange) * gh;
+
+    [
+      { idx: maxIdx, val: maxV, label: "最大值", color: COLORS.parabolic },
+      { idx: minIdx, val: minV, label: "最小值", color: COLORS.flat },
+    ].forEach((m) => {
+      graphic.push({
+        type: "text",
+        left: toX(m.idx) - 24,
+        top: toY(m.val) - 22,
+        style: {
+          text: `${m.label} ${m.val.toFixed(1)}A`,
+          fill: "#fff",
+          fontSize: 11,
+          fontWeight: 600,
+          textAlign: "center",
+          textShadowBlur: 4,
+          textShadowColor: "rgba(0,0,0,0.7)",
+        },
+        z: 100,
+      });
+      graphic.push({
+        type: "circle",
+        shape: { cx: toX(m.idx), cy: toY(m.val), r: 5 },
+        style: { fill: m.color, stroke: "#fff", lineWidth: 2 },
+        z: 100,
+      });
+    });
+  }
+
+  return {
+    graphic,
+    animationDuration: 400,
+    animationEasing: "cubicOut",
     tooltip: hasData
       ? {
           trigger: "axis",
-          axisPointer: { type: "cross" },
-          backgroundColor: "#0b1d33",
+          axisPointer: {
+            type: "cross",
+            crossStyle: { color: "#3a5670" },
+            label: {
+              backgroundColor: "#0b1d33",
+              color: "#e0e8f0",
+            },
+          },
+          backgroundColor: "rgba(11,29,51,0.96)",
           borderColor: "#2d5280",
           textStyle: { color: "#e0e8f0", fontSize: 12 },
+          extraCssText:
+            "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
         }
       : undefined,
     backgroundColor: "transparent",
     grid: {
       left: 55,
       right: 20,
-      top: 15,
-      bottom: 30,
+      top: 20,
+      bottom: 50,
     },
     xAxis: {
       type: "category",
-      data: curveData.value.time || [],
+      data: timeLabels,
       axisLine: { lineStyle: { color: "#1a2d44" } },
       axisTick: { show: false },
       splitLine: {
         show: true,
-        lineStyle: { color: "#1a2d44", type: "dashed" as const },
+        lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" },
       },
       axisLabel: {
         color: "#5a7288",
@@ -109,7 +344,7 @@ function fullChartOpt(
       axisTick: { show: false },
       splitLine: {
         show: true,
-        lineStyle: { color: "#1a2d44", type: "dashed" as const },
+        lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" },
       },
       axisLabel: {
         color: "#5a7288",
@@ -117,30 +352,19 @@ function fullChartOpt(
         formatter: (v: number) => v.toFixed(1),
       },
     },
-    series: [
-      {
-        type: "line",
-        data: data,
-        smooth: true,
-        symbol: "none",
-        lineStyle: { color: "#e8473b", width: 2 },
-        areaStyle: {
-          color: {
-            type: "linear",
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [
-              { offset: 0, color: "rgba(232,71,59,0.2)" },
-              { offset: 1, color: "rgba(232,71,59,0.02)" },
-            ],
-          },
-        },
-      },
-    ],
+    legend: hasData
+      ? {
+          data: ["启动电流", "工作电流", "摩擦电流"],
+          bottom: 0,
+          left: 55,
+          orient: "horizontal",
+          textStyle: { color: "#8fb4d8", fontSize: 11 },
+          icon: "roundRect",
+        }
+      : undefined,
+    series: seriesArr,
   };
-}
+});
 
 async function deleteList(id: string, curve_file: string) {
   const response = await fetch(`${HTTP_URL}/deleteRecord/${id}`, {
@@ -209,8 +433,6 @@ onMounted(async () => {
             <th class="col-op">操作类型</th>
             <th class="col-status">状态</th>
             <th class="col-result">检测结果</th>
-            <th class="col-num">峰值(A)</th>
-            <th class="col-num">谷值(A)</th>
             <th class="col-time">测试时间</th>
             <th class="col-action">操作</th>
           </tr>
@@ -229,8 +451,12 @@ onMounted(async () => {
               </span>
             </td>
             <td class="col-status">
-              <span class="status-tag" :class="r.status === 'success' ? 'success' : 'fail'">
-                <span class="status-dot" :class="r.status === 'success' ? 'success' : 'fail'"></span>
+              <span
+                class="status-tag"
+                :class="r.status === 'success' ? 'success' : 'fail'">
+                <span
+                  class="status-dot"
+                  :class="r.status === 'success' ? 'success' : 'fail'"></span>
                 {{ r.status === "success" ? "成功" : "失败" }}
               </span>
             </td>
@@ -246,23 +472,40 @@ onMounted(async () => {
               </div>
               <span v-else class="no-data">-</span>
             </td>
-            <td class="col-num num-cell">{{ r.peak_current }}</td>
-            <td class="col-num num-cell">{{ r.valley_current }}</td>
             <td class="col-time time-cell">{{ formatDate(r.created_at) }}</td>
             <td class="col-action">
               <div class="action-group">
                 <button class="action-btn view" @click="openDetail(r)">
                   <svg viewBox="0 0 14 14" fill="none" class="btn-icon">
-                    <path d="M2 13L12 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                    <path d="M2 1L2 13L7 9L12 13L12 1Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" fill="none"/>
+                    <path
+                      d="M2 13L12 13"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round" />
+                    <path
+                      d="M2 1L2 13L7 9L12 13L12 1Z"
+                      stroke="currentColor"
+                      stroke-width="1.3"
+                      stroke-linejoin="round"
+                      fill="none" />
                   </svg>
                   曲线
                 </button>
                 <button class="action-btn delete" @click="handleDelete(r)">
                   <svg viewBox="0 0 14 14" fill="none" class="btn-icon">
-                    <path d="M3 4H11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-                    <path d="M5.5 4V3C5.5 2.45 5.95 2 6.5 2H7.5C8.05 2 8.5 2.45 8.5 3V4" stroke="currentColor" stroke-width="1.3"/>
-                    <path d="M11 4V11.5C11 12.05 10.55 12.5 10 12.5H4C3.45 12.5 3 12.05 3 11.5V4" stroke="currentColor" stroke-width="1.3"/>
+                    <path
+                      d="M3 4H11"
+                      stroke="currentColor"
+                      stroke-width="1.3"
+                      stroke-linecap="round" />
+                    <path
+                      d="M5.5 4V3C5.5 2.45 5.95 2 6.5 2H7.5C8.05 2 8.5 2.45 8.5 3V4"
+                      stroke="currentColor"
+                      stroke-width="1.3" />
+                    <path
+                      d="M11 4V11.5C11 12.05 10.55 12.5 10 12.5H4C3.45 12.5 3 12.05 3 11.5V4"
+                      stroke="currentColor"
+                      stroke-width="1.3" />
                   </svg>
                   删除
                 </button>
@@ -273,10 +516,38 @@ onMounted(async () => {
             <td colspan="11" class="empty-row">
               <div class="empty-state">
                 <svg viewBox="0 0 48 48" fill="none" class="empty-icon">
-                  <rect x="8" y="10" width="32" height="28" rx="4" stroke="#1a3350" stroke-width="2"/>
-                  <line x1="14" y1="18" x2="34" y2="18" stroke="#1a3350" stroke-width="1.5" opacity="0.5"/>
-                  <line x1="14" y1="24" x2="28" y2="24" stroke="#1a3350" stroke-width="1.5" opacity="0.3"/>
-                  <line x1="14" y1="30" x2="22" y2="30" stroke="#1a3350" stroke-width="1.5" opacity="0.2"/>
+                  <rect
+                    x="8"
+                    y="10"
+                    width="32"
+                    height="28"
+                    rx="4"
+                    stroke="#1a3350"
+                    stroke-width="2" />
+                  <line
+                    x1="14"
+                    y1="18"
+                    x2="34"
+                    y2="18"
+                    stroke="#1a3350"
+                    stroke-width="1.5"
+                    opacity="0.5" />
+                  <line
+                    x1="14"
+                    y1="24"
+                    x2="28"
+                    y2="24"
+                    stroke="#1a3350"
+                    stroke-width="1.5"
+                    opacity="0.3" />
+                  <line
+                    x1="14"
+                    y1="30"
+                    x2="22"
+                    y2="30"
+                    stroke="#1a3350"
+                    stroke-width="1.5"
+                    opacity="0.2" />
                 </svg>
                 <p>暂无历史记录</p>
               </div>
@@ -298,12 +569,17 @@ onMounted(async () => {
               <div class="modal-header-left">
                 <h3 class="modal-title">电流曲线</h3>
                 <span class="modal-subtitle">
-                  {{ currentRecord?.device_name }} · {{ opTypeLabels[currentRecord?.op_type || ""] }}
+                  {{ currentRecord?.device_name }} ·
+                  {{ opTypeLabels[currentRecord?.op_type || ""] }}
                 </span>
               </div>
               <button class="modal-close" @click="detailVisible = false">
                 <svg viewBox="0 0 16 16" fill="none">
-                  <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  <path
+                    d="M4 4L12 12M12 4L4 12"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round" />
                 </svg>
               </button>
             </div>
@@ -311,19 +587,29 @@ onMounted(async () => {
             <div class="modal-stats">
               <div class="stat-block">
                 <span class="stat-label">峰值电流</span>
-                <span class="stat-value peak">{{ currentRecord?.peak_current }}<small>A</small></span>
+                <span class="stat-value peak"
+                  >{{ currentRecord?.peak_current }}<small>A</small></span
+                >
               </div>
               <div class="stat-block">
                 <span class="stat-label">谷值电流</span>
-                <span class="stat-value valley">{{ currentRecord?.valley_current }}<small>A</small></span>
+                <span class="stat-value valley"
+                  >{{ currentRecord?.valley_current }}<small>A</small></span
+                >
               </div>
               <div class="stat-block">
                 <span class="stat-label">测试时间</span>
-                <span class="stat-value time">{{ formatDate(currentRecord?.created_at || "") }}</span>
+                <span class="stat-value time">{{
+                  formatDate(currentRecord?.created_at || "")
+                }}</span>
               </div>
             </div>
-
-            <div class="modal-result" v-if="currentRecord?.result">
+            <div
+              class="modal-result"
+              v-if="
+                currentRecord?.result &&
+                JSON.parse(currentRecord.result).length > 0
+              ">
               <span class="result-section-label">检测项</span>
               <div class="result-tags">
                 <span
@@ -331,7 +617,9 @@ onMounted(async () => {
                   :key="idx"
                   class="result-tag"
                   :class="item.status ? 'pass' : 'fail'">
-                  <span class="result-check">{{ item.status ? "✓" : "✗" }}</span>
+                  <span class="result-check">{{
+                    item.status ? "✓" : "✗"
+                  }}</span>
                   {{ item.name }}
                   <span class="relay-name" v-if="item.relayName?.length">
                     ({{ item.relayName.join(", ") }})
@@ -339,8 +627,10 @@ onMounted(async () => {
                 </span>
               </div>
             </div>
-
-            <div class="modal-chart">
+            <div v-else class="modal-result">
+              <span class="result-tag fail">未检测</span>
+            </div>
+            <div ref="chartContainer" class="modal-chart">
               <v-chart :option="chartOpt" autoresize />
             </div>
           </div>
@@ -461,16 +751,38 @@ onMounted(async () => {
 }
 
 /* Column widths */
-.col-idx { width: 40px; text-align: center; }
-.col-device { min-width: 150px; }
-.col-combo { min-width: 120px; }
-.col-config { min-width: 120px; }
-.col-op { width: 80px; }
-.col-status { width: 90px; }
-.col-result { min-width: 160px; }
-.col-num { width: 70px; text-align: right; }
-.col-time { min-width: 150px; }
-.col-action { width: 150px; }
+.col-idx {
+  width: 40px;
+  text-align: center;
+}
+.col-device {
+  min-width: 150px;
+}
+.col-combo {
+  min-width: 120px;
+}
+.col-config {
+  min-width: 120px;
+}
+.col-op {
+  width: 80px;
+}
+.col-status {
+  width: 90px;
+}
+.col-result {
+  min-width: 160px;
+}
+.col-num {
+  width: 70px;
+  text-align: right;
+}
+.col-time {
+  min-width: 150px;
+}
+.col-action {
+  width: 150px;
+}
 
 .idx-cell {
   color: #5a7288;

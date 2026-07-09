@@ -220,10 +220,12 @@ const funWsRealData = (data) => {
   }
   // 收到寄存器数据 → 只更新寄存器缓存，线圈不动
   if (data.unitId === 1) {
+    console.log(data);
     const rawReg = Array.isArray(data.data) ? data.data : [];
     // lastRegisterArr.value = rawReg;
+    // lastRegisterArr.value = [data.data];
 
-    tempDate.unshift(rawReg);
+    tempDate.unshift([data.data]);
 
     // 限制最大20条，超出截断
     if (tempDate.length > 20) {
@@ -578,7 +580,7 @@ const handleOpe = (type: string) => {
     nextDoTime.value--;
     // 倒计时到0，清除定时器、解锁按钮
     if (nextDoTime.value <= 0) {
-      nextDoTime.value = 10;
+      nextDoTime.value = 15;
       clearInterval(timerId!);
       timerId = null;
       butItemIsDisable.value = false;
