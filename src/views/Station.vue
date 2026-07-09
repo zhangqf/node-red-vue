@@ -49,7 +49,6 @@ const groupedDevices = computed(() => {
 });
 
 function onDeviceClick(device: Device) {
-  console.log(device);
   router.push({
     name: "work",
     params: {
@@ -91,7 +90,6 @@ async function fetchTemplateData() {
       headers: { "Content-Type": "application/json" },
     });
     const { combination, config, type } = await response.json();
-    console.log("Fetched combination and config:", combination, config);
     combinationOptions.value = combination;
     configOptions.value = config;
     typeOptions.value = type;
@@ -107,25 +105,6 @@ function toggleImportMenu() {
 
 function closeImportMenu() {
   showImportMenu.value = false;
-}
-
-function downloadCsvTemplate() {
-  const csvHeader = "name,type,combination,config,location";
-  const csvRows = [
-    "ZD6 转辙机 #001,ZD6,,,站场 A 区",
-    "S700K 转辙机 #001,S700K,,,站场 B 区",
-  ];
-  const csvContent = [csvHeader, ...csvRows].join("\n");
-  const bom = "﻿";
-  const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "设备导入模板.csv";
-  a.click();
-  URL.revokeObjectURL(url);
-  closeImportMenu();
-  showToast("CSV 模板下载成功", "success");
 }
 
 async function downloadExcelTemplate() {
@@ -144,7 +123,6 @@ async function downloadExcelTemplate() {
   const comboData = combinationOptions.value.map((v) => {
     return [v.name];
   });
-  console.log(comboData);
   comboSheet.addRows([["请替换为系统中的配置信息"], ...comboData]);
   comboSheet.state = "veryHidden";
 
@@ -300,7 +278,6 @@ async function parseCsvFile(file: File): Promise<Device[]> {
 }
 
 async function parseExcelFile(file: File): Promise<Device[]> {
-  console.log("Parsing Excel file:", file.name);
   const buffer = await file.arrayBuffer();
   const wb = XLSX.read(buffer, { type: "array" });
 
@@ -447,31 +424,6 @@ onMounted(async () => {
           </button>
           <div v-if="showImportMenu" class="import-menu" @click.stop>
             <div class="import-menu-label">下载模板</div>
-            <button class="import-menu-item" @click="downloadCsvTemplate">
-              <svg viewBox="0 0 16 16" fill="none" class="menu-item-icon">
-                <path
-                  d="M3 2H13V14H3V2Z"
-                  stroke="currentColor"
-                  stroke-width="1.3"
-                  fill="none" />
-                <path
-                  d="M5 6H11"
-                  stroke="currentColor"
-                  stroke-width="1"
-                  opacity="0.5" />
-                <path
-                  d="M5 8H11"
-                  stroke="currentColor"
-                  stroke-width="1"
-                  opacity="0.5" />
-                <path
-                  d="M5 10H9"
-                  stroke="currentColor"
-                  stroke-width="1"
-                  opacity="0.5" />
-              </svg>
-              CSV 格式 (.csv)
-            </button>
             <button class="import-menu-item" @click="downloadExcelTemplate">
               <svg viewBox="0 0 16 16" fill="none" class="menu-item-icon">
                 <rect
@@ -522,7 +474,7 @@ onMounted(async () => {
                   stroke-linecap="round" />
               </svg>
               上传文件导入
-              <span class="item-hint">CSV / Excel</span>
+              <span class="item-hint"> Excel</span>
             </button>
           </div>
         </div>
@@ -536,7 +488,7 @@ onMounted(async () => {
     <input
       ref="fileInput"
       type="file"
-      accept=".csv,.xlsx,.xls"
+      accept=".xlsx,.xls"
       class="file-input-hidden"
       @change="handleFileImport" />
 
