@@ -124,6 +124,15 @@ const COLORS = {
   square: "#51cf66",
 };
 
+const LEGEND_RECORD = {
+  data: ["启动电流", "工作电流", "摩擦电流"],
+  bottom: 0,
+  left: 55,
+  orient: "horizontal",
+  textStyle: { color: "#8fb4d8", fontSize: 11 },
+  icon: "roundRect",
+} as const;
+
 function gradient(hex: string, alpha: number) {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
@@ -341,7 +350,7 @@ const chartOpt = computed(() => {
 
   return {
     graphic,
-    animationDuration: 400,
+    animationDuration: 0,
     animationEasing: "cubicOut",
     tooltip: hasData
       ? {
@@ -400,16 +409,7 @@ const chartOpt = computed(() => {
         formatter: (v: number) => v.toFixed(1),
       },
     },
-    legend: hasData
-      ? {
-          data: ["启动电流", "工作电流", "摩擦电流"],
-          bottom: 0,
-          left: 55,
-          orient: "horizontal",
-          textStyle: { color: "#8fb4d8", fontSize: 11 },
-          icon: "roundRect",
-        }
-      : undefined,
+    legend: hasData ? LEGEND_RECORD : undefined,
     series: seriesArr,
   };
 });
@@ -680,11 +680,10 @@ onMounted(async () => {
 
     <!-- 曲线弹窗 -->
     <Teleport to="body">
-      <Transition name="modal">
-        <div
-          v-if="detailVisible"
-          class="modal-overlay"
-          @click.self="detailVisible = false">
+      <div
+        v-if="detailVisible"
+        class="modal-overlay"
+        @click.self="detailVisible = false">
           <div class="modal-card">
             <div class="modal-header">
               <div class="modal-header-left">
@@ -756,7 +755,6 @@ onMounted(async () => {
             </div>
           </div>
         </div>
-      </Transition>
     </Teleport>
   </div>
 </template>
@@ -1424,27 +1422,4 @@ onMounted(async () => {
   padding: 0 20px 28px;
 }
 
-/* Modal transition */
-.modal-enter-active,
-.modal-leave-active {
-  transition: opacity 0.25s ease;
-}
-
-.modal-enter-active .modal-card,
-.modal-leave-active .modal-card {
-  transition: transform 0.25s ease;
-}
-
-.modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
-}
-
-.modal-enter-from .modal-card {
-  transform: scale(0.96);
-}
-
-.modal-leave-to .modal-card {
-  transform: scale(0.96);
-}
 </style>

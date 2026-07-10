@@ -220,7 +220,6 @@ const funWsRealData = (data) => {
   }
   // 收到寄存器数据 → 只更新寄存器缓存，线圈不动
   if (data.unitId === 1) {
-    console.log(data);
     const rawReg = Array.isArray(data.data) ? data.data : [];
     // lastRegisterArr.value = rawReg;
     // lastRegisterArr.value = [data.data];
@@ -252,6 +251,7 @@ const modbusStatus = ref();
 const funWsStatus = (data) => {
   if (!data.connected) {
     lastCoilArr.value = [];
+    isThreePhase.value = false;
   }
   modbusStatus.value = data;
 };
@@ -265,11 +265,16 @@ const phaseACurrent = ref(0);
 const phaseBCurrent = ref(0);
 const phaseCCurrent = ref(0);
 
+const phaseAPower = ref(0);
+const phaseBPower = ref(0);
+const phaseCPower = ref(0);
+
 const handleCauculate = (data: number, params: number) => {
   return data / params;
 };
 
 const funThreePhaseACCollector = (data) => {
+  isThreePhase.value = true;
   temperature.value = handleCauculate(data[4], 100);
   phaseAVoltage.value = handleCauculate(data[5], 100);
   phaseBVoltage.value = handleCauculate(data[6], 100);
@@ -277,6 +282,16 @@ const funThreePhaseACCollector = (data) => {
   phaseACurrent.value = handleCauculate(data[8], 1000);
   phaseBCurrent.value = handleCauculate(data[9], 1000);
   phaseCCurrent.value = handleCauculate(data[10], 1000);
+  phaseAPower.value = handleCauculate(data[12], 10000);
+  phaseBPower.value = handleCauculate(data[13], 10000);
+  phaseCPower.value = handleCauculate(data[14], 10000);
+  // 每次创建新数组赋值，确保引用变化，watch 才能检测
+  registerArrA.value = [phaseACurrent.value];
+  registerArrB.value = [phaseBCurrent.value];
+  registerArrC.value = [phaseCCurrent.value];
+  powerArrA.value = [phaseAPower.value];
+  powerArrB.value = [phaseBPower.value];
+  powerArrC.value = [phaseCPower.value];
 };
 
 // 监听ws消息，自动更新对应缓存，另一个数组保留旧值
@@ -308,6 +323,30 @@ const coilArr = computed(() => lastCoilArr.value);
 
 // 寄存器计算属性：永远返回缓存的最新寄存器数据，不会清空
 const registerArr = computed(() => lastRegisterArr.value);
+
+// 三相电流寄存器数组（用 ref 而非 computed，确保每次赋值新数组引用，watch 才能检测到变化）
+const registerArrA = ref<number[]>([]);
+const registerArrB = ref<number[]>([]);
+const registerArrC = ref<number[]>([]);
+
+// 三相功率数组
+const powerArrA = ref<number[]>([]);
+const powerArrB = ref<number[]>([]);
+const powerArrC = ref<number[]>([]);
+
+// 三相功率（W = V × I）
+const powerA = computed(
+  () => +(phaseAVoltage.value * phaseACurrent.value).toFixed(1),
+);
+const powerB = computed(
+  () => +(phaseBVoltage.value * phaseBCurrent.value).toFixed(1),
+);
+const powerC = computed(
+  () => +(phaseCVoltage.value * phaseCCurrent.value).toFixed(1),
+);
+const totalPower = computed(
+  () => +(powerA.value + powerB.value + powerC.value).toFixed(1),
+);
 
 const device = ref({
   name: "",
@@ -442,6 +481,7 @@ const handleContactConfigClick = (type: string) => {
 };
 
 const isAction = ref(false);
+const isThreePhase = ref(false);
 
 const startRecord = () => {
   isAction.value = true;
@@ -461,10 +501,22 @@ const saveRecord = async (relay: keyof ActionRelays) => {
     };
   });
   const exposed = currentCurveRef.value;
-  const valley = exposed?.valley_current;
-  const peak = exposed?.peak_current;
-  const history = exposed?.currentHistory;
-  const xLabels = exposed?.xLabels;
+  let peak, valley, history, xLabels;
+  if (exposed?.isThreePhase) {
+    peak = { A: exposed.peakA, B: exposed.peakB, C: exposed.peakC };
+    valley = { A: exposed.valleyA, B: exposed.valleyB, C: exposed.valleyC };
+    history = {
+      A: exposed.currentHistoryA,
+      B: exposed.currentHistoryB,
+      C: exposed.currentHistoryC,
+    };
+    xLabels = exposed.xLabels3;
+  } else {
+    peak = exposed?.peakSingle;
+    valley = exposed?.valleySingle;
+    history = exposed?.currentHistory;
+    xLabels = exposed?.xLabels;
+  }
   const tempData = {
     device_name: device.value.name,
     combination_name: combinationName.value,
@@ -590,7 +642,6 @@ const handleOpe = (type: string) => {
 };
 
 async function getList() {
-  console.log("4");
   try {
     const [itemRes, deviceRes, comboRes, configRes] = await Promise.all([
       fetch(HTTP_URL + "/getConfig/" + deviceId + "/" + combinationId),
@@ -600,7 +651,6 @@ async function getList() {
     ]);
 
     itemConfig.value = await itemRes.json();
-    console.log(itemConfig.value);
 
     if (itemConfig.value.length > 0) {
       active.value = itemConfig.value.filter((v) => v.id === configId)[0].id;
@@ -624,7 +674,6 @@ async function getList() {
 }
 
 async function getCodeDeviceList() {
-  console.log("code");
   try {
     const [comboRes, configRes] = await Promise.all([
       fetch(HTTP_URL + "/getCombination/" + combinationId),
@@ -700,16 +749,29 @@ onMounted(async () => {
         :start-current="currentData.startCurrent"
         :convert-current="currentData.convertCurrent"
         :lock-current="currentData.lockCurrent"
-        :register-arr="registerArr"
+        :register-arr="isThreePhase ? undefined : registerArr"
+        :register-arr-a="isThreePhase ? registerArrA : undefined"
+        :register-arr-b="isThreePhase ? registerArrB : undefined"
+        :register-arr-c="isThreePhase ? registerArrC : undefined"
         ref="currentCurveRef"
         @start="handleStart" />
 
-      <!-- <PowerCurve
-        :power-kw="powerData.powerKw"
-        :power-value="powerData.powerValue"
-        :start-power="powerData.startPower"
-        :convert-power="powerData.convertPower"
-        :lock-power="powerData.lockPower" /> -->
+      <PowerCurve
+        v-if="isThreePhase"
+        :three-phase="isThreePhase"
+        :voltage-a="phaseAVoltage"
+        :voltage-b="phaseBVoltage"
+        :voltage-c="phaseCVoltage"
+        :current-a="phaseACurrent"
+        :current-b="phaseBCurrent"
+        :current-c="phaseCCurrent"
+        :power-a="powerA"
+        :power-b="powerB"
+        :power-c="powerC"
+        :total-power="totalPower"
+        :power-arr-a="isThreePhase ? powerArrA : undefined"
+        :power-arr-b="isThreePhase ? powerArrB : undefined"
+        :power-arr-c="isThreePhase ? powerArrC : undefined" />
 
       <div class="right-panel">
         <TestResults :tests="testResults" :isAction="isAction" />
