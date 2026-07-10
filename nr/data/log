@@ -3,3 +3,61 @@
 [{"id":"2a6290b2-efce-4e2a-94e0-52ccfdbb1129","name":"单动单机","deviceType":"ZD6","description":"单机牵引组合方式","created_at":"2026-06-24 07:51:59","updated_at":"2026-06-24 07:51:59"}]
 [{"id":"2a6290b2-efce-4e2a-94e0-52ccfdbb1129","name":"单动单机","deviceType":"ZD6","description":"单机牵引组合方式","created_at":"2026-06-24 07:51:59","updated_at":"2026-06-24 07:51:59"}]
 {"name":"23","typeName":"","location":"","combination":"","config":""}
+{"page":"1","pageSize":"15"}
+{"page":"1","pageSize":"15"}
+[0,"15"]
+[0,15]
+[2026/7/10 10:51:52] SQL执行错误
+错误信息: Error: SQLITE_ERROR: near "30": syntax error
+执行SQL: 
+    SELECT id, config_name, op_type, device_name, combination_name, created_at
+    FROM operation_records
+    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+    ORDER BY created_at DESC
+    LIMIT ?, ?
+
+参数: [0,15]
+--------------------------
+
+[2026/7/10 10:53:29] SQL执行错误
+错误信息: Error: SQLITE_ERROR: unrecognized token: "")
+    ORDER BY created_at DESC
+    LIMIT ?, ?
+"
+执行SQL: 
+    SELECT id, config_name, op_type, device_name, combination_name, created_at
+    FROM operation_records
+    WHERE " + whereClauses.join(" AND ")
+    ORDER BY created_at DESC
+    LIMIT ?, ?
+
+参数: [0,15]
+--------------------------
+
+{"page":"1","pageSize":"15"}
+{"page":"1","pageSize":"15"}
+{"page":"1","pageSize":"15"}
+[2026/7/10 11:03:05] SQL执行错误
+错误信息: Error: SQLITE_ERROR: no such column: undefined
+执行SQL: SELECT * FROM operation_records  ORDER BY created_at DESC LIMIT undefined OFFSET NaN
+参数: []
+--------------------------
+
+[2026/7/10 11:22:59] SQL执行错误
+错误信息: Error: SQLITE_ERROR: unrecognized token: "$"
+执行SQL: SELECT COUNT(*) as total FROM operation_records WHERE op_type = ${opType}
+参数: []
+--------------------------
+
+[2026/7/10 11:23:03] SQL执行错误
+错误信息: Error: SQLITE_ERROR: unrecognized token: "$"
+执行SQL: SELECT COUNT(*) as total FROM operation_records WHERE op_type = ${opType}
+参数: []
+--------------------------
+
+[2026/7/10 11:23:07] SQL执行错误
+错误信息: Error: SQLITE_ERROR: unrecognized token: "$"
+执行SQL: SELECT COUNT(*) as total FROM operation_records WHERE op_type = ${opType}
+参数: []
+--------------------------
+

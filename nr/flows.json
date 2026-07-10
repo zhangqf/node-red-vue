@@ -377,7 +377,12 @@
             "870e4422a56ffb66",
             "8ff6c774df68041e",
             "80d48c3968dc9c91",
-            "c2f6d62403a4338f"
+            "c2f6d62403a4338f",
+            "61ddaf6c150c9e97",
+            "fa6adc257e705b7c",
+            "8d1c4fc5a1ecd863",
+            "004c06110970a837",
+            "0fabe0243ee29da8"
         ],
         "x": 114,
         "y": 4299,
@@ -3206,7 +3211,7 @@
         "y": 4580,
         "wires": [
             [
-                "a246ecd9553dfb91"
+                "61ddaf6c150c9e97"
             ]
         ]
     },
@@ -3216,14 +3221,15 @@
         "z": "e4bbd3713100fe17",
         "g": "8f47e2e3400d33b2",
         "mydb": "a074385e545da94b",
-        "sqlquery": "fixed",
+        "sqlquery": "msg.topic",
         "sql": "SELECT * FROM operation_records ORDER BY created_at DESC",
         "name": "",
-        "x": 560,
+        "x": 680,
         "y": 4580,
         "wires": [
             [
-                "708e32731ad70d8d"
+                "fa6adc257e705b7c",
+                "004c06110970a837"
             ]
         ]
     },
@@ -4800,5 +4806,103 @@
         "x": 1640,
         "y": 5400,
         "wires": []
+    },
+    {
+        "id": "61ddaf6c150c9e97",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "function 20",
+        "func": "const page = parseInt(msg.req.query.page) || 1;\n  const pageSize = parseInt(msg.req.query.pageSize) || 15;\n  const offset = (page - 1) * pageSize;\n\n  const device = msg.req.query.device_name;\n  const combo = msg.req.query.combination_name;\n  const config = msg.req.query.config_name;\n  const opType = msg.req.query.op_type;\n  const status = msg.req.query.status;\n\n  // 构建搜索条件\n  const conditions = [];\n  const params = [];\n\n  if (device) {\n    conditions.push(`device_name LIKE '%${device}%'`);   // 直接拼 SQL\n  }\n  if (combo) {\n    conditions.push(`combination_name LIKE '%${combo}%'`);\n  }\n  if (config) {\n    conditions.push(`config_name LIKE '%${config}%'`);\n  }\n  if (opType) {\n    conditions.push(`op_type = '${opType}'`);\n    // params.push(opType);\n  }\n  if (status) {\n    conditions.push(`status = '${status}'`);\n    params.push(status);\n  }\n\n  const whereClause = conditions.length > 0 ? \"WHERE \" + conditions.join(\" AND \") : \"\";\n\n  msg.topic = `SELECT COUNT(*) as total FROM operation_records ${whereClause}`;\n  msg.params = params;\n  return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 4580,
+        "wires": [
+            [
+                "a246ecd9553dfb91"
+            ]
+        ]
+    },
+    {
+        "id": "fa6adc257e705b7c",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 920,
+        "y": 4620,
+        "wires": []
+    },
+    {
+        "id": "8d1c4fc5a1ecd863",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "function 26",
+        "func": "  msg.payload = {\n    data: msg.payload || [],\n    total: msg._total || 0,\n  };\n  return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1330,
+        "y": 4580,
+        "wires": [
+            [
+                "708e32731ad70d8d"
+            ]
+        ]
+    },
+    {
+        "id": "004c06110970a837",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "function 27",
+        "func": "  const total = msg.payload[0]?.total || 0;\n\n  const page = parseInt(msg.req.query.page) || 1;\n  const pageSize = parseInt(msg.req.query.pageSize) || 15;\n  const offset = (page - 1) * pageSize;\n\n  const device = msg.req.query.device_name;\n  const combo = msg.req.query.combination_name;\n  const config = msg.req.query.config_name;\n  const opType = msg.req.query.op_type;\n  const status = msg.req.query.status;\n\n  const conditions = [];\n  const params = [];\n\n  if (device) conditions.push(`device_name LIKE '%${device}%'`);\n  if (combo) conditions.push(`combination_name LIKE '%${combo}%'`);\n  if (config) conditions.push(`config_name LIKE '%${config}%'`);\n  if (opType) {\n    conditions.push(`op_type = '${opType}'`);\n    params.push(opType);\n  }\n  if (status) {\n    conditions.push(`status = '${status}'`);\n    params.push(status);\n  }\n\n  const whereClause = conditions.length > 0 ? \"WHERE \" + conditions.join(\" AND \") : \"\";\n\n  msg.topic = `SELECT * FROM operation_records ${whereClause} ORDER BY created_at DESC LIMIT ${pageSize} OFFSET ${offset}`;\n  msg.params = params;\n  msg._total = total;\n\n  return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 930,
+        "y": 4580,
+        "wires": [
+            [
+                "0fabe0243ee29da8"
+            ]
+        ]
+    },
+    {
+        "id": "0fabe0243ee29da8",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "",
+        "x": 1140,
+        "y": 4580,
+        "wires": [
+            [
+                "8d1c4fc5a1ecd863"
+            ]
+        ]
     }
 ]

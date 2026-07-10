@@ -20,6 +20,16 @@ interface RecordItem {
 }
 
 const records = ref<RecordItem[]>([]);
+const total = ref(0);
+const currentPage = ref(1);
+const pageSize = ref(15);
+
+const searchDevice = ref("");
+const searchCombination = ref("");
+const searchConfig = ref("");
+const searchOpType = ref("");
+const searchStatus = ref("");
+
 const detailVisible = ref(false);
 const currentRecord = ref<RecordItem | null>(null);
 const curveData = ref<{ t: number; v: number }[]>([]);
@@ -55,9 +65,47 @@ const opTypeLabels: Record<string, string> = {
 };
 
 async function getList() {
-  const res = await fetch(HTTP_URL + "/operationRecords");
-  records.value = await res.json();
+  const params = new URLSearchParams();
+  params.set("page", String(currentPage.value));
+  params.set("pageSize", String(pageSize.value));
+  if (searchDevice.value) params.set("device_name", searchDevice.value);
+  if (searchCombination.value) params.set("combination_name", searchCombination.value);
+  if (searchConfig.value) params.set("config_name", searchConfig.value);
+  if (searchOpType.value) params.set("op_type", searchOpType.value);
+  if (searchStatus.value) params.set("status", searchStatus.value);
+
+  const res = await fetch(HTTP_URL + "/operationRecords?" + params.toString());
+  const json = await res.json();
+  if (json.data) {
+    records.value = json.data;
+    total.value = json.total || json.data.length;
+  } else {
+    records.value = json;
+    total.value = json.length;
+  }
 }
+
+function handleSearch() {
+  currentPage.value = 1;
+  getList();
+}
+
+function handleReset() {
+  searchDevice.value = "";
+  searchCombination.value = "";
+  searchConfig.value = "";
+  searchOpType.value = "";
+  searchStatus.value = "";
+  currentPage.value = 1;
+  getList();
+}
+
+function handlePageChange(page: number) {
+  currentPage.value = page;
+  getList();
+}
+
+const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)));
 
 async function openDetail(record: RecordItem) {
   currentRecord.value = record;
@@ -392,10 +440,15 @@ async function handleDelete(item: RecordItem) {
   const delAction = withLoading(async () => {
     const res = await deleteList(String(id), curve_file);
     records.value = records.value.filter((c) => c.id !== id);
+    total.value--;
     return res;
   }, "正在删除...");
   try {
     await delAction();
+    if (records.value.length === 0 && currentPage.value > 1) {
+      currentPage.value--;
+      getList();
+    }
   } catch (error: any) {
     console.error("删除操作异常：", error);
   }
@@ -418,7 +471,45 @@ onMounted(async () => {
     <div class="page-header">
       <div class="header-left">
         <h2 class="page-title">历史记录</h2>
-        <span class="record-count">{{ records.length }} 条记录</span>
+        <span class="record-count">{{ total }} 条记录</span>
+      </div>
+    </div>
+
+    <div class="search-bar">
+      <div class="search-fields">
+        <input
+          v-model="searchDevice"
+          class="search-input"
+          placeholder="设备名称"
+          @keyup.enter="handleSearch"
+        />
+        <input
+          v-model="searchCombination"
+          class="search-input"
+          placeholder="组合方式"
+          @keyup.enter="handleSearch"
+        />
+        <input
+          v-model="searchConfig"
+          class="search-input"
+          placeholder="测试机型"
+          @keyup.enter="handleSearch"
+        />
+        <select v-model="searchOpType" class="search-select">
+          <option value="">操作类型</option>
+          <option v-for="(label, key) in opTypeLabels" :key="key" :value="key">
+            {{ label }}
+          </option>
+        </select>
+        <select v-model="searchStatus" class="search-select">
+          <option value="">状态</option>
+          <option value="success">成功</option>
+          <option value="fail">失败</option>
+        </select>
+      </div>
+      <div class="search-actions">
+        <button class="search-btn" @click="handleSearch">查询</button>
+        <button class="reset-btn" @click="handleReset">重置</button>
       </div>
     </div>
 
@@ -557,6 +648,36 @@ onMounted(async () => {
       </table>
     </div>
 
+    <div class="pagination" v-if="totalPages > 1">
+      <button
+        class="page-btn"
+        :disabled="currentPage <= 1"
+        @click="handlePageChange(currentPage - 1)">
+        上一页
+      </button>
+      <template v-for="p in totalPages" :key="p">
+        <button
+          v-if="p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2"
+          class="page-btn"
+          :class="{ active: p === currentPage }"
+          @click="handlePageChange(p)">
+          {{ p }}
+        </button>
+        <span
+          v-else-if="Math.abs(p - currentPage) === 3"
+          class="page-ellipsis">
+          …
+        </span>
+      </template>
+      <button
+        class="page-btn"
+        :disabled="currentPage >= totalPages"
+        @click="handlePageChange(currentPage + 1)">
+        下一页
+      </button>
+      <span class="page-info">共 {{ total }} 条</span>
+    </div>
+
     <!-- 曲线弹窗 -->
     <Teleport to="body">
       <Transition name="modal">
@@ -647,6 +768,160 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+/* ---- Search Bar ---- */
+.search-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  background: #0b1d33;
+  border: 1px solid #1a2d44;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.search-fields {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.search-input {
+  width: 130px;
+  padding: 6px 10px;
+  background: #051424;
+  border: 1px solid #1a2d44;
+  border-radius: 5px;
+  color: #c0d0e0;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-input::placeholder {
+  color: #4a6078;
+}
+
+.search-input:focus {
+  border-color: #2d5280;
+}
+
+.search-select {
+  width: 110px;
+  padding: 6px 10px;
+  background: #051424;
+  border: 1px solid #1a2d44;
+  border-radius: 5px;
+  color: #c0d0e0;
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.search-select:focus {
+  border-color: #2d5280;
+}
+
+.search-select option {
+  background: #0b1d33;
+  color: #c0d0e0;
+}
+
+.search-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.search-btn {
+  padding: 6px 16px;
+  background: rgba(90, 146, 208, 0.2);
+  border: 1px solid #2d5280;
+  border-radius: 5px;
+  color: #8fb4d8;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.search-btn:hover {
+  background: rgba(90, 146, 208, 0.35);
+  color: #fff;
+}
+
+.reset-btn {
+  padding: 6px 16px;
+  background: transparent;
+  border: 1px solid #1a2d44;
+  border-radius: 5px;
+  color: #5a7288;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.reset-btn:hover {
+  border-color: #2d5280;
+  color: #8fb4d8;
+}
+
+/* ---- Pagination ---- */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 10px 0;
+  flex-shrink: 0;
+}
+
+.page-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  background: #0b1d33;
+  border: 1px solid #1a2d44;
+  border-radius: 5px;
+  color: #8fb4d8;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-btn:hover:not(:disabled) {
+  border-color: #2d5280;
+  background: rgba(90, 146, 208, 0.15);
+}
+
+.page-btn.active {
+  background: rgba(90, 146, 208, 0.25);
+  border-color: #5a92d0;
+  color: #fff;
+}
+
+.page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.page-ellipsis {
+  width: 32px;
+  text-align: center;
+  color: #5a7288;
+  font-size: 14px;
+}
+
+.page-info {
+  margin-left: 8px;
+  color: #5a7288;
+  font-size: 12px;
 }
 
 /* ---- Header ---- */

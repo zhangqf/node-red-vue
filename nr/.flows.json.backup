@@ -377,7 +377,12 @@
             "870e4422a56ffb66",
             "8ff6c774df68041e",
             "80d48c3968dc9c91",
-            "c2f6d62403a4338f"
+            "c2f6d62403a4338f",
+            "61ddaf6c150c9e97",
+            "fa6adc257e705b7c",
+            "8d1c4fc5a1ecd863",
+            "004c06110970a837",
+            "0fabe0243ee29da8"
         ],
         "x": 114,
         "y": 4299,
@@ -3206,7 +3211,7 @@
         "y": 4580,
         "wires": [
             [
-                "a246ecd9553dfb91"
+                "61ddaf6c150c9e97"
             ]
         ]
     },
@@ -3216,14 +3221,15 @@
         "z": "e4bbd3713100fe17",
         "g": "8f47e2e3400d33b2",
         "mydb": "a074385e545da94b",
-        "sqlquery": "fixed",
+        "sqlquery": "msg.topic",
         "sql": "SELECT * FROM operation_records ORDER BY created_at DESC",
         "name": "",
-        "x": 560,
+        "x": 680,
         "y": 4580,
         "wires": [
             [
-                "708e32731ad70d8d"
+                "fa6adc257e705b7c",
+                "004c06110970a837"
             ]
         ]
     },
@@ -4078,8 +4084,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1040,
-        "y": 220,
+        "x": 1200,
+        "y": 80,
         "wires": [
             [
                 "a8c64df65bf7ad9e"
@@ -4091,7 +4097,7 @@
         "type": "function",
         "z": "e4bbd3713100fe17",
         "g": "a78c98a47184b2fa",
-        "name": "function 20",
+        "name": "mock电流",
         "func": "\n\n// msg.sendData = \n//   {\n//     \"fc\":1,\n//     \"unitId\":3,\n//     \"address\":0,\n//     \"quantity\":32,\n//     \"data\":[0,0,1,0,0,0],\n//     \"type\":\"modbusRealData\"\n\n//   }\n\n\nconst currentData = [\n    2.5,\n    5.4,\n    8.1,\n    10.6,\n    12.9,\n    15,\n    16.9,\n    18.6,\n    20.1,\n    21.4,\n    22.5,\n    23.4,\n    24.1,\n    24.6,\n    24.9,\n    25,\n    24.9,\n    24.6,\n    24.1,\n    23.4,\n    22.5,\n    21.4,\n    20.1,\n    18.6,\n    16.9,\n    15,\n    12.9,\n    10.6,\n    8.1,\n    5.4,\n    2.5,\n    5.00,\n    5.02,\n    5.035,\n    5.048,\n    5.056,\n    5.062,\n    5.067,\n    5.070,\n    5.072,\n    5.0735,\n    5.0745,\n    5.0752,\n    5.0758,\n    5.0762,\n    5.0765,\n    5.0767,\n    5.0768,\n    5.0769,\n    5.07695,\n    5.0770,\n    5.0770,\n    5.0770,\n    5.0770,\n    5.0770,\n    5.0770,\n    2,2,2,2,2,2,2,2,\n    6,6,6,6,6,6,6,6,\n    2,2,2,2,2,2,2,2,\n    6,6,6,6,6,6,6,6,\n    2,2,2,2,2,2,2,2\n]\n\n\nconst len = currentData.length;\nlet idx = context.get('idx')||0;\n\n\nmsg.payload = currentData[idx];\n\n\n\nmsg.sendData = {\n    data:msg.payload,\n    type:\"modbusRealData\",\n    unitId: 1,\n\tfc: 3,\n\taddress:14,\n\tquantity: 1,\n}\n\nidx = idx + 1;\nif(idx >= currentData.length){\n    idx = 0;\n}\ncontext.set(\"idx\", idx);\n\n\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
@@ -4099,12 +4105,10 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1230,
-        "y": 240,
+        "x": 1360,
+        "y": 80,
         "wires": [
-            [
-                "d50b53f9cf0907c2"
-            ]
+            []
         ]
     },
     {
@@ -4802,5 +4806,103 @@
         "x": 1640,
         "y": 5400,
         "wires": []
+    },
+    {
+        "id": "61ddaf6c150c9e97",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "function 20",
+        "func": "const page = parseInt(msg.req.query.page) || 1;\n  const pageSize = parseInt(msg.req.query.pageSize) || 15;\n  const offset = (page - 1) * pageSize;\n\n  const device = msg.req.query.device_name;\n  const combo = msg.req.query.combination_name;\n  const config = msg.req.query.config_name;\n  const opType = msg.req.query.op_type;\n  const status = msg.req.query.status;\n\n  // 构建搜索条件\n  const conditions = [];\n  const params = [];\n\n  if (device) {\n    conditions.push(`device_name LIKE '%${device}%'`);   // 直接拼 SQL\n  }\n  if (combo) {\n    conditions.push(`combination_name LIKE '%${combo}%'`);\n  }\n  if (config) {\n    conditions.push(`config_name LIKE '%${config}%'`);\n  }\n  if (opType) {\n    conditions.push(`op_type = '${opType}'`);\n    // params.push(opType);\n  }\n  if (status) {\n    conditions.push(\"status = ?\");\n    params.push(status);\n  }\n\n  const whereClause = conditions.length > 0 ? \"WHERE \" + conditions.join(\" AND \") : \"\";\n\n  msg.topic = `SELECT COUNT(*) as total FROM operation_records ${whereClause}`;\n  msg.params = params;\n  return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 4580,
+        "wires": [
+            [
+                "a246ecd9553dfb91"
+            ]
+        ]
+    },
+    {
+        "id": "fa6adc257e705b7c",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 920,
+        "y": 4620,
+        "wires": []
+    },
+    {
+        "id": "8d1c4fc5a1ecd863",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "function 26",
+        "func": "  msg.payload = {\n    data: msg.payload || [],\n    total: msg._total || 0,\n  };\n  return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1330,
+        "y": 4580,
+        "wires": [
+            [
+                "708e32731ad70d8d"
+            ]
+        ]
+    },
+    {
+        "id": "004c06110970a837",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "function 27",
+        "func": "  const total = msg.payload[0]?.total || 0;\n\n  const page = parseInt(msg.req.query.page) || 1;\n  const pageSize = parseInt(msg.req.query.pageSize) || 15;\n  const offset = (page - 1) * pageSize;\n\n  const device = msg.req.query.device_name;\n  const combo = msg.req.query.combination_name;\n  const config = msg.req.query.config_name;\n  const opType = msg.req.query.op_type;\n  const status = msg.req.query.status;\n\n  const conditions = [];\n  const params = [];\n\n  if (device) conditions.push(`device_name LIKE '%${device}%'`);\n  if (combo) conditions.push(`combination_name LIKE '%${combo}%'`);\n  if (config) conditions.push(`config_name LIKE '%${config}%'`);\n  if (opType) {\n    conditions.push(\"op_type = ?\");\n    params.push(opType);\n  }\n  if (status) {\n    conditions.push(\"status = ?\");\n    params.push(status);\n  }\n\n  const whereClause = conditions.length > 0 ? \"WHERE \" + conditions.join(\" AND \") : \"\";\n\n  msg.topic = `SELECT * FROM operation_records ${whereClause} ORDER BY created_at DESC LIMIT ${pageSize} OFFSET ${offset}`;\n  msg.params = params;\n  msg._total = total;\n\n  return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 930,
+        "y": 4580,
+        "wires": [
+            [
+                "0fabe0243ee29da8"
+            ]
+        ]
+    },
+    {
+        "id": "0fabe0243ee29da8",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "",
+        "x": 1140,
+        "y": 4580,
+        "wires": [
+            [
+                "8d1c4fc5a1ecd863"
+            ]
+        ]
     }
 ]
