@@ -176,6 +176,7 @@ async function fetchCombinations() {
   try {
     const res = await fetch(HTTP_URL + "/getCombination");
     combinations.value = await res.json();
+    console.log("组合方式数据:", combinations.value);
   } catch {
     combinations.value = [
       {
@@ -204,6 +205,7 @@ async function fetchConfigs() {
   try {
     const res = await fetch(HTTP_URL + "/getConfig");
     configs.value = await res.json();
+    console.log("测试机型数据:", configs.value);
   } catch {
     configs.value = [
       {
@@ -254,6 +256,22 @@ async function fetchBindings() {
     ];
   }
 }
+/* 获取当前选中设备的类型 */
+const selectedDeviceType = computed(() => {
+  const device = devices.value.find((d) => d.id === selectedDeviceId.value);
+  return device?.typeName || "";
+});
+
+const filteredCombinations = computed(() => {
+  return combinations.value.filter(
+    (c) => c.deviceType === selectedDeviceType.value,
+  );
+});
+const getInnerText = (text) => {
+  const match = text.match(/【([^】]+)】/);
+  console.log("getInnerText:", text, match ? match[1] : null);
+  return match ? match[1] : null;
+};
 
 watch(selectedDeviceId, (newVal) => {
   if (newVal) {
@@ -305,7 +323,7 @@ onMounted(async () => {
       <p class="section-hint" v-if="!selectedDeviceId">请先选择机型</p>
 
       <div
-        v-for="combo in combinations"
+        v-for="combo in filteredCombinations"
         :key="combo.id"
         class="bind-row"
         :class="{ bound: isCombinationBound(combo.id) }">
@@ -325,17 +343,27 @@ onMounted(async () => {
         <div v-if="isCombinationBound(combo.id)" class="config-sublist">
           <span class="config-label">关联测试机型：</span>
           <div class="config-chips">
-            <label
-              v-for="cfg in configs"
-              :key="cfg.id"
-              class="chip-label"
-              :class="{ checked: isConfigBound(combo.id, cfg.id) }">
-              <input
-                type="checkbox"
-                :checked="isConfigBound(combo.id, cfg.id)"
-                @change="toggleConfig(combo.id, cfg.id)" />
-              {{ cfg.name }}
-            </label>
+            <template v-for="cfg in configs" :key="cfg.id">
+              <label
+                v-if="
+                  cfg.name &&
+                  (() => {
+                    const inner = getInnerText(cfg.name) ?? '';
+                    return (
+                      inner === combo.name ||
+                      inner.split('/').includes(combo.name)
+                    );
+                  })()
+                "
+                class="chip-label"
+                :class="{ checked: isConfigBound(combo.id, cfg.id) }">
+                <input
+                  type="checkbox"
+                  :checked="isConfigBound(combo.id, cfg.id)"
+                  @change="toggleConfig(combo.id, cfg.id)" />
+                {{ cfg.name }}
+              </label>
+            </template>
             <span v-if="configs.length === 0" class="empty-hint"
               >暂无测试机型</span
             >
