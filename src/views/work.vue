@@ -224,7 +224,7 @@ const funWsRealData = (data) => {
     // lastRegisterArr.value = rawReg;
     // lastRegisterArr.value = [data.data];
 
-    tempDate.unshift([data.data]);
+    tempDate.unshift(rawReg);
 
     // 限制最大20条，超出截断
     if (tempDate.length > 20) {
@@ -525,7 +525,8 @@ const saveRecord = async (relay: keyof ActionRelays) => {
     op_type: relay,
     status: "success",
     peak_current: typeof peak === "object" ? JSON.stringify(peak) : peak,
-    valley_current: typeof valley === "object" ? JSON.stringify(valley) : valley,
+    valley_current:
+      typeof valley === "object" ? JSON.stringify(valley) : valley,
     curve_data: history,
     time_data: xLabels,
     result: data,
