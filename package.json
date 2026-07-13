@@ -1,8 +1,9 @@
 {
   "name": "switch-machine",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "hebimaoshi",
   "description": "Switch Machine",
+  "repository": "https://github.com/zhangqf/node-red-vue",
   "private": true,
   "type": "module",
   "main": "electron/main.cjs",
