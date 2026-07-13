@@ -148,27 +148,32 @@ if (!gotTheLock) {
       createWindow();
 
       // ---- 自动更新 ----
-      if (!isDev) {
-        autoUpdater.autoDownload = true;
-        autoUpdater.autoInstallOnAppQuit = true;
+      autoUpdater.autoDownload = true;
+      autoUpdater.autoInstallOnAppQuit = true;
 
-        autoUpdater.on("update-available", () => {
-          mainWindow?.webContents.send("update-status", "downloading");
-        });
-        autoUpdater.on("update-not-available", () => {
-          mainWindow?.webContents.send("update-status", "up-to-date");
-        });
-        autoUpdater.on("download-progress", (progress) => {
-          mainWindow?.webContents.send("update-download-progress", progress.percent);
-        });
-        autoUpdater.on("update-downloaded", (info) => {
-          mainWindow?.webContents.send("update-downloaded", info.version);
-        });
-        autoUpdater.on("error", (err) => {
-          console.error("Auto-updater error:", err);
-        });
+      autoUpdater.on("update-available", () => {
+        mainWindow?.webContents.send("update-status", "downloading");
+      });
+      autoUpdater.on("update-not-available", () => {
+        mainWindow?.webContents.send("update-status", "up-to-date");
+      });
+      autoUpdater.on("download-progress", (progress) => {
+        mainWindow?.webContents.send(
+          "update-download-progress",
+          progress.percent,
+        );
+      });
+      autoUpdater.on("update-downloaded", (info) => {
+        mainWindow?.webContents.send("update-downloaded", info.version);
+      });
+      autoUpdater.on("error", (err) => {
+        console.error("Auto-updater error:", err);
+      });
 
+      try {
         autoUpdater.checkForUpdates();
+      } catch (e) {
+        console.warn("Update check skipped (dev mode):", e.message);
       }
 
       // IPC：renderer 请求立即安装更新
