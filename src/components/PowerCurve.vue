@@ -198,7 +198,7 @@ function resetData() {
   startTime.value = 0;
 }
 
-defineExpose({ resetData });
+defineExpose({ resetData, historyA, historyB, historyC, xLabels });
 </script>
 
 <template>

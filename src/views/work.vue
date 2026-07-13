@@ -491,6 +491,7 @@ const stopRecord = () => {
 };
 
 const currentCurveRef = ref<InstanceType<typeof CurrentCurve>>();
+const powerCurveRef = ref<InstanceType<typeof PowerCurve>>();
 
 const saveRecord = async (relay: keyof ActionRelays) => {
   const data = toRaw(testResults.value).map((item) => {
@@ -517,18 +518,29 @@ const saveRecord = async (relay: keyof ActionRelays) => {
     history = exposed?.currentHistory;
     xLabels = exposed?.xLabels;
   }
-  const tempData = {
+  const tempData: Record<string, any> = {
     device_name: device.value.name,
     combination_name: combinationName.value,
     config_name: configName.value,
     op_type: relay,
     status: "success",
-    peak_current: peak,
-    valley_current: valley,
+    peak_current: typeof peak === "object" ? JSON.stringify(peak) : peak,
+    valley_current: typeof valley === "object" ? JSON.stringify(valley) : valley,
     curve_data: history,
     time_data: xLabels,
     result: data,
   };
+
+  // 保存功率曲线数据（仅三相时存在）
+  if (isThreePhase.value) {
+    const pw = powerCurveRef.value;
+    if (pw) {
+      tempData.power_A = pw.historyA;
+      tempData.power_B = pw.historyB;
+      tempData.power_C = pw.historyC;
+      tempData.power_time = pw.xLabels;
+    }
+  }
 
   try {
     const response = await fetch(HTTP_URL + "/saveRecord", {
@@ -757,6 +769,7 @@ onMounted(async () => {
         @start="handleStart" />
 
       <PowerCurve
+        ref="powerCurveRef"
         v-if="isThreePhase"
         :three-phase="isThreePhase"
         :voltage-a="phaseAVoltage"

@@ -33,10 +33,15 @@ const searchStatus = ref("");
 const detailVisible = ref(false);
 const currentRecord = ref<RecordItem | null>(null);
 const curveData = ref<{ t: number; v: number }[]>([]);
+const powerCurveData = ref<{ power_A: number[]; power_B: number[]; power_C: number[]; power_time: string[] } | null>(null);
+const hasPowerData = computed(() => powerCurveData.value != null);
 const chartContainer = ref<HTMLElement | null>(null);
 const chartSize = ref({ width: 0, height: 0 });
+const powerChartContainer = ref<HTMLElement | null>(null);
+const powerChartSize = ref({ width: 0, height: 0 });
 
 let sizeObserver: ResizeObserver | null = null;
+let powerSizeObserver: ResizeObserver | null = null;
 
 watch(chartContainer, (el) => {
   if (sizeObserver) {
@@ -52,8 +57,23 @@ watch(chartContainer, (el) => {
   sizeObserver.observe(el);
 });
 
+watch(powerChartContainer, (el) => {
+  if (powerSizeObserver) {
+    powerSizeObserver.disconnect();
+    powerSizeObserver = null;
+  }
+  if (!el) return;
+  const update = () => {
+    powerChartSize.value = { width: el.clientWidth, height: el.clientHeight };
+  };
+  update();
+  powerSizeObserver = new ResizeObserver(update);
+  powerSizeObserver.observe(el);
+});
+
 onUnmounted(() => {
   if (sizeObserver) sizeObserver.disconnect();
+  if (powerSizeObserver) powerSizeObserver.disconnect();
 });
 
 const opTypeLabels: Record<string, string> = {
@@ -111,9 +131,21 @@ async function openDetail(record: RecordItem) {
   currentRecord.value = record;
   try {
     const res = await fetch(HTTP_URL + "/" + record.curve_file);
-    curveData.value = await res.json();
+    const json = await res.json();
+    curveData.value = json;
+    if (json.power_A && json.power_A.length) {
+      powerCurveData.value = {
+        power_A: json.power_A,
+        power_B: json.power_B,
+        power_C: json.power_C,
+        power_time: json.power_time || json.time,
+      };
+    } else {
+      powerCurveData.value = null;
+    }
   } catch {
     curveData.value = [];
+    powerCurveData.value = null;
   }
   detailVisible.value = true;
 }
@@ -192,110 +224,160 @@ function makeSeries(
   };
 }
 
+function classifyPhase(data: number[]): string[] {
+  const HALF_WIN = 12;
+  const rawLabels = data.map((_, i) => {
+    const ws = Math.max(0, i - HALF_WIN);
+    const we = Math.min(data.length - 1, i + HALF_WIN);
+    const win = data.slice(ws, we + 1);
+    if (win.length < 6) return "flat";
+    const wRange = Math.max(...win) - Math.min(...win);
+    let largeJumps = 0, signChanges = 0, lastSign = 0;
+    for (let j = 1; j < win.length; j++) {
+      const d = win[j] - win[j - 1];
+      if (d > 1.0) { largeJumps++; if (lastSign < 0) signChanges++; lastSign = 1; }
+      else if (d < -1.0) { largeJumps++; if (lastSign > 0) signChanges++; lastSign = -1; }
+    }
+    if (largeJumps >= 2 && signChanges >= 1 && signChanges / largeJumps >= 0.4) return "square";
+    if (wRange < 0.2) return "flat";
+    const diffs: number[] = [];
+    for (let j = 1; j < win.length; j++) diffs.push(win[j] - win[j - 1]);
+    const dd: number[] = [];
+    for (let j = 1; j < diffs.length; j++) dd.push(diffs[j] - diffs[j - 1]);
+    const pos = dd.filter((d) => d > 0).length;
+    const neg = dd.filter((d) => d < 0).length;
+    if (Math.max(pos, neg) >= dd.length * 0.45 && wRange > 1) return "parabolic";
+    return "flat";
+  });
+  for (let i = 0; i < rawLabels.length; i++) {
+    if (rawLabels[i] === "parabolic") {
+      const ls = Math.max(0, i - 2), le = Math.min(data.length - 1, i + 2);
+      let md = 0;
+      for (let j = ls; j < le; j++) md = Math.max(md, Math.abs(data[j + 1] - data[j]));
+      if (md < 0.2) rawLabels[i] = "flat";
+    }
+  }
+  return rawLabels.map((_, i) => {
+    const votes: Record<string, number> = { parabolic: 0, flat: 0, square: 0 };
+    for (let j = Math.max(0, i - 2); j <= Math.min(data.length - 1, i + 2); j++) votes[rawLabels[j]]++;
+    return Object.entries(votes).sort((a, b) => b[1] - a[1])[0][0];
+  });
+}
+
+function makePhaseSeries(
+  data: number[], labels: string[], name: string, key: "parabolic" | "flat" | "square",
+  colors: Record<string, string>, lineWidth: number,
+) {
+  return {
+    name, type: "line",
+    data: buildSegments(data, labels, (l: string) => l === key),
+    smooth: false, symbol: "none",
+    color: colors[key],
+    itemStyle: { color: colors[key] },
+    lineStyle: { color: colors[key], width: lineWidth, shadowBlur: lineWidth >= 2 ? 6 : 4, shadowColor: gradient(colors[key], 0.35) },
+    areaStyle: {
+      color: {
+        type: "linear", x: 0, y: 0, x2: 0, y2: 1,
+        colorStops: [{ offset: 0, color: gradient(colors[key], 0.18) }, { offset: 1, color: gradient(colors[key], 0.01) }],
+      },
+    },
+    connectNulls: false,
+  };
+}
+
+function buildSegments(data: number[], labels: string[], match: (l: string) => boolean) {
+  const result = new Array(data.length).fill(null);
+  let i = 0;
+  while (i < data.length) {
+    if (match(labels[i])) {
+      if (i > 0) result[i - 1] = data[i - 1];
+      while (i < data.length && match(labels[i])) { result[i] = data[i]; i++; }
+      if (i < data.length) result[i] = data[i];
+    } else { i++; }
+  }
+  return result;
+}
+
+const COLORS_3A = { parabolic: "#f04b4b", flat: "#e88b8b", square: "#c0392b" };
+const COLORS_3B = { parabolic: "#4dabf7", flat: "#74c0fc", square: "#1c7ed6" };
+const COLORS_3C = { parabolic: "#51cf66", flat: "#8ce99a", square: "#2f9e44" };
+
 const chartOpt = computed(() => {
-  const data: number[] = curveData.value.data || [];
-  const timeLabels: string[] = curveData.value.time || [];
+  if (isThreePhaseCurve.value) {
+    const raw = curveData.value as any;
+    const dataA: number[] = raw.data?.A || [];
+    const dataB: number[] = raw.data?.B || [];
+    const dataC: number[] = raw.data?.C || [];
+    const timeLabels: string[] = raw.time || [];
+    const allData = [...dataA, ...dataB, ...dataC];
+    const hasData = allData.length > 0;
+
+    if (!hasData) return {};
+
+    const maxVal = Math.max(...allData, 0.01);
+    const minVal = Math.min(...allData, 0);
+    const padding = (maxVal - minVal) * 0.15 || 0.5;
+
+    const labelsA = classifyPhase(dataA);
+    const labelsB = classifyPhase(dataB);
+    const labelsC = classifyPhase(dataC);
+
+    const seriesArr = [
+      makePhaseSeries(dataA, labelsA, "A-启动电流", "parabolic", COLORS_3A, 1.5),
+      makePhaseSeries(dataA, labelsA, "A-工作电流", "flat", COLORS_3A, 1.5),
+      makePhaseSeries(dataA, labelsA, "A-摩擦电流", "square", COLORS_3A, 1.5),
+      makePhaseSeries(dataB, labelsB, "B-启动电流", "parabolic", COLORS_3B, 1.5),
+      makePhaseSeries(dataB, labelsB, "B-工作电流", "flat", COLORS_3B, 1.5),
+      makePhaseSeries(dataB, labelsB, "B-摩擦电流", "square", COLORS_3B, 1.5),
+      makePhaseSeries(dataC, labelsC, "C-启动电流", "parabolic", COLORS_3C, 1.5),
+      makePhaseSeries(dataC, labelsC, "C-工作电流", "flat", COLORS_3C, 1.5),
+      makePhaseSeries(dataC, labelsC, "C-摩擦电流", "square", COLORS_3C, 1.5),
+    ];
+
+    return {
+      animationDuration: 0,
+      tooltip: {
+        trigger: "axis",
+        backgroundColor: "rgba(11,29,51,0.96)",
+        borderColor: "#2d5280",
+        textStyle: { color: "#e0e8f0", fontSize: 12 },
+        extraCssText: "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
+      },
+      backgroundColor: "transparent",
+      grid: { left: 55, right: 20, top: 12, bottom: 50 },
+      xAxis: {
+        type: "category", data: timeLabels,
+        axisLine: { lineStyle: { color: "#1a2d44" } },
+        axisTick: { show: false },
+        splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
+        axisLabel: { color: "#5a7288", fontSize: 10, interval: Math.max(Math.floor((timeLabels.length || 1) / 6), 0) },
+      },
+      yAxis: {
+        type: "value", min: Math.max(0, minVal - padding), max: maxVal + padding, splitNumber: 4,
+        axisLine: { show: false }, axisTick: { show: false },
+        splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
+        axisLabel: { color: "#5a7288", fontSize: 11, formatter: (v: number) => v.toFixed(1) },
+      },
+      legend: {
+        data: ["A-启动电流", "A-工作电流", "A-摩擦电流", "B-启动电流", "B-工作电流", "B-摩擦电流", "C-启动电流", "C-工作电流", "C-摩擦电流"],
+        bottom: 0, left: 55, type: "scroll",
+        textStyle: { color: "#8fb4d8", fontSize: 10 },
+        icon: "roundRect", itemWidth: 14, itemHeight: 8,
+      },
+      series: seriesArr,
+    };
+  }
+
+  // ---- 单相 ----
+  const data: number[] = (curveData.value as any).data || [];
+  const timeLabels: string[] = (curveData.value as any).time || [];
   const hasData = data.length > 0;
 
   const maxVal = hasData ? Math.max(...data, 0.01) : 10;
   const minVal = hasData ? Math.min(...data, 0) : 0;
   const padding = (maxVal - minVal) * 0.15 || 0.5;
 
-  let paraEnd = 0;
-  let flatEnd = data.length;
-  let labels: string[] = [];
-
-  if (hasData && data.length > 10) {
-    for (let i = Math.floor(data.length * 0.15); i < data.length - 2; i++) {
-      const d1 = Math.abs(data[i] - data[i - 1]);
-      const d2 = Math.abs(data[i + 1] - data[i]);
-      if (d1 < 0.15 && d2 < 0.15 && data[i] > 1) {
-        paraEnd = i;
-        break;
-      }
-    }
-    for (let i = paraEnd + 1; i < data.length - 1; i++) {
-      if (Math.abs(data[i] - data[i - 1]) > 1.0) {
-        flatEnd = i;
-        break;
-      }
-    }
-
-    const HALF_WIN = 12;
-    const rawLabels = data.map((_, i) => {
-      const ws = Math.max(0, i - HALF_WIN);
-      const we = Math.min(data.length - 1, i + HALF_WIN);
-      const win = data.slice(ws, we + 1);
-      if (win.length < 6) return "flat";
-
-      const wRange = Math.max(...win) - Math.min(...win);
-
-      let largeJumps = 0;
-      let signChanges = 0;
-      let lastSign = 0;
-      for (let j = 1; j < win.length; j++) {
-        const d = win[j] - win[j - 1];
-        if (d > 1.0) {
-          largeJumps++;
-          if (lastSign < 0) signChanges++;
-          lastSign = 1;
-        } else if (d < -1.0) {
-          largeJumps++;
-          if (lastSign > 0) signChanges++;
-          lastSign = -1;
-        }
-      }
-      if (
-        largeJumps >= 2 &&
-        signChanges >= 1 &&
-        signChanges / largeJumps >= 0.4
-      )
-        return "square";
-
-      if (wRange < 0.2) return "flat";
-
-      const diffs: number[] = [];
-      for (let j = 1; j < win.length; j++) diffs.push(win[j] - win[j - 1]);
-      const dd: number[] = [];
-      for (let j = 1; j < diffs.length; j++) dd.push(diffs[j] - diffs[j - 1]);
-      const pos = dd.filter((d) => d > 0).length;
-      const neg = dd.filter((d) => d < 0).length;
-      if (Math.max(pos, neg) >= dd.length * 0.45 && wRange > 1)
-        return "parabolic";
-
-      return "flat";
-    });
-
-    for (let i = 0; i < rawLabels.length; i++) {
-      if (rawLabels[i] === "parabolic") {
-        const ls = Math.max(0, i - 2);
-        const le = Math.min(data.length - 1, i + 2);
-        let maxLocalDiff = 0;
-        for (let j = ls; j < le; j++) {
-          maxLocalDiff = Math.max(
-            maxLocalDiff,
-            Math.abs(data[j + 1] - data[j]),
-          );
-        }
-        if (maxLocalDiff < 0.2) rawLabels[i] = "flat";
-      }
-    }
-
-    labels = rawLabels.map((_, i) => {
-      const votes: Record<string, number> = {
-        parabolic: 0,
-        flat: 0,
-        square: 0,
-      };
-      for (
-        let j = Math.max(0, i - 2);
-        j <= Math.min(data.length - 1, i + 2);
-        j++
-      )
-        votes[rawLabels[j]]++;
-      return Object.entries(votes).sort((a, b) => b[1] - a[1])[0][0];
-    });
-  }
+  const labels = hasData && data.length > 10 ? classifyPhase(data) : [];
 
   const seriesArr = [
     makeSeries(data, labels, "启动电流", "parabolic", (l) => l === "parabolic"),
@@ -311,107 +393,144 @@ const chartOpt = computed(() => {
     const yMin = Math.max(0, minVal - padding);
     const yMax = maxVal + padding;
     const yRange = yMax - yMin || 1;
-
     const maxV = Math.max(...data);
     const minV = Math.min(...data);
     const maxIdx = data.indexOf(maxV);
     const minIdx = data.indexOf(minV);
-
     const toX = (i: number) => GRID.left + (i / (data.length - 1)) * gw;
     const toY = (v: number) => GRID.top + (1 - (v - yMin) / yRange) * gh;
-
     [
       { idx: maxIdx, val: maxV, label: "最大值", color: COLORS.parabolic },
       { idx: minIdx, val: minV, label: "最小值", color: COLORS.flat },
     ].forEach((m) => {
       graphic.push({
-        type: "text",
-        left: toX(m.idx) - 24,
-        top: toY(m.val) - 22,
-        style: {
-          text: `${m.label} ${m.val.toFixed(1)}A`,
-          fill: "#fff",
-          fontSize: 11,
-          fontWeight: 600,
-          textAlign: "center",
-          textShadowBlur: 4,
-          textShadowColor: "rgba(0,0,0,0.7)",
-        },
+        type: "text", left: toX(m.idx) - 24, top: toY(m.val) - 22,
+        style: { text: `${m.label} ${m.val.toFixed(1)}A`, fill: "#fff", fontSize: 11, fontWeight: 600, textAlign: "center", textShadowBlur: 4, textShadowColor: "rgba(0,0,0,0.7)" },
         z: 100,
       });
       graphic.push({
-        type: "circle",
-        shape: { cx: toX(m.idx), cy: toY(m.val), r: 5 },
-        style: { fill: m.color, stroke: "#fff", lineWidth: 2 },
-        z: 100,
+        type: "circle", shape: { cx: toX(m.idx), cy: toY(m.val), r: 5 },
+        style: { fill: m.color, stroke: "#fff", lineWidth: 2 }, z: 100,
       });
     });
   }
 
   return {
     graphic,
-    animationDuration: 0,
-    animationEasing: "cubicOut",
-    tooltip: hasData
-      ? {
-          trigger: "axis",
-          axisPointer: {
-            type: "cross",
-            crossStyle: { color: "#3a5670" },
-            label: {
-              backgroundColor: "#0b1d33",
-              color: "#e0e8f0",
-            },
-          },
-          backgroundColor: "rgba(11,29,51,0.96)",
-          borderColor: "#2d5280",
-          textStyle: { color: "#e0e8f0", fontSize: 12 },
-          extraCssText:
-            "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
-        }
-      : undefined,
+    animationDuration: 0, animationEasing: "cubicOut",
+    tooltip: hasData ? {
+      trigger: "axis",
+      axisPointer: { type: "cross", crossStyle: { color: "#3a5670" }, label: { backgroundColor: "#0b1d33", color: "#e0e8f0" } },
+      backgroundColor: "rgba(11,29,51,0.96)", borderColor: "#2d5280",
+      textStyle: { color: "#e0e8f0", fontSize: 12 },
+      extraCssText: "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
+    } : undefined,
     backgroundColor: "transparent",
-    grid: {
-      left: 55,
-      right: 20,
-      top: 20,
-      bottom: 50,
+    grid: { left: 55, right: 20, top: 20, bottom: 50 },
+    xAxis: {
+      type: "category", data: timeLabels,
+      axisLine: { lineStyle: { color: "#1a2d44" } }, axisTick: { show: false },
+      splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
+      axisLabel: { color: "#5a7288", fontSize: 10, interval: hasData ? Math.max(Math.floor(data.length / 6), 0) : 0 },
     },
+    yAxis: {
+      type: "value", min: Math.max(0, minVal - padding), max: maxVal + padding, splitNumber: 4,
+      axisLine: { show: false }, axisTick: { show: false },
+      splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
+      axisLabel: { color: "#5a7288", fontSize: 11, formatter: (v: number) => v.toFixed(1) },
+    },
+    legend: hasData ? LEGEND_RECORD : undefined,
+    series: seriesArr,
+  };
+});
+
+const powerChartOpt = computed(() => {
+  const pd = powerCurveData.value;
+  if (!pd) return {};
+
+  const allData = [...pd.power_A, ...pd.power_B, ...pd.power_C];
+  const hasData = allData.length > 0;
+  if (!hasData) return {};
+
+  const maxVal = Math.max(...allData, 0.01);
+  const minVal = Math.min(...allData, 0);
+  const padding = (maxVal - minVal) * 0.15 || 10;
+
+  const P_COLORS = { A: "#f04b4b", B: "#4dabf7", C: "#51cf66" };
+
+  function gradient(hex: string, alpha: number) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+
+  function makeLine(name: string, data: number[], color: string) {
+    return {
+      name,
+      type: "line",
+      data,
+      smooth: false,
+      symbol: "none",
+      color,
+      lineStyle: { color, width: 1.5, shadowBlur: 4, shadowColor: gradient(color, 0.35) },
+      areaStyle: {
+        color: {
+          type: "linear", x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: gradient(color, 0.15) },
+            { offset: 1, color: gradient(color, 0.01) },
+          ],
+        },
+      },
+      connectNulls: false,
+    };
+  }
+
+  const opt: any = {
+    animationDuration: 0,
+    tooltip: {
+      trigger: "axis",
+      backgroundColor: "rgba(11,29,51,0.96)",
+      borderColor: "#2d5280",
+      textStyle: { color: "#e0e8f0", fontSize: 11 },
+      extraCssText: "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
+    },
+    backgroundColor: "transparent",
+    grid: { left: 48, right: 16, top: 10, bottom: 36 },
     xAxis: {
       type: "category",
-      data: timeLabels,
+      data: pd.power_time,
       axisLine: { lineStyle: { color: "#1a2d44" } },
       axisTick: { show: false },
-      splitLine: {
-        show: true,
-        lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" },
-      },
-      axisLabel: {
-        color: "#5a7288",
-        fontSize: 10,
-        interval: hasData ? Math.max(Math.floor(data.length / 6), 0) : 0,
-      },
+      splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
+      axisLabel: { color: "#5a7288", fontSize: 9, interval: Math.max(Math.floor((pd.power_time.length || 1) / 5), 0) },
     },
     yAxis: {
       type: "value",
       min: Math.max(0, minVal - padding),
       max: maxVal + padding,
-      splitNumber: 4,
+      splitNumber: 3,
       axisLine: { show: false },
       axisTick: { show: false },
-      splitLine: {
-        show: true,
-        lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" },
-      },
-      axisLabel: {
-        color: "#5a7288",
-        fontSize: 11,
-        formatter: (v: number) => v.toFixed(1),
-      },
+      splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
+      axisLabel: { color: "#5a7288", fontSize: 10, formatter: (v: number) => v.toFixed(0) + "W" },
     },
-    legend: hasData ? LEGEND_RECORD : undefined,
-    series: seriesArr,
+    legend: {
+      data: ["A相功率", "B相功率", "C相功率"],
+      bottom: 0, left: 48,
+      textStyle: { color: "#8fb4d8", fontSize: 10 },
+      icon: "roundRect",
+      itemWidth: 14, itemHeight: 8,
+    },
+    series: [
+      makeLine("A相功率", pd.power_A, P_COLORS.A),
+      makeLine("B相功率", pd.power_B, P_COLORS.B),
+      makeLine("C相功率", pd.power_C, P_COLORS.C),
+    ],
   };
+
+  return opt;
 });
 
 async function deleteList(id: string, curve_file: string) {
@@ -457,6 +576,26 @@ async function handleDelete(item: RecordItem) {
 function formatDate(dateStr: string): string {
   if (!dateStr) return "-";
   return dateStr.replace("T", " ").substring(0, 19);
+}
+
+const isThreePhaseCurve = computed(() => {
+  const d = (curveData.value as any).data;
+  return d && typeof d === "object" && !Array.isArray(d);
+});
+
+function formatPeakValley(val: any): string {
+  if (val == null) return "-";
+  if (typeof val === "string") {
+    try { val = JSON.parse(val); } catch { return val; }
+  }
+  if (typeof val === "number") return val.toFixed(1);
+  if (typeof val === "object") {
+    const a = val.A != null ? val.A.toFixed(1) : "-";
+    const b = val.B != null ? val.B.toFixed(1) : "-";
+    const c = val.C != null ? val.C.toFixed(1) : "-";
+    return `A:${a} B:${b} C:${c}`;
+  }
+  return String(val);
 }
 
 onMounted(async () => {
@@ -708,13 +847,13 @@ onMounted(async () => {
               <div class="stat-block">
                 <span class="stat-label">峰值电流</span>
                 <span class="stat-value peak"
-                  >{{ currentRecord?.peak_current }}<small>A</small></span
+                  >{{ formatPeakValley(currentRecord?.peak_current) }}<small>A</small></span
                 >
               </div>
               <div class="stat-block">
                 <span class="stat-label">谷值电流</span>
                 <span class="stat-value valley"
-                  >{{ currentRecord?.valley_current }}<small>A</small></span
+                  >{{ formatPeakValley(currentRecord?.valley_current) }}<small>A</small></span
                 >
               </div>
               <div class="stat-block">
@@ -752,6 +891,14 @@ onMounted(async () => {
             </div>
             <div ref="chartContainer" class="modal-chart">
               <v-chart :option="chartOpt" autoresize />
+            </div>
+            <div v-if="hasPowerData" class="modal-power-section">
+              <div class="modal-power-header">
+                <h3 class="modal-title">功率曲线</h3>
+              </div>
+              <div ref="powerChartContainer" class="modal-chart power-chart">
+                <v-chart :option="powerChartOpt" autoresize />
+              </div>
             </div>
           </div>
         </div>
@@ -1420,6 +1567,19 @@ onMounted(async () => {
 .modal-chart {
   height: 360px;
   padding: 0 20px 28px;
+}
+
+.power-chart {
+  height: 280px;
+}
+
+.modal-power-section {
+  border-top: 1px solid #1a2d44;
+  padding-top: 16px;
+}
+
+.modal-power-header {
+  padding: 0 28px 8px;
 }
 
 </style>
