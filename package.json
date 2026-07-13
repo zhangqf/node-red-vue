@@ -25,12 +25,18 @@
     "electron:build": "vite build && electron-builder --publish never",
     "electron:build:win": "vite build && electron-builder --win --publish never",
     "electron:build:mac": "vite build && electron-builder --mac --publish never",
-    "electron:build:linux": "vite build && electron-builder --linux --publish never"
+    "electron:build:linux": "vite build && electron-builder --linux --publish never",
+    "electron:build:ci:win": "vite build && electron-builder --win --publish always",
+    "electron:build:ci:mac": "vite build && electron-builder --mac --publish always",
+    "electron:build:ci:linux": "vite build && electron-builder --linux --publish always"
   },
   "build": {
     "appId": "com.switch-machine.app",
     "productName": "Switch Machine",
     "npmRebuild": true,
+    "publish": {
+      "provider": "github"
+    },
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -80,6 +86,7 @@
     "@stfi/node-red-contrib-mqtt-broker": "~0.5.0",
     "@vueuse/core": "^14.3.0",
     "echarts": "^6.1.0",
+    "electron-updater": "^6.8.9",
     "exceljs": "^4.4.0",
     "express": "^4.22.2",
     "mqtt-vue-hook": "^1.2.20",

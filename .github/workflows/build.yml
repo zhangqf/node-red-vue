@@ -3,7 +3,11 @@ name: Build Electron App
 on:
   push:
     branches: [release]
+    tags: ["v*"]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -12,15 +16,15 @@ jobs:
         os: [windows-latest, macos-latest, ubuntu-latest]
         include:
           - os: windows-latest
-            build-script: electron:build:win
+            build-script: electron:build:ci:win
             artifact-name: win-package
             artifact-pattern: release/*.exe
           - os: macos-latest
-            build-script: electron:build:mac
+            build-script: electron:build:ci:mac
             artifact-name: mac-package
             artifact-pattern: release/*.dmg
           - os: ubuntu-latest
-            build-script: electron:build:linux
+            build-script: electron:build:ci:linux
             artifact-name: linux-package
             artifact-pattern: release/*.AppImage
 
@@ -41,11 +45,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Build Electron
+      - name: Build & Publish Electron
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: pnpm run ${{ matrix.build-script }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
+        if: always()
         with:
           name: ${{ matrix.artifact-name }}
           path: ${{ matrix.artifact-pattern }}

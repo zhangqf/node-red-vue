@@ -1,9 +1,10 @@
-const { app, BrowserWindow, dialog } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const http = require("http");
 const express = require("express");
 const RED = require("node-red");
+const { autoUpdater } = require("electron-updater");
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -145,6 +146,35 @@ if (!gotTheLock) {
     try {
       await startNodeRED();
       createWindow();
+
+      // ---- 自动更新 ----
+      if (!isDev) {
+        autoUpdater.autoDownload = true;
+        autoUpdater.autoInstallOnAppQuit = true;
+
+        autoUpdater.on("update-available", () => {
+          mainWindow?.webContents.send("update-status", "downloading");
+        });
+        autoUpdater.on("update-not-available", () => {
+          mainWindow?.webContents.send("update-status", "up-to-date");
+        });
+        autoUpdater.on("download-progress", (progress) => {
+          mainWindow?.webContents.send("update-download-progress", progress.percent);
+        });
+        autoUpdater.on("update-downloaded", (info) => {
+          mainWindow?.webContents.send("update-downloaded", info.version);
+        });
+        autoUpdater.on("error", (err) => {
+          console.error("Auto-updater error:", err);
+        });
+
+        autoUpdater.checkForUpdates();
+      }
+
+      // IPC：renderer 请求立即安装更新
+      ipcMain.handle("install-update", () => {
+        autoUpdater.quitAndInstall();
+      });
     } catch (err) {
       dialog.showErrorBox("Startup Error", err.message);
       await shutdownNR();
