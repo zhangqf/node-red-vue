@@ -18,15 +18,15 @@ onMounted(() => {
   const api = window.electronAPI;
   if (!api) return;
 
-  api.onUpdateStatus((status) => {
+  api.onUpdateStatus?.((status) => {
     if (status === "downloading") {
       updateDownloading.value = true;
     }
   });
-  api.onUpdateProgress((pct) => {
+  api.onUpdateProgress?.((pct) => {
     updateProgress.value = Math.round(pct);
   });
-  api.onUpdateDownloaded((version) => {
+  api.onUpdateDownloaded?.((version) => {
     updateDownloading.value = false;
     updateVersion.value = version;
     updateReady.value = true;
