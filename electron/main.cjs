@@ -46,11 +46,17 @@ async function startNodeRED() {
     if (!fs.existsSync(destNr)) {
       fs.mkdirSync(destNr, { recursive: true });
     }
-    // Copy flows.json
+    // Copy flows.json when app version changes (update/reinstall)
     const srcFlow = path.join(srcNr, "flows.json");
     const destFlow = path.join(destNr, "flows.json");
-    if (fs.existsSync(srcFlow) && !fs.existsSync(destFlow)) {
+    const appVersion = app.getVersion();
+    const versionFile = path.join(destNr, ".flows_version");
+    const storedVersion = fs.existsSync(versionFile)
+      ? fs.readFileSync(versionFile, "utf8").trim()
+      : "";
+    if (fs.existsSync(srcFlow) && storedVersion !== appVersion) {
       fs.copyFileSync(srcFlow, destFlow);
+      fs.writeFileSync(versionFile, appVersion, "utf8");
     }
     // Copy data/ from read-only Resources to writable userData only on first launch
     const srcData = path.join(srcNr, "data");
