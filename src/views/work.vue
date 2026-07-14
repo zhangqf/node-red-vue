@@ -108,6 +108,11 @@ const relayConfigList = [
   },
 ];
 
+const typeToFieldMap: Record<string, keyof ActionRelays> = {};
+relayConfigList.forEach((item) => {
+  typeToFieldMap[item.type] = item.field;
+});
+
 const findRelayIndex = (
   expectedData: string[],
   realData: number[],
@@ -140,61 +145,31 @@ const findRelayIndex = (
 
 // 重置锁定
 const resetAllLock = () => {
+  testResults.value = [];
   Object.keys(lockStatus.value).forEach((key) => {
     lockStatus.value[key] = false;
   });
 };
 
-const handleWsRelayData = (data: number[]) => {
+// 根据 configActionRelays 生成初始结果列表（不依赖 WS 数据）
+function initTestResults() {
   const relayData = configActionRelays.value;
-
   if (!relayData) {
-    testResults.value = [
-      {
-        type: "empty",
-        name: "无所需的表示项",
-        status: "NT",
-        realCheck: false,
-        relayName: [],
-      },
-    ];
+    testResults.value = [];
     return;
   }
 
-  const sampleData = indicationRelay.value;
-  if (!Array.isArray(sampleData) || sampleData.length < 1) {
-    return (testResults.value = [
-      {
-        type: "empty",
-        name: "无所需的表示项",
-        status: "NT",
-        realCheck: false,
-        relayName: [],
-      },
-    ]);
-  }
-  const realData = data;
+  testResults.value = relayConfigList
+    .filter((item) => relayData[item.field].length > 0)
+    .map((item) => ({
+      type: item.type,
+      name: item.name,
+      status: "NT" as const,
+      realCheck: false,
+      relayName: relayData[item.field],
+    }));
 
-  const tempList = relayConfigList
-    .map((item) => {
-      // 取出对应继电器数组
-      const targetArr = relayData[item.field];
-      if (targetArr.length < 1) return;
-      const res = findRelayIndex(targetArr, realData, sampleData);
-      // 未锁定且当前满足，打上永久锁定标记
-      if (!lockStatus.value[item.type] && res.allClosed) {
-        lockStatus.value[item.type] = true;
-      }
-      return {
-        relayName: toRaw(res.expectedData),
-        name: item.name,
-        type: item.type,
-        status: lockStatus.value[item.type] ? true : res.allClosed,
-        realCheck: res.allClosed,
-      };
-    })
-    .filter(Boolean);
-  if (tempList.length < 1) {
+  if (testResults.value.length === 0) {
     testResults.value = [
       {
         type: "empty",
@@ -204,11 +179,42 @@ const handleWsRelayData = (data: number[]) => {
         relayName: [],
       },
     ];
-  } else {
-    testResults.value = tempList;
   }
-};
+}
 
+const handleWsRelayData = (data: number[]) => {
+  const relayData = configActionRelays.value;
+  if (!relayData) return;
+
+  const sampleData = indicationRelay.value;
+  if (!Array.isArray(sampleData) || sampleData.length < 1) return;
+
+  const realData = data;
+
+  // 在已有的 testResults 基础上更新状态
+  testResults.value = testResults.value.map((item) => {
+    if (item.type === "empty") return item;
+
+    const field = typeToFieldMap[item.type];
+    if (!field) return item;
+
+    const targetArr = relayData[field];
+    if (targetArr.length < 1) return item;
+
+    const res = findRelayIndex(targetArr, realData, sampleData);
+
+    if (!lockStatus.value[item.type] && res.allClosed) {
+      lockStatus.value[item.type] = true;
+    }
+
+    return {
+      ...item,
+      status: lockStatus.value[item.type] ? true : res.allClosed,
+      realCheck: res.allClosed,
+    };
+  });
+  console.log(testResults.value);
+};
 const testResults = ref<TestItem[]>([]);
 let tempDate = [];
 const funWsRealData = (data) => {
@@ -462,14 +468,17 @@ const batchUpdateTerminal = (nameList: string[], status: number) => {
 
 const handleContact13Closed = () => {
   configActionRelays.value = contact13Closed.value;
+  initTestResults();
 };
 
 const handleContact24Closed = () => {
   configActionRelays.value = contact24Closed.value;
+  initTestResults();
 };
 const handleContactConfigClick = (type: string) => {
   resetAllLock();
   selectedContactType.value = type;
+
   switch (type) {
     case "contact13Closed":
       handleContact13Closed();
@@ -494,7 +503,9 @@ const currentCurveRef = ref<InstanceType<typeof CurrentCurve>>();
 const powerCurveRef = ref<InstanceType<typeof PowerCurve>>();
 
 const saveRecord = async (relay: keyof ActionRelays) => {
+  console.log(testResults.value);
   const data = toRaw(testResults.value).map((item) => {
+    console.log("item", item);
     return {
       status: item.status,
       name: item.name,
@@ -558,7 +569,6 @@ const saveRecord = async (relay: keyof ActionRelays) => {
 
 const handleRelayAction = (key: keyof ActionRelays) => {
   const relay = configActionRelays.value![key];
-
   batchUpdateTerminal(relay, 1);
   handleDo();
   startRecord();
@@ -625,6 +635,7 @@ const handleOpe = (type: string) => {
   const exposed = currentCurveRef.value;
   exposed?.resetData();
   testResults.value = [];
+  initTestResults();
   butItemStatus.value = type;
   butItemIsDisable.value = true;
 
