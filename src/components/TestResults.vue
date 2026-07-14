@@ -48,8 +48,14 @@ const defaultTests = [
             <span
               class="light"
               :class="{
-                green: test.type === 'GreenLight' && test.status,
-                yellow: test.type === 'YellowLight' && test.status,
+                green:
+                  test.type === 'GreenLight' &&
+                  test.status !== 'NT' &&
+                  test.status,
+                yellow:
+                  test.type === 'YellowLight' &&
+                  test.status !== 'NT' &&
+                  test.status,
               }"></span>
           </span>
         </div>

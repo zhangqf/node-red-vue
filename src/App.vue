@@ -3,8 +3,11 @@ import { onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import TopNav from "@/components/TopNav.vue";
 import GlobalToast from "@/components/GlobalToast.vue";
+import AuthDialog from "@/components/AuthDialog.vue";
+import { useAuth } from "@/composables/useAuth";
 
 const router = useRouter();
+const { showDialog, errorMsg, requireAuth, onDialogConfirm, onDialogCancel } = useAuth();
 
 const activeMenu = ref("home");
 
@@ -13,6 +16,8 @@ const updateReady = ref(false);
 const updateVersion = ref("");
 const updateDownloading = ref(false);
 const updateProgress = ref(0);
+const updateSpeed = ref("");
+const updateError = ref("");
 
 onMounted(() => {
   const api = window.electronAPI;
@@ -21,15 +26,25 @@ onMounted(() => {
   api.onUpdateStatus?.((status) => {
     if (status === "downloading") {
       updateDownloading.value = true;
+      updateProgress.value = 0;
+      updateSpeed.value = "";
+      updateError.value = "";
     }
   });
-  api.onUpdateProgress?.((pct) => {
-    updateProgress.value = Math.round(pct);
+  api.onUpdateProgress?.((info) => {
+    updateProgress.value = info.percent;
+    const speed = info.bytesPerSecond / 1024;
+    updateSpeed.value = speed >= 1024
+      ? `${(speed / 1024).toFixed(1)} MB/s`
+      : `${speed.toFixed(0)} KB/s`;
   });
   api.onUpdateDownloaded?.((version) => {
     updateDownloading.value = false;
     updateVersion.value = version;
     updateReady.value = true;
+  });
+  api.onUpdateError?.((msg) => {
+    updateError.value = msg;
   });
 });
 
@@ -37,7 +52,14 @@ function restartToUpdate() {
   window.electronAPI?.installUpdate();
 }
 
-function onMenuClick(menu: string) {
+const homeRoutes = ["home", "station", "devices", "configure", "work"];
+const assetRoutes = ["device-manager", "combination-manager", "config-manager", "binding-manager"];
+
+async function onMenuClick(menu: string) {
+  if (assetRoutes.includes(menu)) {
+    const ok = await requireAuth();
+    if (!ok) return;
+  }
   switch (menu) {
     case "home":
       router.push({ name: "home" });
@@ -58,12 +80,10 @@ function onMenuClick(menu: string) {
       router.push({ name: "history" });
       break;
     case "settings":
+      router.push({ name: "settings" });
       break;
   }
 }
-
-const homeRoutes = ["home", "station", "devices", "configure", "work"];
-const assetRoutes = ["device-manager", "combination-manager", "config-manager", "binding-manager"];
 
 watch(
   () => router.currentRoute.value.name,
@@ -83,15 +103,21 @@ watch(
     <TopNav :active-menu="activeMenu" @menu-click="onMenuClick" />
     <router-view />
     <GlobalToast />
+    <AuthDialog :visible="showDialog" :error-msg="errorMsg" @confirm="onDialogConfirm" @cancel="onDialogCancel" />
 
     <!-- 更新通知条 -->
     <Transition name="update-slide">
       <div v-if="updateDownloading || updateReady" class="update-bar">
         <template v-if="updateDownloading">
-          <span class="update-text">正在下载更新 {{ updateProgress }}%</span>
+          <span class="update-text">
+            {{ updateProgress > 0 ? `正在下载更新 ${updateProgress.toFixed(1)}%` : '正在连接更新服务器...' }}
+            <span v-if="updateSpeed" class="update-speed">{{ updateSpeed }}</span>
+          </span>
           <div class="update-progress-track">
-            <div class="update-progress-fill" :style="{ width: updateProgress + '%' }" />
+            <div class="update-progress-fill" :style="{ width: Math.max(updateProgress, 0.5) + '%' }" />
           </div>
+          <span v-if="updateError" class="update-error">{{ updateError }}</span>
+          <button v-if="updateError" class="update-btn" @click="restartToUpdate">重试</button>
         </template>
         <template v-else>
           <span class="update-text">新版本 v{{ updateVersion }} 已就绪</span>
@@ -152,6 +178,18 @@ body,
 .update-text {
   font-size: 13px;
   color: #8fb4d8;
+}
+
+.update-speed {
+  margin-left: 8px;
+  color: #5a8fb8;
+  font-size: 12px;
+}
+
+.update-error {
+  font-size: 12px;
+  color: #e8473b;
+  margin-left: 12px;
 }
 
 .update-btn {

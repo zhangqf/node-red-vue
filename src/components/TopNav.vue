@@ -25,7 +25,7 @@ const menuItems = [
     ],
   },
   { key: "history", label: "历史记录" },
-  // { key: "settings", label: "系统设置" },
+  { key: "settings", label: "系统设置" },
 ];
 
 function onMenuClick(key: string) {
