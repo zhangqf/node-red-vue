@@ -1,6 +1,6 @@
 {
   "name": "switch-machine",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "author": "hebimaoshi",
   "description": "Switch Machine",
   "repository": "https://github.com/zhangqf/node-red-vue",
@@ -74,7 +74,15 @@
       "installerHeaderIcon": "build/win/icon.ico"
     },
     "mac": {
-      "target": "dmg",
+      "target": [
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
       "icon": "build/mac/icon.icns"
     },
     "linux": {
