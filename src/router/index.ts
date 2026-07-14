@@ -9,6 +9,10 @@ import ConfigManager from "@/views/ConfigManager.vue";
 import CombinationManager from "@/views/CombinationManager.vue";
 import BindingManager from "@/views/BindingManager.vue";
 import RecordList from "@/views/RecordList.vue";
+import Settings from "@/views/Settings.vue";
+import { useAuth } from "@/composables/useAuth";
+
+const assetRouteNames = ["device-manager", "combination-manager", "config-manager", "binding-manager"];
 
 const isElectron = !!(window as any).electronAPI;
 const router = createRouter({
@@ -28,7 +32,19 @@ const router = createRouter({
     { path: "/configure/:deviceId", name: "configure", component: Configure },
     { path: "/work/:deviceId/:combinationId/:configId", name: "work", component: Work },
     { path: "/records", name: "history", component: RecordList },
+    { path: "/settings", name: "settings", component: Settings },
   ],
+});
+
+router.beforeEach((to, _from, next) => {
+  if (assetRouteNames.includes(to.name as string)) {
+    const { sessionAuthed } = useAuth();
+    if (!sessionAuthed.value) {
+      next({ name: "home" });
+      return;
+    }
+  }
+  next();
 });
 
 export default router;

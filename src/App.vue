@@ -3,8 +3,11 @@ import { onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import TopNav from "@/components/TopNav.vue";
 import GlobalToast from "@/components/GlobalToast.vue";
+import AuthDialog from "@/components/AuthDialog.vue";
+import { useAuth } from "@/composables/useAuth";
 
 const router = useRouter();
+const { showDialog, errorMsg, requireAuth, onDialogConfirm, onDialogCancel } = useAuth();
 
 const activeMenu = ref("home");
 
@@ -37,7 +40,14 @@ function restartToUpdate() {
   window.electronAPI?.installUpdate();
 }
 
-function onMenuClick(menu: string) {
+const homeRoutes = ["home", "station", "devices", "configure", "work"];
+const assetRoutes = ["device-manager", "combination-manager", "config-manager", "binding-manager"];
+
+async function onMenuClick(menu: string) {
+  if (assetRoutes.includes(menu)) {
+    const ok = await requireAuth();
+    if (!ok) return;
+  }
   switch (menu) {
     case "home":
       router.push({ name: "home" });
@@ -58,12 +68,10 @@ function onMenuClick(menu: string) {
       router.push({ name: "history" });
       break;
     case "settings":
+      router.push({ name: "settings" });
       break;
   }
 }
-
-const homeRoutes = ["home", "station", "devices", "configure", "work"];
-const assetRoutes = ["device-manager", "combination-manager", "config-manager", "binding-manager"];
 
 watch(
   () => router.currentRoute.value.name,
@@ -83,6 +91,7 @@ watch(
     <TopNav :active-menu="activeMenu" @menu-click="onMenuClick" />
     <router-view />
     <GlobalToast />
+    <AuthDialog :visible="showDialog" :error-msg="errorMsg" @confirm="onDialogConfirm" @cancel="onDialogCancel" />
 
     <!-- 更新通知条 -->
     <Transition name="update-slide">

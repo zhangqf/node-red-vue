@@ -1,6 +1,7 @@
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const crypto = require("crypto");
 const http = require("http");
 const express = require("express");
 const RED = require("node-red");
@@ -178,6 +179,56 @@ if (!gotTheLock) {
       // IPC：renderer 请求立即安装更新
       ipcMain.handle("install-update", () => {
         autoUpdater.quitAndInstall();
+      });
+
+      // ---- 权限管理 ----
+      const DEFAULT_PASSWORD = "admin888";
+      const authFilePath = path.join(app.getPath("userData"), "auth.json");
+
+      function hashPassword(pwd) {
+        return crypto.createHash("sha256").update(pwd).digest("hex");
+      }
+
+      function getAuthConfig() {
+        try {
+          if (fs.existsSync(authFilePath)) {
+            return JSON.parse(fs.readFileSync(authFilePath, "utf8"));
+          }
+        } catch (e) {
+          console.error("[auth] 读取 auth.json 失败:", e.message);
+        }
+        return null;
+      }
+
+      ipcMain.handle("get-auth-config", () => {
+        const config = getAuthConfig();
+        return { hasPassword: config != null };
+      });
+
+      ipcMain.handle("verify-auth-password", (_e, password) => {
+        const config = getAuthConfig();
+        const storedHash = config?.passwordHash;
+        const validHash = storedHash || hashPassword(DEFAULT_PASSWORD);
+        return hashPassword(password) === validHash;
+      });
+
+      ipcMain.handle("set-auth-password", (_e, oldPassword, newPassword) => {
+        const config = getAuthConfig();
+        const storedHash = config?.passwordHash;
+        const validHash = storedHash || hashPassword(DEFAULT_PASSWORD);
+        if (hashPassword(oldPassword) !== validHash) {
+          return { success: false, error: "原密码错误" };
+        }
+        try {
+          fs.writeFileSync(
+            authFilePath,
+            JSON.stringify({ passwordHash: hashPassword(newPassword) }, null, 2),
+            "utf8",
+          );
+          return { success: true };
+        } catch (e) {
+          return { success: false, error: e.message };
+        }
       });
     } catch (err) {
       dialog.showErrorBox("Startup Error", err.message);
