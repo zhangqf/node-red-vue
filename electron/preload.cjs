@@ -3,8 +3,9 @@ const { contextBridge, ipcRenderer } = require("electron");
 contextBridge.exposeInMainWorld("electronAPI", {
   platform: process.platform,
   onUpdateStatus: (cb) => ipcRenderer.on("update-status", (_e, status) => cb(status)),
-  onUpdateProgress: (cb) => ipcRenderer.on("update-download-progress", (_e, pct) => cb(pct)),
+  onUpdateProgress: (cb) => ipcRenderer.on("update-download-progress", (_e, info) => cb(info)),
   onUpdateDownloaded: (cb) => ipcRenderer.on("update-downloaded", (_e, version) => cb(version)),
+  onUpdateError: (cb) => ipcRenderer.on("update-error", (_e, msg) => cb(msg)),
   installUpdate: () => ipcRenderer.invoke("install-update"),
   // 权限管理
   getAuthConfig: () => ipcRenderer.invoke("get-auth-config"),

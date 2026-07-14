@@ -124,6 +124,13 @@ function createWindow() {
     },
   });
 
+  // F12 切换 DevTools
+  mainWindow.webContents.on("before-input-event", (_e, input) => {
+    if (input.key === "F12" && input.type === "keyDown") {
+      mainWindow.webContents.toggleDevTools();
+    }
+  });
+
   if (isDev) {
     mainWindow.loadURL("http://localhost:5174");
     mainWindow.webContents.openDevTools();
@@ -151,23 +158,38 @@ if (!gotTheLock) {
       autoUpdater.autoDownload = true;
       autoUpdater.autoInstallOnAppQuit = true;
 
-      autoUpdater.on("update-available", () => {
+      autoUpdater.on("checking-for-update", () => {
+        console.log("[autoUpdater] 正在检查更新...");
+      });
+      autoUpdater.on("update-available", (info) => {
+        console.log(`[autoUpdater] 发现新版本: ${info.version}`);
         mainWindow?.webContents.send("update-status", "downloading");
       });
       autoUpdater.on("update-not-available", () => {
+        console.log("[autoUpdater] 当前已是最新版本");
         mainWindow?.webContents.send("update-status", "up-to-date");
       });
       autoUpdater.on("download-progress", (progress) => {
-        mainWindow?.webContents.send(
-          "update-download-progress",
-          progress.percent,
+        const mb = (progress.transferred / 1024 / 1024).toFixed(1);
+        const totalMb = (progress.total / 1024 / 1024).toFixed(1);
+        const speed = (progress.bytesPerSecond / 1024).toFixed(1);
+        console.log(
+          `[autoUpdater] 下载: ${progress.percent.toFixed(1)}% (${mb}MB / ${totalMb}MB, ${speed} KB/s)`,
         );
+        mainWindow?.webContents.send("update-download-progress", {
+          percent: progress.percent,
+          transferred: progress.transferred,
+          total: progress.total,
+          bytesPerSecond: progress.bytesPerSecond,
+        });
       });
       autoUpdater.on("update-downloaded", (info) => {
+        console.log(`[autoUpdater] 下载完成: v${info.version}`);
         mainWindow?.webContents.send("update-downloaded", info.version);
       });
       autoUpdater.on("error", (err) => {
-        console.error("Auto-updater error:", err);
+        console.error("[autoUpdater] 错误:", err.message);
+        mainWindow?.webContents.send("update-error", err.message);
       });
 
       try {
