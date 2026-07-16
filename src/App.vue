@@ -7,7 +7,8 @@ import AuthDialog from "@/components/AuthDialog.vue";
 import { useAuth } from "@/composables/useAuth";
 
 const router = useRouter();
-const { showDialog, errorMsg, requireAuth, onDialogConfirm, onDialogCancel } = useAuth();
+const { showDialog, errorMsg, requireAuth, onDialogConfirm, onDialogCancel } =
+  useAuth();
 
 const activeMenu = ref("home");
 
@@ -34,9 +35,10 @@ onMounted(() => {
   api.onUpdateProgress?.((info) => {
     updateProgress.value = info.percent;
     const speed = info.bytesPerSecond / 1024;
-    updateSpeed.value = speed >= 1024
-      ? `${(speed / 1024).toFixed(1)} MB/s`
-      : `${speed.toFixed(0)} KB/s`;
+    updateSpeed.value =
+      speed >= 1024
+        ? `${(speed / 1024).toFixed(1)} MB/s`
+        : `${speed.toFixed(0)} KB/s`;
   });
   api.onUpdateDownloaded?.((version) => {
     updateDownloading.value = false;
@@ -53,7 +55,12 @@ function restartToUpdate() {
 }
 
 const homeRoutes = ["home", "station", "devices", "configure", "work"];
-const assetRoutes = ["device-manager", "combination-manager", "config-manager", "binding-manager"];
+const assetRoutes = [
+  "device-manager",
+  "combination-manager",
+  "config-manager",
+  "binding-manager",
+];
 
 async function onMenuClick(menu: string) {
   if (assetRoutes.includes(menu)) {
@@ -94,7 +101,7 @@ watch(
     else if (name === "settings") activeMenu.value = "settings";
     else activeMenu.value = "home";
   },
-  { immediate: true }
+  { immediate: true },
 );
 </script>
 
@@ -103,21 +110,38 @@ watch(
     <TopNav :active-menu="activeMenu" @menu-click="onMenuClick" />
     <router-view />
     <GlobalToast />
-    <AuthDialog :visible="showDialog" :error-msg="errorMsg" @confirm="onDialogConfirm" @cancel="onDialogCancel" />
+    <AuthDialog
+      :visible="showDialog"
+      :error-msg="errorMsg"
+      @confirm="onDialogConfirm"
+      @cancel="onDialogCancel" />
 
     <!-- 更新通知条 -->
     <Transition name="update-slide">
       <div v-if="updateDownloading || updateReady" class="update-bar">
         <template v-if="updateDownloading">
           <span class="update-text">
-            {{ updateProgress > 0 ? `正在下载更新 ${updateProgress.toFixed(1)}%` : '正在连接更新服务器...' }}
-            <span v-if="updateSpeed" class="update-speed">{{ updateSpeed }}</span>
+            {{
+              updateProgress > 0
+                ? `正在下载更新 ${updateProgress.toFixed(1)}%`
+                : "正在连接更新服务器..."
+            }}
+            <span v-if="updateSpeed" class="update-speed">{{
+              updateSpeed
+            }}</span>
           </span>
           <div class="update-progress-track">
-            <div class="update-progress-fill" :style="{ width: Math.max(updateProgress, 0.5) + '%' }" />
+            <div
+              class="update-progress-fill"
+              :style="{ width: Math.max(updateProgress, 0.5) + '%' }" />
           </div>
           <span v-if="updateError" class="update-error">{{ updateError }}</span>
-          <button v-if="updateError" class="update-btn" @click="restartToUpdate">重试</button>
+          <button
+            v-if="updateError"
+            class="update-btn"
+            @click="restartToUpdate">
+            重试
+          </button>
         </template>
         <template v-else>
           <span class="update-text">新版本 v{{ updateVersion }} 已就绪</span>
@@ -156,6 +180,8 @@ body,
   height: 100vh;
   background: #051424;
   position: relative;
+  background-image: url("@/assets/bg1.png");
+  background-size: 100% 100%;
 }
 
 /* ---- 更新提示条 ---- */
@@ -223,7 +249,9 @@ body,
 
 .update-slide-enter-active,
 .update-slide-leave-active {
-  transition: transform 0.25s ease, opacity 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    opacity 0.25s ease;
 }
 
 .update-slide-enter-from,
