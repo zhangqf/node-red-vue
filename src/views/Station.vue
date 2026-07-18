@@ -30,6 +30,12 @@ function extractZone(location?: string): string {
   return match ? match[0].replace("区", "") + " 区" : "";
 }
 
+function getStrContent(str?: string): string {
+  if (!str) return "";
+  const match = str.match(/\/(.+)/);
+  return match ? match[1] : "";
+}
+
 function deviceModel(name: string): string {
   if (name.includes("ZD6")) return "ZD6";
   if (name.includes("ZDJ9")) return "ZDJ9";
@@ -41,7 +47,8 @@ function deviceModel(name: string): string {
 const groupedDevices = computed(() => {
   const groups: Record<string, Device[]> = {};
   for (const d of devices.value) {
-    const zone = extractZone(d.location) || "未分区";
+    const zone =
+      extractZone(d.location) || getStrContent(d.location) || "未分区";
     if (!groups[zone]) groups[zone] = [];
     groups[zone].push(d);
   }

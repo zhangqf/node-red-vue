@@ -50,9 +50,15 @@ const LEGEND_SINGLE = {
 
 const LEGEND_THREE = {
   data: [
-    "A-启动电流", "A-工作电流", "A-摩擦电流",
-    "B-启动电流", "B-工作电流", "B-摩擦电流",
-    "C-启动电流", "C-工作电流", "C-摩擦电流",
+    "A-启动电流",
+    "A-工作电流",
+    "A-摩擦电流",
+    "B-启动电流",
+    "B-工作电流",
+    "B-摩擦电流",
+    "C-启动电流",
+    "C-工作电流",
+    "C-摩擦电流",
   ],
   bottom: 0,
   left: 55,
@@ -605,17 +611,26 @@ watch(
     threeTimer = window.setTimeout(() => {
       const {
         option,
-        peakA: pa, valleyA: va,
-        peakB: pb, valleyB: vb,
-        peakC: pc, valleyC: vc,
+        peakA: pa,
+        valleyA: va,
+        peakB: pb,
+        valleyB: vb,
+        peakC: pc,
+        valleyC: vc,
       } = buildThreePhaseChartOpt(
-        historyA.value, historyB.value, historyC.value,
+        historyA.value,
+        historyB.value,
+        historyC.value,
         xLabels3.value,
-        sizeThree.value.width, sizeThree.value.height,
+        sizeThree.value.width,
+        sizeThree.value.height,
       );
-      peakA.value = pa; valleyA.value = va;
-      peakB.value = pb; valleyB.value = vb;
-      peakC.value = pc; valleyC.value = vc;
+      peakA.value = pa;
+      valleyA.value = va;
+      peakB.value = pb;
+      valleyB.value = vb;
+      peakC.value = pc;
+      valleyC.value = vc;
       chartOptThree.value = option;
       threeTimer = null;
     }, 150);
@@ -760,7 +775,7 @@ defineExpose({
     </div>
 
     <div class="power-btn-section">
-      <button class="power-btn" @click="handleStart">同步继电器状态</button>
+      <!-- <button class="power-btn" @click="handleStart">同步继电器状态</button> -->
     </div>
   </div>
 </template>

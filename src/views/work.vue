@@ -9,6 +9,11 @@ import TestResults from "@/components/TestResults.vue";
 import { HTTP_URL, WEBSOCKET_URL } from "@/config/config";
 import { useRoute, useRouter } from "vue-router";
 import { useToast } from "@/composables/useToast";
+import {gen32BitArray,handleCauculate,parseWsData,findRelayIndex, startBeforeTestExpress} from "@/utils/utils";
+import type {WSSTATUS,ActionRelays,TestItem} from "@/utils/interface"
+import {relayConfigList,StartPowerConfig,StartBeforeTestConfig,contact24Closed,contact13Closed} from '@/utils/config'
+import StartBeforeTest from "@/components/StartBeforeTest.vue";
+
 
 const route = useRoute();
 const router = useRouter();
@@ -22,48 +27,8 @@ const rawWsMsg = ref<string | null>(null);
 // 分别缓存线圈、寄存器最新有效值
 const lastCoilArr = ref<number[]>([]);
 const lastRegisterArr = ref<number[]>([]);
-
-interface ActionRelays {
-  DC: string[];
-  FC: string[];
-  DWBS: string[];
-  EJCDDWBS: string[];
-  EJCDFWBS: string[];
-  FWBS: string[];
-  YJCDDWBS: string[];
-  YJCDFWBS: string[];
-}
-
 const configActionRelays = ref<ActionRelays | null>(null);
 
-interface WSSTATUS {
-  color: string;
-  connected: boolean;
-  lastTime: string;
-  msg: string;
-  type: string;
-}
-
-const wsStatus = ref<WSSTATUS>();
-
-// 公共解析函数
-function parseWsData(raw: string | null) {
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch (e) {
-    console.error("WS解析异常", e);
-    return null;
-  }
-}
-
-export interface TestItem {
-  name: string;
-  type: string;
-  status: boolean | number | string;
-  realCheck: boolean;
-  relayName: string[];
-}
 // 锁定状态缓存
 const lockStatus = ref<Record<string, boolean>>({
   GreenLight: false,
@@ -74,74 +39,104 @@ const lockStatus = ref<Record<string, boolean>>({
   PrimaryTransmissionPositioning: false,
 });
 
-// 配置映射：名称、type、对应继电器数组字段
-const relayConfigList = [
-  {
-    name: "定位表示",
-    type: "GreenLight",
-    field: "DWBS" as const,
-  },
-  {
-    name: "反位表示",
-    type: "YellowLight",
-    field: "FWBS" as const,
-  },
-  {
-    name: "二级传动反位",
-    type: "SecondaryTransmissionInReversePosition",
-    field: "EJCDFWBS" as const,
-  },
-  {
-    name: "二级传动定位",
-    type: "SecondaryTransmissionPositioning",
-    field: "EJCDDWBS" as const,
-  },
-  {
-    name: "一级传动反位",
-    type: "PrimaryTransmissionInReversePosition",
-    field: "YJCDFWBS" as const,
-  },
-  {
-    name: "一级传动定位",
-    type: "PrimaryTransmissionPositioning",
-    field: "YJCDDWBS" as const,
-  },
+
+
+const modbusStatus = ref();
+const temperature = ref(0);
+const phaseAVoltage = ref(0);
+const phaseBVoltage = ref(0);
+const phaseCVoltage = ref(0);
+
+const phaseACurrent = ref(0);
+const phaseBCurrent = ref(0);
+const phaseCCurrent = ref(0);
+
+const phaseAPower = ref(0);
+const phaseBPower = ref(0);
+const phaseCPower = ref(0);
+
+
+const testResults = ref<TestItem[]>([]);
+
+let tempDate = [];
+
+// 寄存器计算属性：永远返回缓存的最新寄存器数据，不会清空
+const registerArr = computed(() => lastRegisterArr.value);
+
+// 三相电流寄存器数组（用 ref 而非 computed，确保每次赋值新数组引用，watch 才能检测到变化）
+const registerArrA = ref<number[]>([]);
+const registerArrB = ref<number[]>([]);
+const registerArrC = ref<number[]>([]);
+
+// 三相功率数组
+const powerArrA = ref<number[]>([]);
+const powerArrB = ref<number[]>([]);
+const powerArrC = ref<number[]>([]);
+
+
+
+const device = ref({
+  name: "",
+});
+const combinationName = ref("");
+const configName = ref("");
+
+const showContactDialog = ref(true);
+const selectedContactType = ref("");
+
+
+
+const currentData = ref({
+  currentValue: 3.8,
+  startCurrent: 1.0,
+  convertCurrent: 0,
+  lockCurrent: 0,
+});
+
+const powerData = ref({
+  powerKw: 4.19,
+  powerValue: 3.14,
+  startPower: "09",
+  convertPower: "000",
+  lockPower: "0",
+});
+const butItemStatus = ref("");
+
+const itemConfig = ref<any[]>([]);
+
+export type RelayKey = string;
+
+const terminals = ref<any[]>([]);
+
+const wsSendData = ref<number[] | null>(null);
+
+const active = ref<string>("");
+
+const deviceId = route.params.deviceId as string;
+const combinationId = route.params.combinationId as string;
+const configId = route.params.configId as string;
+
+const opeModel = route.query.opeModel as string;
+const codeName = route.query.name as string;
+const indicationRelay = ref<any[]>([]);
+
+
+const startBeforeTestFinshed = ref(false)
+
+
+/* 按钮配置 */
+const buttonItemConfig = [
+  { name: "定操", type: "DC" },
+  { name: "反操", type: "FC" },
 ];
+
 
 const typeToFieldMap: Record<string, keyof ActionRelays> = {};
 relayConfigList.forEach((item) => {
   typeToFieldMap[item.type] = item.field;
 });
 
-const findRelayIndex = (
-  expectedData: string[],
-  realData: number[],
-  sampleData: Array<{ relay_name: string; sort_order: number }>,
-) => {
-  const sortedSample = [...sampleData].sort(
-    (a, b) => a.sort_order - b.sort_order,
-  );
-  const nameToIndex = new Map<string, number>();
-  sortedSample.forEach((item, idx) => nameToIndex.set(item.relay_name, idx));
 
-  const matchIndexes: number[] = [];
-  for (const name of expectedData) {
-    const idx = nameToIndex.get(name);
-    if (idx !== undefined) matchIndexes.push(idx);
-  }
-  if (matchIndexes.length === 0) {
-    return { matchIndexes: [], allClosed: false };
-  }
-  let allClosed = true;
-  for (const idx of matchIndexes) {
-    if (realData[idx] !== 1) {
-      allClosed = false;
-      break;
-    }
-  }
-
-  return { matchIndexes, allClosed, expectedData };
-};
 
 // 重置锁定
 const resetAllLock = () => {
@@ -151,37 +146,7 @@ const resetAllLock = () => {
   });
 };
 
-// 根据 configActionRelays 生成初始结果列表（不依赖 WS 数据）
-function initTestResults() {
-  const relayData = configActionRelays.value;
-  if (!relayData) {
-    testResults.value = [];
-    return;
-  }
-
-  testResults.value = relayConfigList
-    .filter((item) => relayData[item.field].length > 0)
-    .map((item) => ({
-      type: item.type,
-      name: item.name,
-      status: "NT" as const,
-      realCheck: false,
-      relayName: relayData[item.field],
-    }));
-
-  if (testResults.value.length === 0) {
-    testResults.value = [
-      {
-        type: "empty",
-        name: "无所需的表示项",
-        status: "NT",
-        realCheck: false,
-        relayName: [],
-      },
-    ];
-  }
-}
-
+/* 表示数据处理 */
 const handleWsRelayData = (data: number[]) => {
   const relayData = configActionRelays.value;
   if (!relayData) return;
@@ -215,44 +180,71 @@ const handleWsRelayData = (data: number[]) => {
   });
   console.log(testResults.value);
 };
-const testResults = ref<TestItem[]>([]);
-let tempDate = [];
-const funWsRealData = (data) => {
-  // 收到线圈数据 → 只更新线圈缓存，寄存器不动
-  if (data.unitId === 2) {
-    const rawCoil = Array.isArray(data.data) ? data.data : [];
+
+
+
+
+/* 动作继电器 */
+const handleActionRelays = (data:Record<string, any>) => {
+   const rawCoil = Array.isArray(data.data) ? data.data : [];
     const coilArr = rawCoil.map((item: number) => (item ? 1 : 0));
     lastCoilArr.value = coilArr.slice(0, terminals.value.length);
-  }
-  // 收到寄存器数据 → 只更新寄存器缓存，线圈不动
-  if (data.unitId === 1) {
-    const rawReg = Array.isArray(data.data) ? data.data : [];
-    // lastRegisterArr.value = rawReg;
-    // lastRegisterArr.value = [data.data];
+}
+const startBeforeTestTips = ref()
 
+/* 表示继电器 */
+const handleExpressRelays = (data:Record<string,any>) => {
+
+   if (isAction.value) {
+    return  handleWsRelayData(data.data);
+    }
+  /* 
+  启动前测试表示
+  */
+    // [15,15,15,15]
+  const {result, allTrue} = startBeforeTestExpress(data.data,deviceType.value)
+  // startBeforeTestFinshed.value = allTrue
+  startBeforeTestTips.value = result
+}
+
+/* 采集直流曲线 */
+const handleCollectDCCurve = (data) => {
+  const rawReg = Array.isArray(data.data) ? data.data : [];
     tempDate.unshift(rawReg);
 
     // 限制最大20条，超出截断
     if (tempDate.length > 20) {
       tempDate = tempDate.slice(0, 20);
     }
-
     if (isAction.value) {
       tempDate.forEach((element) => {
         lastRegisterArr.value = element;
       });
-      // lastRegisterArr.value = tempDate;
-      // lastRegisterArr.value = rawReg;
     }
-  }
-  if (data.unitId === 3) {
-    if (isAction.value) {
-      handleWsRelayData(data.data);
-    }
+}
+
+
+const funWsRealData = (data) => {
+  const unitId = data.unitId;
+  switch (unitId) {
+    case 1:
+    case 2:
+      handleActionRelays(data);
+      break;
+    case 3:
+      // 表示
+    handleExpressRelays(data);
+      break;
+    case 4:
+      // 采集直流曲线
+    handleCollectDCCurve(data);
+      break;
+    default:
+      console.warn("未知 unitId:", unitId);
   }
 };
 
-const modbusStatus = ref();
+
 
 const funWsStatus = (data) => {
   if (!data.connected) {
@@ -262,23 +254,9 @@ const funWsStatus = (data) => {
   modbusStatus.value = data;
 };
 
-const temperature = ref(0);
-const phaseAVoltage = ref(0);
-const phaseBVoltage = ref(0);
-const phaseCVoltage = ref(0);
 
-const phaseACurrent = ref(0);
-const phaseBCurrent = ref(0);
-const phaseCCurrent = ref(0);
 
-const phaseAPower = ref(0);
-const phaseBPower = ref(0);
-const phaseCPower = ref(0);
-
-const handleCauculate = (data: number, params: number) => {
-  return data / params;
-};
-
+/* 三相采集模块初级处理 */
 const funThreePhaseACCollector = (data) => {
   isThreePhase.value = true;
   temperature.value = handleCauculate(data[4], 100);
@@ -327,18 +305,7 @@ watch(
 // 线圈计算属性：永远返回缓存的最新线圈数据，不会清空
 const coilArr = computed(() => lastCoilArr.value);
 
-// 寄存器计算属性：永远返回缓存的最新寄存器数据，不会清空
-const registerArr = computed(() => lastRegisterArr.value);
 
-// 三相电流寄存器数组（用 ref 而非 computed，确保每次赋值新数组引用，watch 才能检测到变化）
-const registerArrA = ref<number[]>([]);
-const registerArrB = ref<number[]>([]);
-const registerArrC = ref<number[]>([]);
-
-// 三相功率数组
-const powerArrA = ref<number[]>([]);
-const powerArrB = ref<number[]>([]);
-const powerArrC = ref<number[]>([]);
 
 // 三相功率（W = V × I）
 const powerA = computed(
@@ -354,14 +321,6 @@ const totalPower = computed(
   () => +(powerA.value + powerB.value + powerC.value).toFixed(1),
 );
 
-const device = ref({
-  name: "",
-});
-const combinationName = ref("");
-const configName = ref("");
-
-const showContactDialog = ref(true);
-const selectedContactType = ref("");
 
 const handleContactDialogSelect = (type: string) => {
   selectedContactType.value = type;
@@ -369,58 +328,7 @@ const handleContactDialogSelect = (type: string) => {
   showContactDialog.value = false;
 };
 
-const currentData = ref({
-  currentValue: 3.8,
-  startCurrent: 1.0,
-  convertCurrent: 0,
-  lockCurrent: 0,
-});
 
-const powerData = ref({
-  powerKw: 4.19,
-  powerValue: 3.14,
-  startPower: "09",
-  convertPower: "000",
-  lockPower: "0",
-});
-const butItemStatus = ref("");
-const contact13Closed = ref<ActionRelays>({
-  DC: [],
-  FC: [],
-  DWBS: [],
-  EJCDDWBS: [],
-  EJCDFWBS: [],
-  FWBS: [],
-  YJCDDWBS: [],
-  YJCDFWBS: [],
-});
-const contact24Closed = ref<ActionRelays>({
-  DC: [],
-  FC: [],
-  DWBS: [],
-  EJCDDWBS: [],
-  EJCDFWBS: [],
-  FWBS: [],
-  YJCDDWBS: [],
-  YJCDFWBS: [],
-});
-const itemConfig = ref<any[]>([]);
-
-export type RelayKey = string;
-
-const terminals = ref<any[]>([]);
-
-const wsSendData = ref<number[] | null>(null);
-
-const active = ref<string>("");
-
-const deviceId = route.params.deviceId as string;
-const combinationId = route.params.combinationId as string;
-const configId = route.params.configId as string;
-
-const opeModel = route.query.opeModel as string;
-const codeName = route.query.name as string;
-const indicationRelay = ref<any[]>([]);
 
 async function getConfig(itemType: string) {
   try {
@@ -442,11 +350,29 @@ watch(active, (newkey) => {
   getConfig(newkey);
 });
 
-const handleStart = (start: string) => {
-  if (start === "start") {
-    handleDo();
-  }
+const machineStatus = ref(false)
+
+watch(machineStatus,(newKey) => {
+  startBeforeTestFinshed.value = !newKey
+})
+
+/* 开启电源 */
+const handleStart = () => {
+  machineStatus.value = !machineStatus.value;
+  handleDo();
 };
+
+const isStartBeforeTest = ref(false);
+
+/* 启动前测试 */
+const handleStartBeforeTest = () => {
+  isStartBeforeTest.value = true;
+  const idxArr = StartBeforeTestConfig[deviceType.value as keyof typeof StartBeforeTestConfig];
+  console.log(idxArr)
+  const result = gen32BitArray([], idxArr);
+  console.log(result)
+  sendCmd(result, "startBeforeTestRelays");
+}
 
 // 单个更新
 const findNode = (relay_name: string, default_status: number) => {
@@ -458,6 +384,7 @@ const findNode = (relay_name: string, default_status: number) => {
   }
 };
 
+/* 批量更新 */
 const batchUpdateTerminal = (nameList: string[], status: number) => {
   terminals.value
     .filter((item) => nameList.includes(item.relay_name))
@@ -466,6 +393,40 @@ const batchUpdateTerminal = (nameList: string[], status: number) => {
     });
 };
 
+// 根据 configActionRelays 生成初始结果列表（不依赖 WS 数据）
+function initTestResults() {
+  const relayData = configActionRelays.value;
+  if (!relayData) {
+    testResults.value = [];
+    return;
+  }
+
+  testResults.value = relayConfigList
+    .filter((item) => relayData[item.field].length > 0)
+    .map((item) => ({
+      type: item.type,
+      name: item.name,
+      status: "NT" as const,
+      realCheck: false,
+      relayName: relayData[item.field],
+    }));
+
+  if (testResults.value.length === 0) {
+    testResults.value = [
+      {
+        type: "empty",
+        name: "无所需的表示项",
+        status: "NT",
+        realCheck: false,
+        relayName: [],
+      },
+    ];
+  }
+}
+
+/* 
+  闭合方式配置
+*/
 const handleContact13Closed = () => {
   configActionRelays.value = contact13Closed.value;
   initTestResults();
@@ -475,10 +436,10 @@ const handleContact24Closed = () => {
   configActionRelays.value = contact24Closed.value;
   initTestResults();
 };
+
 const handleContactConfigClick = (type: string) => {
   resetAllLock();
   selectedContactType.value = type;
-
   switch (type) {
     case "contact13Closed":
       handleContact13Closed();
@@ -492,9 +453,12 @@ const handleContactConfigClick = (type: string) => {
 const isAction = ref(false);
 const isThreePhase = ref(false);
 
+/* 开始记录 */
 const startRecord = () => {
   isAction.value = true;
 };
+
+/* 停止记录 */
 const stopRecord = () => {
   isAction.value = false;
 };
@@ -502,6 +466,176 @@ const stopRecord = () => {
 const currentCurveRef = ref<InstanceType<typeof CurrentCurve>>();
 const powerCurveRef = ref<InstanceType<typeof PowerCurve>>();
 
+
+
+
+/* 处理继电器动作 */
+const handleRelayAction = (key: keyof ActionRelays) => {
+  const relay = configActionRelays.value![key];
+  batchUpdateTerminal(relay, 1);
+  handleDo();
+  startRecord();
+  setTimeout(async () => {
+    batchUpdateTerminal(relay, 0);
+    handleDo();
+    stopRecord();
+    saveRecord(key);
+  }, 13000);
+};
+
+/* 通讯链接状态，button根据这个链接状态显示 */
+const isShowButtons = computed(() => {
+  return modbusStatus.value && modbusStatus.value.connected;
+});
+
+/* 定操处理 */
+const handleDC = () => {
+  const key = butItemStatus.value as keyof ActionRelays;
+  handleRelayAction(key);
+};
+
+
+/* 反操处理 */
+const handleFC = () => {
+  const key = butItemStatus.value as keyof ActionRelays;
+  handleRelayAction(key);
+};
+
+
+
+/* 操作处理 */
+const handleDo = () => {
+  let result = terminals.value.map((item) =>
+    item.default_status
+  );
+  
+  let idxArr = StartPowerConfig[deviceType.value as keyof typeof StartPowerConfig];
+  if(!machineStatus.value){
+    idxArr = []
+  }
+
+  wsSendData.value = gen32BitArray(result,idxArr);
+  console.log(wsSendData.value)
+  sendCmd(wsSendData.value, "relays");
+};
+
+/* 发送命令 */
+function sendCmd(data: number[] | null, type: string) {
+  ws.send({ type: type, value: data });
+}
+
+
+
+const updateConfigData = () => {
+  
+  wsSendData.value = result;
+};
+
+const butItemIsDisable = ref(false);
+
+const nextDoTime = ref(15);
+let timerId: number | null = null;
+
+/* 操作处理 */
+const handleOpe = (type: string) => {
+  if (!configActionRelays.value) {
+    return showToast("请先选择闭合方式", "error");
+  }
+  if (butItemIsDisable.value) return;
+
+  const exposed = currentCurveRef.value;
+  exposed?.resetData();
+  testResults.value = [];
+  initTestResults();
+  butItemStatus.value = type;
+  butItemIsDisable.value = true;
+
+  switch (type) {
+    case "DC":
+      handleDC();
+      break;
+    case "FC":
+      handleFC();
+      break;
+  }
+  // 开启每秒递减
+  timerId = window.setInterval(() => {
+    nextDoTime.value--;
+    // 倒计时到0，清除定时器、解锁按钮
+    if (nextDoTime.value <= 0) {
+      nextDoTime.value = 15;
+      clearInterval(timerId!);
+      timerId = null;
+      butItemIsDisable.value = false;
+      butItemStatus.value = "";
+    }
+  }, 1000);
+};
+
+
+/* 设备类型 */
+const deviceType = ref("");
+
+/* 获取列表数据 */
+async function getList() {
+  try {
+    const [itemRes, deviceRes, comboRes, configRes] = await Promise.all([
+      fetch(HTTP_URL + "/getConfig/" + deviceId + "/" + combinationId),
+      fetch(HTTP_URL + "/getDevice/" + deviceId),
+      fetch(HTTP_URL + "/getCombination/" + combinationId),
+      fetch(HTTP_URL + "/getConfigList/" + configId),
+    ]);
+
+    itemConfig.value = await itemRes.json();
+
+    if (itemConfig.value.length > 0) {
+      active.value = itemConfig.value.filter((v) => v.id === configId)[0].id;
+    }
+
+    const deviceData = await deviceRes.json();
+    device.value.name = deviceData.name || "";
+
+    const comboData = await comboRes.json();
+    combinationName.value = comboData.name || "";
+    deviceType.value = comboData.deviceType || "";
+    const configData = await configRes.json();
+    // configActionRelays.value = configData.actionRelays || {};
+    contact13Closed.value = configData.contact13Closed || {};
+    contact24Closed.value = configData.contact24Closed || {};
+    configName.value = configData.name || "";
+  } catch (e) {
+    console.error("加载数据失败:", e);
+    throw e;
+  }
+}
+
+/* 获取代码设备列表 */
+async function getCodeDeviceList() {
+  try {
+    const [comboRes, configRes] = await Promise.all([
+      fetch(HTTP_URL + "/getCombination/" + combinationId),
+      fetch(HTTP_URL + "/getConfigList/" + configId),
+    ]);
+
+    active.value = configId;
+    device.value.name = codeName;
+    const comboData = await comboRes.json();
+
+    combinationName.value = comboData.name || "";
+    deviceType.value = comboData.deviceType || "";
+
+    const configData = await configRes.json();
+    // configActionRelays.value = configData.actionRelays || {};
+    contact13Closed.value = configData.contact13Closed || {};
+    contact24Closed.value = configData.contact24Closed || {};
+    configName.value = configData.name || "";
+  } catch (e) {
+    console.error("加载数据失败:", e);
+    throw e;
+  }
+}
+
+/* 保存记录 */
 const saveRecord = async (relay: keyof ActionRelays) => {
   console.log(testResults.value);
   const data = toRaw(testResults.value).map((item) => {
@@ -567,161 +701,6 @@ const saveRecord = async (relay: keyof ActionRelays) => {
   }
 };
 
-const handleRelayAction = (key: keyof ActionRelays) => {
-  const relay = configActionRelays.value![key];
-  batchUpdateTerminal(relay, 1);
-  handleDo();
-  startRecord();
-  setTimeout(async () => {
-    batchUpdateTerminal(relay, 0);
-    handleDo();
-    stopRecord();
-    saveRecord(key);
-  }, 13000);
-};
-
-const handleDC = () => {
-  const key = butItemStatus.value as keyof ActionRelays;
-  handleRelayAction(key);
-};
-
-const handleFC = () => {
-  const key = butItemStatus.value as keyof ActionRelays;
-  handleRelayAction(key);
-};
-
-const handleCD = () => {
-  // const key = butItemStatus.value as keyof ActionRelays;
-  // handleRelayAction(key);
-  const data = [1, 0, 0, 0, 0];
-  sendCmd(data, "collect");
-};
-
-const handleDo = () => {
-  updateConfigData();
-
-  sendCmd(wsSendData.value, "relays");
-};
-
-function sendCmd(data: number[] | null, type: string) {
-  ws.send({ type: type, value: data });
-}
-
-const buttonItemConfig = [
-  { name: "定操", type: "DC" },
-  { name: "反操", type: "FC" },
-  // { name: "传动", type: "CD" },
-  // { name: "混线", type: "HX" },
-  // { name: "接地", type: "JD" },
-];
-
-const updateConfigData = () => {
-  const result = terminals.value.map((item) =>
-    item.default_status === 1 || item.default_status === "ok" ? 1 : 0,
-  );
-  wsSendData.value = result;
-};
-
-const butItemIsDisable = ref(false);
-
-const nextDoTime = ref(15);
-let timerId: number | null = null;
-const handleOpe = (type: string) => {
-  if (!configActionRelays.value) {
-    return showToast("请先选择闭合方式", "error");
-  }
-  if (butItemIsDisable.value) return;
-
-  const exposed = currentCurveRef.value;
-  exposed?.resetData();
-  testResults.value = [];
-  initTestResults();
-  butItemStatus.value = type;
-  butItemIsDisable.value = true;
-
-  switch (type) {
-    case "DC":
-      handleDC();
-      break;
-    case "FC":
-      handleFC();
-      break;
-    case "CD":
-      handleCD();
-      break;
-  }
-
-  // 开启每秒递减
-  timerId = window.setInterval(() => {
-    nextDoTime.value--;
-    // 倒计时到0，清除定时器、解锁按钮
-    if (nextDoTime.value <= 0) {
-      nextDoTime.value = 15;
-      clearInterval(timerId!);
-      timerId = null;
-      butItemIsDisable.value = false;
-      butItemStatus.value = "";
-    }
-  }, 1000);
-};
-
-async function getList() {
-  try {
-    const [itemRes, deviceRes, comboRes, configRes] = await Promise.all([
-      fetch(HTTP_URL + "/getConfig/" + deviceId + "/" + combinationId),
-      fetch(HTTP_URL + "/getDevice/" + deviceId),
-      fetch(HTTP_URL + "/getCombination/" + combinationId),
-      fetch(HTTP_URL + "/getConfigList/" + configId),
-    ]);
-
-    itemConfig.value = await itemRes.json();
-
-    if (itemConfig.value.length > 0) {
-      active.value = itemConfig.value.filter((v) => v.id === configId)[0].id;
-    }
-
-    const deviceData = await deviceRes.json();
-    device.value.name = deviceData.name || "";
-
-    const comboData = await comboRes.json();
-    combinationName.value = comboData.name || "";
-
-    const configData = await configRes.json();
-    // configActionRelays.value = configData.actionRelays || {};
-    contact13Closed.value = configData.contact13Closed || {};
-    contact24Closed.value = configData.contact24Closed || {};
-    configName.value = configData.name || "";
-  } catch (e) {
-    console.error("加载数据失败:", e);
-    throw e;
-  }
-}
-
-async function getCodeDeviceList() {
-  try {
-    const [comboRes, configRes] = await Promise.all([
-      fetch(HTTP_URL + "/getCombination/" + combinationId),
-      fetch(HTTP_URL + "/getConfigList/" + configId),
-    ]);
-
-    active.value = configId;
-
-    device.value.name = codeName;
-
-    const comboData = await comboRes.json();
-    combinationName.value = comboData.name || "";
-
-    const configData = await configRes.json();
-    // configActionRelays.value = configData.actionRelays || {};
-    contact13Closed.value = configData.contact13Closed || {};
-    contact24Closed.value = configData.contact24Closed || {};
-    configName.value = configData.name || "";
-  } catch (e) {
-    console.error("加载数据失败:", e);
-    throw e;
-  }
-}
-
 onMounted(async () => {
   await withLoading(async () => {
     switch (opeModel) {
@@ -761,13 +740,13 @@ onMounted(async () => {
     <DeviceBar
       :device-name="device.name"
       :combination-name="combinationName"
+      :device-type="deviceType"
       :config-name="configName"
       :item-config="itemConfig"
       :contact-active="selectedContactType"
       v-model:active="active"
       @contactConfigClick="handleContactConfigClick"
       @back="router.back()" />
-
     <div class="main-content">
       <CurrentCurve
         :start-current="currentData.startCurrent"
@@ -798,34 +777,49 @@ onMounted(async () => {
         :power-arr-b="isThreePhase ? powerArrB : undefined"
         :power-arr-c="isThreePhase ? powerArrC : undefined" />
 
-      <div class="right-panel">
-        <TestResults :tests="testResults" :isAction="isAction" />
-        <div class="action-buttons">
-          <span class="action-light">
-            <span
-              v-if="butItemStatus === 'DC'"
-              class="light light-green"></span>
-            <span
-              v-if="butItemStatus === 'FC'"
-              class="light light-yellow"></span>
-          </span>
-          <button
-            v-for="item in buttonItemConfig"
-            class="action-btn"
-            :disabled="butItemIsDisable"
-            :class="butItemStatus === item.type ? 'active' : ''"
-            @click="handleOpe(item.type)">
-            {{ item.name }}
-          </button>
-          <span class="action-tips" v-if="butItemIsDisable">
-            {{ nextDoTime }}s后可以再次操作</span
-          >
-        </div>
+      <TestResults
+        v-if="!isStartBeforeTest"
+        :tests="testResults"
+        :modbus-status="modbusStatus"
+        :machineStatus="machineStatus"
+        :isAction="isAction" />
+      <StartBeforeTest
+      v-if="isStartBeforeTest"
+      :startBeforeTestTips="startBeforeTestTips"
+      :modbus-status="modbusStatus"
+      :machineStatus="machineStatus"
+      />
+    </div>
+
+    <div class="button-rows">
+      <div style="flex: 1; justify-content: center; display: flex; align-items: center"">
+        <button class="emergency-btn" @click="handleStart()"  v-if="isShowButtons" >
+          {{ machineStatus ? '紧急停止' : '开启电源' }}
+        </button>
+      </div>
+      <div class="action-buttons" style="flex: 1" v-if="isShowButtons &&  machineStatus"">
+        <button class="action-btn" v-if="!startBeforeTestFinshed" @click="handleStartBeforeTest">启动前测试</button>
+        <span class="action-light">
+          <span v-if="butItemStatus === 'DC'" class="light light-green"></span>
+          <span v-if="butItemStatus === 'FC'" class="light light-yellow"></span>
+        </span>
+        <button
+        v-if="startBeforeTestFinshed"
+          v-for="item in buttonItemConfig"
+          class="action-btn"
+          :disabled="butItemIsDisable"
+          :class="butItemStatus === item.type ? 'active' : ''"
+          @click="handleOpe(item.type)">
+          {{ item.name }}
+        </button>
+        <span class="action-tips" v-if="butItemIsDisable">
+          {{ nextDoTime }}s后可以再次操作</span
+        >
       </div>
     </div>
     <div class="terminal-bar">
       <span class="terminal-bar-title">期望端子状态</span>
-      <!-- <div class="terminal-bar-grid"> -->
+
       <div
         v-for="t in terminals"
         :key="t.id"
@@ -835,12 +829,11 @@ onMounted(async () => {
         <span
           class="terminal-bar-dot"
           :class="[t.default_status ? 'ok' : 'ng']"></span>
-        <!-- </div> -->
       </div>
     </div>
     <div class="terminal-bar">
       <span class="terminal-bar-title">端子实时状态</span>
-      <!-- <div class="terminal-bar-grid"> -->
+
       <div
         v-for="(t, index) in coilArr"
         :key="index"
@@ -850,7 +843,6 @@ onMounted(async () => {
           terminals[index]?.relay_name
         }}</span>
         <span class="terminal-bar-dot" :class="{ ok: t, ng: !t }"></span>
-        <!-- </div> -->
       </div>
     </div>
     <div class="status-bar">
@@ -949,6 +941,43 @@ onMounted(async () => {
   background: rgba(90, 146, 208, 0.25);
   border-color: #5a92d0;
   color: #fff;
+}
+.action-btn:disabled {
+  background: rgba(149, 178, 211, 0.25);
+  border-color: #759dcc;
+  color: #fff;
+  cursor: not-allowed;
+}
+
+.emergency-btn {
+  background: #d93025;
+  color: #fff;
+  border: none;
+  font-size: 26px;
+  font-weight: 600;
+  padding: 6px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.2s;
+}
+
+.emergency-btn:hover {
+  background: #e8473b;
+}
+.emergency-btn:disabled {
+  background: #f19b94;
+  cursor: not-allowed;
+}
+
+.button-rows {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 12px;
+  background: #071a2e;
+  border-top: 1px solid #1a2d44;
+  flex-shrink: 0;
 }
 
 .action-tips {

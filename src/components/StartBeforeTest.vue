@@ -1,18 +1,11 @@
 <script setup lang="ts">
-export interface TestItem {
-  name: string;
-  type: string;
-  status: boolean | "NT";
-  realCheck: boolean;
-  relayName: string[];
-}
 defineProps<{
-  tests?: TestItem[];
   modbusStatus?: {
     connected: boolean;
     msg?: string;
     color?: string;
   };
+  startBeforeTestTips: [];
   machineStatus: boolean;
 }>();
 </script>
@@ -21,7 +14,9 @@ defineProps<{
   <div class="test-panel">
     <div class="panel-header">
       <span class="panel-title">{{
-        modbusStatus && modbusStatus.connected ? "测试结果" : "通讯异常"
+        modbusStatus && modbusStatus.connected
+          ? "启动前测试测试结果"
+          : "通讯异常"
       }}</span>
     </div>
     <div
@@ -30,23 +25,16 @@ defineProps<{
       {{ modbusStatus?.msg }}！ 请检查通讯连接或设备状态
     </div>
     <div v-else class="test-list">
-      <h4
-        v-if="tests && tests?.length > 0 && tests[0].type === 'empty'"
-        style="color: #c18232">
-        暂无表示继电器配置，跳过该组状态校验
-      </h4>
       <div
         v-if="machineStatus"
-        v-for="(test, idx) in tests?.length ? tests : []"
+        v-for="(test, idx) in startBeforeTestTips?.length
+          ? startBeforeTestTips
+          : []"
         :key="idx"
         class="test-item">
         <div class="test-header">
-          <span
-            class="test-dot"
-            :class="
-              test.status == 'NT' ? '' : test.status ? 'ok' : 'ng'
-            "></span>
-          <span class="test-name">{{ test.name }}</span>
+          <span class="test-dot" :class="test.isNormal ? 'ok' : 'ng'"></span>
+          <span class="test-name">{{ test.channelName }}</span>
         </div>
         <div v-if="test?.type === 'GreenLight' || test?.type === 'YellowLight'">
           <span class="action-light">
@@ -64,11 +52,8 @@ defineProps<{
               }"></span>
           </span>
         </div>
-        <div
-          v-else
-          class="test-result"
-          :class="test.status == 'NT' ? '' : test.status ? 'ok' : 'ng'">
-          {{ test.status == "NT" ? "--" : test.status ? "OK" : "NG" }}
+        <div v-else class="test-result" :class="test.isNormal ? 'ok' : 'ng'">
+          {{ test.tip }}
         </div>
         <div v-if="test.realCheck"></div>
       </div>

@@ -66,7 +66,7 @@ onUnmounted(() => {
 <template>
   <div ref="navRef" class="top-nav">
     <div class="nav-left">
-      <span class="nav-logo">Portable turnout tester</span>
+      <span class="nav-logo">便携式转辙机测试系统</span>
     </div>
     <div class="nav-center">
       <div v-for="item in menuItems" :key="item.key" class="nav-item-wrapper">
@@ -100,9 +100,9 @@ onUnmounted(() => {
       </div>
     </div>
     <div class="nav-right">
-      <button class="emergency-btn" @click="emit('menu-click', 'emergency')">
+      <!-- <button class="emergency-btn" @click="emit('menu-click', 'emergency')">
         紧急停止
-      </button>
+      </button> -->
     </div>
   </div>
 </template>

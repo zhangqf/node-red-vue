@@ -83,12 +83,14 @@
             "6c73b535266f1f23",
             "f6e9d7e097e60402",
             "eba6249e5628396f",
-            "010538068717c445"
+            "010538068717c445",
+            "bd98acdecbf1659f",
+            "ca862f075ce41d0c"
         ],
         "x": 74,
         "y": 419,
         "w": 992,
-        "h": 242
+        "h": 302
     },
     {
         "id": "a78c98a47184b2fa",
@@ -1046,7 +1048,7 @@
         "z": "e4bbd3713100fe17",
         "g": "a78c98a47184b2fa",
         "name": "function 3",
-        "func": "const deviceList = [\n  {\n    \"fc\":3,\n    \"unitid\":1,\n    \"address\":14,\n    \"quantity\":1,\n    \"name\":\"电流\"\n  },\n  {\n    \"fc\":1,\n    \"unitid\":2,\n    \"address\":0,\n    \"quantity\":32,\n    \"name\":\"继电器状态\"\n  }, \n  {\n    \"fc\": 3,\n    \"unitid\": 1,\n    \"address\": 14,\n    \"quantity\": 1,\n    \"name\": \"电流\"\n  },\n  {\n    \"fc\":2,\n    \"unitid\":3,\n    \"address\":0,\n    \"quantity\":16,\n    \"name\":\"表示\"\n  },\n]\n\n// 读取循环下标\nlet idx = context.get(\"idx\") || 0;\nconst dev = deviceList[idx];\nmsg.modbus = {};\n\nmsg.payload = {\n    fc: dev.fc,\n    unitid: dev.unitid,\n    address: dev.address,\n    quantity: dev.quantity\n};\n\n// msg.payload = {\n// //     {\n//     \"fc\":1,\n//     \"unitid\":2,\n//     \"address\":0,\n//     \"quantity\":32,\n//     \"name\":\"继电器状态\"\n//   }\n\n\n\n\nmsg.deviceName = dev.name;\n// 循环计数\nidx = idx + 1;\nif(idx >= deviceList.length){\n    idx = 0;\n}\ncontext.set(\"idx\", idx);\n\nreturn msg;",
+        "func": "const deviceList = [\n  {\n    \"fc\":3,\n    \"unitid\":4,\n    \"address\":14,\n    \"quantity\":1,\n    \"name\":\"电流\"\n  },\n  {\n    \"fc\":1,\n    \"unitid\":2,\n    \"address\":0,\n    \"quantity\":32,\n    \"name\":\"继电器状态\"\n  }, \n  {\n    \"fc\": 3,\n    \"unitid\": 4,\n    \"address\": 14,\n    \"quantity\": 1,\n    \"name\": \"电流\"\n  },\n  {\n    \"fc\":2,\n    \"unitid\":3,\n    \"address\":0,\n    \"quantity\":16,\n    \"name\":\"表示\"\n  },\n]\n\n// 读取循环下标\nlet idx = context.get(\"idx\") || 0;\nconst dev = deviceList[idx];\nmsg.modbus = {};\n\nmsg.payload = {\n    fc: dev.fc,\n    unitid: dev.unitid,\n    address: dev.address,\n    quantity: dev.quantity\n};\n\n// msg.payload = {\n// //     {\n//     \"fc\":1,\n//     \"unitid\":2,\n//     \"address\":0,\n//     \"quantity\":32,\n//     \"name\":\"继电器状态\"\n//   }\n\n\n\n\nmsg.deviceName = dev.name;\n// 循环计数\nidx = idx + 1;\nif(idx >= deviceList.length){\n    idx = 0;\n}\ncontext.set(\"idx\", idx);\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -3775,7 +3777,7 @@
         "z": "e4bbd3713100fe17",
         "g": "a78c98a47184b2fa",
         "name": "func_check_timeout",
-        "func": "\nconst lastTick = global.get(\"modbus_last_tick\") || 0;\nconst now = Date.now();\nconst timeout = 1000;\n\nlet sendData = {};\n\n// 情况1：从未收到过任何数据（完全没连上）\nif (lastTick === 0) {\n    sendData = {\n        type: \"modbusStatus\",\n        connected: false,\n        msg: \"未建立Modbus连接，无任何数据返回\",\n        color: \"orange\",\n        lastTime: \"--\"\n    };\n}\n// 情况2：3秒内有数据，在线\nelse if (now - lastTick < timeout) {\n    sendData = {\n        type: \"modbusStatus\",\n        connected: true,\n        msg: \"通讯正常\",\n        color: \"green\",\n        lastTime: new Date(lastTick).toLocaleString()\n    };\n}\n// 情况3：超过3秒无新数据，设备断开（flex-getter无输出）\nelse {\n    sendData = {\n        type: \"modbusStatus\",\n        connected: false,\n        msg: \"Modbus通讯中断，设备无应答\",\n        color: \"red\",\n        lastTime: new Date(lastTick).toLocaleString()\n    };\n}\n\nmsg.sendData = sendData;\nreturn msg;",
+        "func": "\nconst lastTick = global.get(\"modbus_last_tick\") || 0;\nconst now = Date.now();\nconst timeout = 1000;\n\nlet sendData = {};\n\n// 情况1：从未收到过任何数据（完全没连上）\nif (lastTick === 0) {\n    sendData = {\n        type: \"modbusStatus\",\n        connected: true,\n        msg: \"未建立Modbus连接，无任何数据返回\",\n        color: \"orange\",\n        lastTime: \"--\"\n    };\n}\n// 情况2：3秒内有数据，在线\nelse if (now - lastTick < timeout) {\n    sendData = {\n        type: \"modbusStatus\",\n        connected: true,\n        msg: \"通讯正常\",\n        color: \"green\",\n        lastTime: new Date(lastTick).toLocaleString()\n    };\n}\n// 情况3：超过3秒无新数据，设备断开（flex-getter无输出）\nelse {\n    sendData = {\n        type: \"modbusStatus\",\n        connected: false,\n        msg: \"Modbus通讯中断，设备无应答\",\n        color: \"red\",\n        lastTime: new Date(lastTick).toLocaleString()\n    };\n}\n\nmsg.sendData = sendData;\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -3902,11 +3904,16 @@
                 "t": "eq",
                 "v": "collect",
                 "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "startBeforeTestRelays",
+                "vt": "str"
             }
         ],
         "checkall": "true",
         "repair": false,
-        "outputs": 2,
+        "outputs": 3,
         "x": 330,
         "y": 500,
         "wires": [
@@ -3915,6 +3922,9 @@
             ],
             [
                 "eba6249e5628396f"
+            ],
+            [
+                "bd98acdecbf1659f"
             ]
         ]
     },
@@ -3931,7 +3941,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 490,
+        "x": 530,
         "y": 560,
         "wires": [
             [
@@ -3953,7 +3963,7 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 620,
+        "x": 740,
         "y": 620,
         "wires": []
     },
@@ -4015,10 +4025,7 @@
         "x": 1930,
         "y": 620,
         "wires": [
-            [
-                "c34b5fbd4a102ab1",
-                "7410291c8a0585e6"
-            ]
+            []
         ]
     },
     {
@@ -4111,7 +4118,9 @@
         "x": 1360,
         "y": 80,
         "wires": [
-            []
+            [
+                "d50b53f9cf0907c2"
+            ]
         ]
     },
     {
@@ -4912,7 +4921,6 @@
         "id": "831991aa359dd546",
         "type": "inject",
         "z": "e4bbd3713100fe17",
-        "d": true,
         "g": "264be9ece447ca9d",
         "name": "",
         "props": [
@@ -4924,7 +4932,7 @@
                 "vt": "str"
             }
         ],
-        "repeat": "0.1",
+        "repeat": "1",
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
@@ -4945,7 +4953,7 @@
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
         "name": "function 28",
-        "func": "\nconst mergeData = [\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0 ,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,1000,1000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,1000,1000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,1000,1000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,1000,1000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,2000,2000,2000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,2000,2000,2000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,2000,2000,2000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n    [ 0,0,0,0,3278,123,223,245,1000,2000,3000,0,238847,995834,7384302],\n]\n\n\nlet idx = context.get('idx') || 0\n\nconst value = mergeData[idx];\n\n\nmsg.sendData = {\n    type: \"ThreePhaseACCollector\",\n    value:value\n};\n\nidx = idx + 1;\nif(idx >= mergeData.length){\n    idx = 0;\n}\ncontext.set(\"idx\", idx);\n\n\nreturn msg",
+        "func": "\nconst data =[17,10000000,100000000,15]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 3,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -4970,6 +4978,45 @@
         "headers": {},
         "x": 820,
         "y": 5760,
+        "wires": []
+    },
+    {
+        "id": "bd98acdecbf1659f",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "9e2d670578adbe41",
+        "name": "启动前测试",
+        "func": "\nconst coilArr = msg.value || [];\n\n  msg.payload = {\n    \"fc\":15,\n    \"unitid\":6,\n    \"address\":0,\n    \"quantity\":32,\n    \"value\": coilArr\n  };\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 510,
+        "y": 660,
+        "wires": [
+            [
+                "ca862f075ce41d0c"
+            ]
+        ]
+    },
+    {
+        "id": "ca862f075ce41d0c",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "9e2d670578adbe41",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 780,
+        "y": 680,
         "wires": []
     }
 ]
