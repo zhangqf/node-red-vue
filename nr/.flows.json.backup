@@ -413,12 +413,16 @@
             "c34b5fbd4a102ab1",
             "7410291c8a0585e6",
             "831991aa359dd546",
-            "5002b56175b0e267"
+            "5002b56175b0e267",
+            "30151d7bd9eec3f3",
+            "a20ffea59d710210",
+            "7e26b810a0a911ef",
+            "bc4417b23d6b2293"
         ],
         "x": 1254,
-        "y": 499,
+        "y": 419,
         "w": 1012,
-        "h": 262
+        "h": 342
     },
     {
         "id": "cf823ce89da7f786",
@@ -4108,7 +4112,7 @@
         "z": "e4bbd3713100fe17",
         "g": "a78c98a47184b2fa",
         "name": "mock电流",
-        "func": "\n\n// msg.sendData = \n//   {\n//     \"fc\":1,\n//     \"unitId\":3,\n//     \"address\":0,\n//     \"quantity\":32,\n//     \"data\":[0,0,1,0,0,0],\n//     \"type\":\"modbusRealData\"\n\n//   }\nconst currentData = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]\n\n// const currentData = [\n//     2.5,\n//     5.4,\n//     8.1,\n//     10.6,\n//     12.9,\n//     15,\n//     16.9,\n//     18.6,\n//     20.1,\n//     21.4,\n//     22.5,\n//     23.4,\n//     24.1,\n//     24.6,\n//     24.9,\n//     25,\n//     24.9,\n//     24.6,\n//     24.1,\n//     23.4,\n//     22.5,\n//     21.4,\n//     20.1,\n//     18.6,\n//     16.9,\n//     15,\n//     12.9,\n//     10.6,\n//     8.1,\n//     5.4,\n//     2.5,\n//     5.00,\n//     5.02,\n//     5.035,\n//     5.048,\n//     5.056,\n//     5.062,\n//     5.067,\n//     5.070,\n//     5.072,\n//     5.0735,\n//     5.0745,\n//     5.0752,\n//     5.0758,\n//     5.0762,\n//     5.0765,\n//     5.0767,\n//     5.0768,\n//     5.0769,\n//     5.07695,\n//     5.0770,\n//     5.0770,\n//     5.0770,\n//     5.0770,\n//     5.0770,\n//     5.0770,\n//     2,2,2,2,2,2,2,2,\n//     6,6,6,6,6,6,6,6,\n//     2,2,2,2,2,2,2,2,\n//     6,6,6,6,6,6,6,6,\n//     2,2,2,2,2,2,2,2\n// ]\n\n\nconst len = currentData.length;\nlet idx = context.get('idx')||0;\n\n\nmsg.payload = currentData[idx];\n\n\n\nmsg.sendData = {\n    data:msg.payload,\n    type:\"modbusRealData\",\n    unitId: 1,\n\tfc: 3,\n\taddress:14,\n\tquantity: 1,\n}\n\nidx = idx + 1;\nif(idx >= currentData.length){\n    idx = 0;\n}\ncontext.set(\"idx\", idx);\n\n\n\nreturn msg;",
+        "func": "\n\n// msg.sendData = \n//   {\n//     \"fc\":1,\n//     \"unitId\":3,\n//     \"address\":0,\n//     \"quantity\":32,\n//     \"data\":[0,0,1,0,0,0],\n//     \"type\":\"modbusRealData\"\n\n//   }\nconst currentData = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]\n\n// const currentData = [\n//     2.5,\n//     5.4,\n//     8.1,\n//     10.6,\n//     12.9,\n//     15,\n//     16.9,\n//     18.6,\n//     20.1,\n//     21.4,\n//     22.5,\n//     23.4,\n//     24.1,\n//     24.6,\n//     24.9,\n//     25,\n//     24.9,\n//     24.6,\n//     24.1,\n//     23.4,\n//     22.5,\n//     21.4,\n//     20.1,\n//     18.6,\n//     16.9,\n//     15,\n//     12.9,\n//     10.6,\n//     8.1,\n//     5.4,\n//     2.5,\n//     5.00,\n//     5.02,\n//     5.035,\n//     5.048,\n//     5.056,\n//     5.062,\n//     5.067,\n//     5.070,\n//     5.072,\n//     5.0735,\n//     5.0745,\n//     5.0752,\n//     5.0758,\n//     5.0762,\n//     5.0765,\n//     5.0767,\n//     5.0768,\n//     5.0769,\n//     5.07695,\n//     5.0770,\n//     5.0770,\n//     5.0770,\n//     5.0770,\n//     5.0770,\n//     5.0770,\n//     2,2,2,2,2,2,2,2,\n//     6,6,6,6,6,6,6,6,\n//     2,2,2,2,2,2,2,2,\n//     6,6,6,6,6,6,6,6,\n//     2,2,2,2,2,2,2,2\n// ]\n\n\nconst len = currentData.length;\nlet idx = context.get('idx')||0;\n\n\nmsg.payload = currentData[idx];\n\n\n\nmsg.sendData = {\n    data:msg.payload,\n    type:\"modbusRealData\",\n    unitId: 4,\n\tfc: 3,\n\taddress:14,\n\tquantity: 1,\n}\n\nidx = idx + 1;\nif(idx >= currentData.length){\n    idx = 0;\n}\ncontext.set(\"idx\", idx);\n\n\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -4932,14 +4936,14 @@
                 "vt": "str"
             }
         ],
-        "repeat": "1",
+        "repeat": "",
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1500,
+        "x": 1470,
         "y": 560,
         "wires": [
             [
@@ -4953,7 +4957,7 @@
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
         "name": "function 28",
-        "func": "\nconst data =[17,0.4,0,15]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 3,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
+        "func": "\nconst data =[17,10000000,100000000,15]\n\n// const data = [1,1,1,1,1,1,1,1,]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 6,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -5018,5 +5022,107 @@
         "x": 780,
         "y": 680,
         "wires": []
+    },
+    {
+        "id": "30151d7bd9eec3f3",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "264be9ece447ca9d",
+        "name": "function 19",
+        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst data = [1,1,1,1,1,1,1,1,]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 3,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1730,
+        "y": 460,
+        "wires": [
+            [
+                "7410291c8a0585e6"
+            ]
+        ]
+    },
+    {
+        "id": "a20ffea59d710210",
+        "type": "inject",
+        "z": "e4bbd3713100fe17",
+        "g": "264be9ece447ca9d",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 1470,
+        "y": 460,
+        "wires": [
+            [
+                "30151d7bd9eec3f3"
+            ]
+        ]
+    },
+    {
+        "id": "7e26b810a0a911ef",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "264be9ece447ca9d",
+        "name": "function 29",
+        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst tempArr = new Array(32).fill(0)\n\ntempArr[31] = 1\ntempArr[30] = 1\n\nconst data = [1,1,1,1,1,1,1,1,]\n\nmsg.sendData = {\n    data:tempArr,\n    type:\"modbusRealData\",\n    unitId: 1,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1730,
+        "y": 500,
+        "wires": [
+            [
+                "7410291c8a0585e6"
+            ]
+        ]
+    },
+    {
+        "id": "bc4417b23d6b2293",
+        "type": "inject",
+        "z": "e4bbd3713100fe17",
+        "g": "264be9ece447ca9d",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "1",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 1480,
+        "y": 500,
+        "wires": [
+            [
+                "7e26b810a0a911ef"
+            ]
+        ]
     }
 ]

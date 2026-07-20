@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import type { ActionRelays, ChannelTestItem, TestRule } from "./interface";
+import type { ActionRelays } from "./interface";
 
 // 配置映射：名称、type、对应继电器数组字段
 export const relayConfigList = [
@@ -70,55 +70,68 @@ export const contact24Closed = ref<ActionRelays>({
   YJCDFWBS: [],
 });
 
-// 先抽离公共配置
-const ZDJ9ANDZYJ7_RULES: ChannelTestItem[] = [
+// ===== 4路阻值合并配置 =====
+// dcExpect / fcExpect: 该方向时期望的阻值状态
+// shortTip: 混线(<0.5Ω)时的故障提示
+// openFaultTip: 期望NORMAL但实际OPEN时的断线故障提示
+export interface ChannelExpect {
+  name: string;
+  dcExpect: "NORMAL" | "OPEN";
+  fcExpect: "NORMAL" | "OPEN";
+  shortTip: string;
+  openFaultTip: string;
+}
+
+export const CHANNEL_CONFIG: ChannelExpect[] = [
   {
-    index: 0,
     name: "第1路",
-    rules: [
-      {
-        min: 10000000,
-        max: null,
-        tip: "D1至绕组1断线或D2至绕组2断线",
-        isNormal: false,
-      },
-      { min: null, max: 0.5, tip: "D1D2混线", isNormal: false },
-      { min: 12, max: 17, tip: "正常", isNormal: true },
-    ],
+    dcExpect: "NORMAL",
+    fcExpect: "OPEN",
+    shortTip: "D1D2混线",
+    openFaultTip: "D1至绕组1断线或D2至绕组2断线",
   },
   {
-    index: 1,
     name: "第2路",
-    rules: [
-      { min: 10000000, max: null, tip: "正常", isNormal: true },
-      { min: null, max: 0.5, tip: "D1D3混线", isNormal: false },
-    ],
+    dcExpect: "OPEN",
+    fcExpect: "NORMAL",
+    shortTip: "D1D3混线",
+    openFaultTip: "D1至绕组1断线或D3至绕组2断线",
   },
   {
-    index: 2,
     name: "第3路",
-    rules: [
-      { min: 10000000, max: null, tip: "正常", isNormal: true },
-      { min: null, max: 0.5, tip: "D1D4混线", isNormal: false },
-    ],
+    dcExpect: "OPEN",
+    fcExpect: "NORMAL",
+    shortTip: "D1D4混线",
+    openFaultTip: "D1至绕组1断线或D4至绕组3断线",
   },
   {
-    index: 3,
     name: "第4路",
-    rules: [
-      {
-        min: 10000000,
-        max: null,
-        tip: "D1至绕组1断线或D5至绕组3断线",
-        isNormal: false,
-      },
-      { min: null, max: 0.5, tip: "D1D5混线", isNormal: false },
-      { min: 12, max: 17, tip: "正常", isNormal: true },
-    ],
+    dcExpect: "NORMAL",
+    fcExpect: "OPEN",
+    shortTip: "D1D5混线",
+    openFaultTip: "D1至绕组1断线或D5至绕组3断线",
   },
 ];
+export interface ChannelResult {
+  channelName: string;
+  value: number;
+  state: ResistanceState;
+  tip: string;
+  isNormal: boolean;
+}
 
-export const StartBeforeTestResult: Record<string, ChannelTestItem[]> = {
-  ZYJ7: ZDJ9ANDZYJ7_RULES,
-  ZDJ9: ZDJ9ANDZYJ7_RULES,
-};
+export interface DirectionResult {
+  DC: boolean;
+  FC: boolean;
+  diagnosis: string[];
+}
+
+export interface StartBeforeTestReturn {
+  dcResult: ChannelResult[];
+  fcResult: ChannelResult[];
+  allTrue: boolean;
+  direction: DirectionResult;
+}
+
+// ===== 启动前测试：4路阻值方向判定 =====
+export type ResistanceState = "NORMAL" | "OPEN" | "SHORT" | "UNKNOWN";

@@ -9,12 +9,9 @@ import TestResults from "@/components/TestResults.vue";
 import { HTTP_URL, WEBSOCKET_URL } from "@/config/config";
 import { useRoute, useRouter } from "vue-router";
 import { useToast } from "@/composables/useToast";
-import {gen32BitArray,handleCauculate,parseWsData,findRelayIndex, startBeforeTestExpress} from "@/utils/utils";
+import {gen32BitArray,handleCalculate,parseWsData,findRelayIndex, startBeforeTestExpress,powerStatusJudgmen} from "@/utils/utils";
 import type {WSSTATUS,ActionRelays,TestItem} from "@/utils/interface"
 import {relayConfigList,StartPowerConfig,StartBeforeTestConfig,contact24Closed,contact13Closed} from '@/utils/config'
-import StartBeforeTest from "@/components/StartBeforeTest.vue";
-
-
 const route = useRoute();
 const router = useRouter();
 const { withLoading, showToast } = useToast();
@@ -57,6 +54,9 @@ const phaseCPower = ref(0);
 
 
 const testResults = ref<TestItem[]>([]);
+
+
+const startBeforeLoading = ref(false)
 
 let tempDate = [];
 
@@ -122,13 +122,8 @@ const indicationRelay = ref<any[]>([]);
 
 
 const startBeforeTestFinshed = ref(false)
-
-
-/* 按钮配置 */
-const buttonItemConfig = [
-  { name: "定操", type: "DC" },
-  { name: "反操", type: "FC" },
-];
+const availableDirections = ref<{ DC: boolean; FC: boolean }>({ DC: false, FC: false })
+const diagnosisMessages = ref<string[]>([])
 
 
 const typeToFieldMap: Record<string, keyof ActionRelays> = {};
@@ -182,30 +177,40 @@ const handleWsRelayData = (data: number[]) => {
 };
 
 
-
+/* 电源状态 */
+const powerStatus = ref({})
 
 /* 动作继电器 */
 const handleActionRelays = (data:Record<string, any>) => {
    const rawCoil = Array.isArray(data.data) ? data.data : [];
-    const coilArr = rawCoil.map((item: number) => (item ? 1 : 0));
-    lastCoilArr.value = coilArr.slice(0, terminals.value.length);
+   const coilArr = rawCoil.map((item: number) => (item ? 1 : 0));
+   let idxArr = StartPowerConfig[deviceType.value as keyof typeof StartPowerConfig];
+  //  console.log(idxArr)
+  
+  // 模拟继电器状态
+  const tempArr = new Array(32).fill(0)
+  tempArr[31] = 1
+  tempArr[30] = 1
+  powerStatus.value = powerStatusJudgmen(coilArr,idxArr);
+  lastCoilArr.value = coilArr.slice(0, terminals.value.length);
 }
-const startBeforeTestTips = ref()
+
+
+const startBeforeTestTips = ref<{
+  dcResult: any[];
+  fcResult: any[];
+  allTrue: boolean;
+  direction: { DC: boolean; FC: boolean; diagnosis: string[] };
+} | null>(null)
 
 /* 表示继电器 */
 const handleExpressRelays = (data:Record<string,any>) => {
-
+  console.log(isAction.value)
    if (isAction.value) {
     return  handleWsRelayData(data.data);
     }
-  /* 
-  启动前测试表示
-  */
-    // [15,15,15,15]
-  const {result, allTrue} = startBeforeTestExpress(data.data,deviceType.value)
-  // startBeforeTestFinshed.value = allTrue
-  startBeforeTestTips.value = result
 }
+
 
 /* 采集直流曲线 */
 const handleCollectDCCurve = (data) => {
@@ -223,9 +228,29 @@ const handleCollectDCCurve = (data) => {
     }
 }
 
+  /*
+  启动前测试表示
+  */
+const handleStartBeforeTestExpress = (data) => {
+  console.log(data)
+  const result = startBeforeTestExpress(data.data)
+  startBeforeTestTips.value = result
+  startBeforeLoading.value = false
+  if (result.allTrue) {
+    startBeforeTestFinshed.value = true
+    availableDirections.value = { DC: result.direction.DC, FC: result.direction.FC }
+    diagnosisMessages.value = result.direction.diagnosis
+  } else {
+    startBeforeTestFinshed.value = false
+    availableDirections.value = { DC: false, FC: false }
+    diagnosisMessages.value = result.direction.diagnosis
+  }
+}
+
 
 const funWsRealData = (data) => {
   const unitId = data.unitId;
+  console.log(unitId)
   switch (unitId) {
     case 1:
     case 2:
@@ -233,11 +258,14 @@ const funWsRealData = (data) => {
       break;
     case 3:
       // 表示
-    handleExpressRelays(data);
+      handleExpressRelays(data);
       break;
     case 4:
       // 采集直流曲线
-    handleCollectDCCurve(data);
+      handleCollectDCCurve(data);
+      break;
+    case 6:
+      handleStartBeforeTestExpress(data)
       break;
     default:
       console.warn("未知 unitId:", unitId);
@@ -259,16 +287,16 @@ const funWsStatus = (data) => {
 /* 三相采集模块初级处理 */
 const funThreePhaseACCollector = (data) => {
   isThreePhase.value = true;
-  temperature.value = handleCauculate(data[4], 100);
-  phaseAVoltage.value = handleCauculate(data[5], 100);
-  phaseBVoltage.value = handleCauculate(data[6], 100);
-  phaseCVoltage.value = handleCauculate(data[7], 100);
-  phaseACurrent.value = handleCauculate(data[8], 1000);
-  phaseBCurrent.value = handleCauculate(data[9], 1000);
-  phaseCCurrent.value = handleCauculate(data[10], 1000);
-  phaseAPower.value = handleCauculate(data[12], 10000);
-  phaseBPower.value = handleCauculate(data[13], 10000);
-  phaseCPower.value = handleCauculate(data[14], 10000);
+  temperature.value = handleCalculate(data[4], 100);
+  phaseAVoltage.value = handleCalculate(data[5], 100);
+  phaseBVoltage.value = handleCalculate(data[6], 100);
+  phaseCVoltage.value = handleCalculate(data[7], 100);
+  phaseACurrent.value = handleCalculate(data[8], 1000);
+  phaseBCurrent.value = handleCalculate(data[9], 1000);
+  phaseCCurrent.value = handleCalculate(data[10], 1000);
+  phaseAPower.value = handleCalculate(data[12], 10000);
+  phaseBPower.value = handleCalculate(data[13], 10000);
+  phaseCPower.value = handleCalculate(data[14], 10000);
   // 每次创建新数组赋值，确保引用变化，watch 才能检测
   registerArrA.value = [phaseACurrent.value];
   registerArrB.value = [phaseBCurrent.value];
@@ -350,23 +378,29 @@ watch(active, (newkey) => {
   getConfig(newkey);
 });
 
-const machineStatus = ref(false)
 
-watch(machineStatus,(newKey) => {
+watch(powerStatus?.isRunning,(newKey) => {
   startBeforeTestFinshed.value = !newKey
+  if (!newKey) {
+    availableDirections.value = { DC: false, FC: false }
+    diagnosisMessages.value = []
+    startBeforeTestTips.value = null
+  }
 })
 
 /* 开启电源 */
 const handleStart = () => {
-  machineStatus.value = !machineStatus.value;
   handleDo();
 };
 
-const isStartBeforeTest = ref(false);
+
 
 /* 启动前测试 */
 const handleStartBeforeTest = () => {
-  isStartBeforeTest.value = true;
+  startBeforeLoading.value = true
+  startBeforeTestTips.value = null;
+  diagnosisMessages.value = [];
+  availableDirections.value = { DC: false, FC: false };
   const idxArr = StartBeforeTestConfig[deviceType.value as keyof typeof StartBeforeTestConfig];
   console.log(idxArr)
   const result = gen32BitArray([], idxArr);
@@ -480,7 +514,15 @@ const handleRelayAction = (key: keyof ActionRelays) => {
     handleDo();
     stopRecord();
     saveRecord(key);
-  }, 13000);
+    // 操动结束，回到启动前测试状态
+    if (timerId) { clearInterval(timerId); timerId = null }
+    nextDoTime.value = 15;
+    butItemIsDisable.value = false;
+    butItemStatus.value = "";
+    startBeforeTestFinshed.value = false;
+    availableDirections.value = { DC: false, FC: false };
+    startBeforeTestTips.value = null
+  }, 15000);
 };
 
 /* 通讯链接状态，button根据这个链接状态显示 */
@@ -510,7 +552,7 @@ const handleDo = () => {
   );
   
   let idxArr = StartPowerConfig[deviceType.value as keyof typeof StartPowerConfig];
-  if(!machineStatus.value){
+  if(!powerStatus?.isRunning){
     idxArr = []
   }
 
@@ -778,39 +820,43 @@ onMounted(async () => {
         :power-arr-c="isThreePhase ? powerArrC : undefined" />
 
       <TestResults
-        v-if="!isStartBeforeTest"
         :tests="testResults"
         :modbus-status="modbusStatus"
-        :machineStatus="machineStatus"
-        :isAction="isAction" />
-      <StartBeforeTest
-      v-if="isStartBeforeTest"
-      :startBeforeTestTips="startBeforeTestTips"
-      :modbus-status="modbusStatus"
-      :machineStatus="machineStatus"
-      />
+        :powerStatusIsRunning="powerStatus?.isRunning"
+        :isAction="isAction"
+        :test-result="startBeforeTestTips"
+        :start-before-loading = "startBeforeLoading"
+        :available-directions="availableDirections"
+        :diagnosis-messages="diagnosisMessages" />
     </div>
 
     <div class="button-rows">
       <div style="flex: 1; justify-content: center; display: flex; align-items: center"">
         <button class="emergency-btn" @click="handleStart()"  v-if="isShowButtons" >
-          {{ machineStatus ? '紧急停止' : '开启电源' }}
+          {{ powerStatus?.isRunning ? '紧急停止' : '开启电源' }}
         </button>
       </div>
-      <div class="action-buttons" style="flex: 1" v-if="isShowButtons &&  machineStatus"">
+      <div class="action-buttons" style="flex: 1" v-if="isShowButtons &&  powerStatus?.isRunning">
         <button class="action-btn" v-if="!startBeforeTestFinshed" @click="handleStartBeforeTest">启动前测试</button>
         <span class="action-light">
           <span v-if="butItemStatus === 'DC'" class="light light-green"></span>
           <span v-if="butItemStatus === 'FC'" class="light light-yellow"></span>
         </span>
         <button
-        v-if="startBeforeTestFinshed"
-          v-for="item in buttonItemConfig"
+          v-if="startBeforeTestFinshed && availableDirections.DC"
           class="action-btn"
           :disabled="butItemIsDisable"
-          :class="butItemStatus === item.type ? 'active' : ''"
-          @click="handleOpe(item.type)">
-          {{ item.name }}
+          :class="butItemStatus === 'DC' ? 'active' : ''"
+          @click="handleOpe('DC')">
+          定操
+        </button>
+        <button
+          v-if="startBeforeTestFinshed && availableDirections.FC"
+          class="action-btn"
+          :disabled="butItemIsDisable"
+          :class="butItemStatus === 'FC' ? 'active' : ''"
+          @click="handleOpe('FC')">
+          反操
         </button>
         <span class="action-tips" v-if="butItemIsDisable">
           {{ nextDoTime }}s后可以再次操作</span
@@ -853,7 +899,8 @@ onMounted(async () => {
         :class="modbusStatus.color"
         >{{ modbusStatus.msg }}</span
       >
-      <span v-if="temperature">{{ temperature }}℃</span>
+      <span>{{ powerStatus.desc }}</span>
+      <!-- <span v-if="temperature">{{ temperature }}℃</span> -->
     </div>
   </div>
 </template>

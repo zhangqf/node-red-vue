@@ -6,6 +6,7 @@ export interface TestItem {
   realCheck: boolean;
   relayName: string[];
 }
+
 defineProps<{
   tests?: TestItem[];
   modbusStatus?: {
@@ -13,7 +14,28 @@ defineProps<{
     msg?: string;
     color?: string;
   };
-  machineStatus: boolean;
+  isAction: boolean;
+  powerStatusIsRunning: boolean;
+  /** 启动前测试结果，非 null 时展示测试详情 */
+  testResult?: {
+    dcResult: {
+      channelName: string;
+      value: number;
+      tip: string;
+      isNormal: boolean;
+    }[];
+    fcResult: {
+      channelName: string;
+      value: number;
+      tip: string;
+      isNormal: boolean;
+    }[];
+    allTrue: boolean;
+    direction: { DC: boolean; FC: boolean; diagnosis: string[] };
+  } | null;
+  availableDirections: { DC: boolean; FC: boolean };
+  diagnosisMessages: string[];
+  startBeforeLoading: boolean;
 }>();
 </script>
 
@@ -24,19 +46,103 @@ defineProps<{
         modbusStatus && modbusStatus.connected ? "测试结果" : "通讯异常"
       }}</span>
     </div>
+    <!-- 通讯异常 -->
     <div
       class="modbusStatus-content"
       v-if="modbusStatus && !modbusStatus.connected">
       {{ modbusStatus?.msg }}！ 请检查通讯连接或设备状态
     </div>
+
     <div v-else class="test-list">
+      <template v-if="!powerStatusIsRunning">
+        <div class="modbusStatus-content">开启电源</div>
+      </template>
+      <template v-if="startBeforeLoading"> 启动前测试，等待结果中... </template>
+      <!-- 启动前测试结果（始终显示，不隐藏） -->
+      <template v-if="testResult">
+        <div class="direction-banner">
+          <div class="direction-row">
+            <span class="direction-label">定操</span>
+            <span
+              class="direction-status"
+              :class="availableDirections.DC ? 'ok' : 'ng'">
+              {{ availableDirections.DC ? "可用" : "不可用" }}
+            </span>
+            <span class="direction-divider">|</span>
+            <span class="direction-label">反操</span>
+            <span
+              class="direction-status"
+              :class="availableDirections.FC ? 'ok' : 'ng'">
+              {{ availableDirections.FC ? "可用" : "不可用" }}
+            </span>
+          </div>
+        </div>
+
+        <div v-if="diagnosisMessages.length > 0" class="diagnosis-box">
+          <div
+            v-for="(msg, idx) in diagnosisMessages"
+            :key="idx"
+            class="diagnosis-item">
+            {{ msg }}
+          </div>
+        </div>
+
+        <div class="section-label">
+          定操视角
+          <span v-if="availableDirections.DC" class="section-badge ok"
+            >通过</span
+          >
+          <span v-else class="section-badge ng">未通过</span>
+        </div>
+        <div
+          v-for="(test, idx) in testResult.dcResult"
+          :key="'dc-' + idx"
+          class="test-item">
+          <div class="test-header">
+            <span class="test-dot" :class="test.isNormal ? 'ok' : 'ng'"></span>
+            <span class="test-name">{{ test.channelName }}</span>
+            <span class="test-value">{{ test.value }}Ω</span>
+          </div>
+          <div class="test-result" :class="test.isNormal ? 'ok' : 'ng'">
+            {{ test.tip }}
+          </div>
+        </div>
+
+        <div class="section-label section-divider">
+          反操视角
+          <span v-if="availableDirections.FC" class="section-badge ok"
+            >通过</span
+          >
+          <span v-else class="section-badge ng">未通过</span>
+        </div>
+        <div
+          v-for="(test, idx) in testResult.fcResult"
+          :key="'fc-' + idx"
+          class="test-item">
+          <div class="test-header">
+            <span class="test-dot" :class="test.isNormal ? 'ok' : 'ng'"></span>
+            <span class="test-name">{{ test.channelName }}</span>
+            <span class="test-value">{{ test.value }}Ω</span>
+          </div>
+          <div class="test-result" :class="test.isNormal ? 'ok' : 'ng'">
+            {{ test.tip }}
+          </div>
+        </div>
+
+        <div class="section-divider"></div>
+      </template>
+
+      <!-- 常规表示继电器结果 -->
       <h4
         v-if="tests && tests?.length > 0 && tests[0].type === 'empty'"
         style="color: #c18232">
         暂无表示继电器配置，跳过该组状态校验
       </h4>
       <div
-        v-if="machineStatus"
+        v-if="
+          (powerStatusIsRunning && availableDirections.DC) ||
+          availableDirections.FC
+        "
         v-for="(test, idx) in tests?.length ? tests : []"
         :key="idx"
         class="test-item">
@@ -87,17 +193,6 @@ defineProps<{
   }
 }
 
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
 .test-panel {
   flex: 1;
   background: #0b1d33;
@@ -128,24 +223,26 @@ defineProps<{
   padding: 10px;
   background: rgba(248, 113, 113, 0.1);
   border-radius: 3px;
-}
-
-/* 给modbusStatus-content 添加动画 */
-.modbusStatus-content {
   animation: pulse 0.5s ease-in-out 0.2s infinite;
 }
 
 .test-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.test-list::-webkit-scrollbar {
+  display: none;
 }
 
 .test-item {
   display: flex;
-  /* flex-direction: column; */
+  align-items: center;
   gap: 4px;
-  padding: 8px 10px;
+  padding: 6px 10px;
   background: rgba(0, 0, 0, 0.2);
   border-radius: 3px;
   border-left: 3px solid #1a2d44;
@@ -164,6 +261,8 @@ defineProps<{
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
+  min-width: 100px;
 }
 
 .test-dot {
@@ -171,6 +270,7 @@ defineProps<{
   height: 7px;
   border-radius: 50%;
   background: #5a7288;
+  flex-shrink: 0;
 }
 
 .test-dot.ok {
@@ -188,17 +288,24 @@ defineProps<{
   color: #bccfde;
 }
 
+.test-value {
+  font-size: 11px;
+  color: #5a7288;
+  margin-left: auto;
+  font-family: "SF Mono", "Monaco", "Menlo", monospace;
+}
+
 .test-result {
   font-size: 10px;
   color: #5a7288;
   padding-left: 13px;
   font-family: "SF Mono", "Monaco", "Menlo", monospace;
+  flex: 1;
 }
 
 .test-result.ok {
   color: #34d399;
 }
-
 .test-result.ng {
   color: #f87171;
 }
@@ -235,16 +342,14 @@ defineProps<{
   border-radius: 50%;
   display: inline-block;
   vertical-align: middle;
-  /* 外层光晕 + 内部柔和高光双层阴影 */
   box-shadow:
     inset 0 -3px 6px rgba(0, 0, 0, 0.15),
-    /* 内部暗边模拟球体 */ 0 0 8px var(--light-gray-glow);
+    0 0 8px var(--light-gray-glow);
   background-color: var(--light-gray);
   transition: all 0.25s ease;
   position: relative;
 }
 
-/* 灯珠顶部高光，更立体 */
 .light::after {
   content: "";
   position: absolute;
@@ -256,14 +361,13 @@ defineProps<{
   background: rgba(255, 255, 255, 0.45);
 }
 
-/* 绿色亮灯 */
 .light.green {
   background-color: var(--light-green);
   box-shadow:
     inset 0 -3px 6px rgba(0, 0, 0, 0.15),
     0 0 12px 2px var(--light-green-glow);
 }
-/* 黄色亮灯 */
+
 .light.yellow {
   background-color: var(--light-yellow);
   box-shadow:
@@ -280,7 +384,107 @@ defineProps<{
     opacity: 0.2;
   }
 }
+
 .light.blink {
   animation: blink 1s infinite;
+}
+
+/* ---- 方向判定横幅 ---- */
+.direction-banner {
+  background: rgba(0, 153, 255, 0.06);
+  border: 1px solid rgba(0, 153, 255, 0.15);
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 4px;
+}
+
+.direction-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.direction-label {
+  font-size: 13px;
+  color: #8fb4d8;
+  font-weight: 600;
+}
+
+.direction-status {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 4px;
+}
+
+.direction-status.ok {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.1);
+}
+
+.direction-status.ng {
+  color: #5a7288;
+  background: rgba(90, 114, 136, 0.1);
+}
+
+.direction-divider {
+  color: #1a2d44;
+  margin: 0 4px;
+}
+
+/* ---- 诊断信息 ---- */
+.diagnosis-box {
+  background: rgba(248, 113, 113, 0.06);
+  border: 1px solid rgba(248, 113, 113, 0.15);
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 4px;
+}
+
+.diagnosis-item {
+  font-size: 11px;
+  color: #fca5a5;
+  line-height: 1.8;
+  font-family: "SF Mono", "Monaco", "Menlo", monospace;
+}
+
+.diagnosis-item::before {
+  content: "! ";
+  color: #f87171;
+  font-weight: 700;
+}
+
+/* ---- 区块标签 ---- */
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8fb4d8;
+  padding: 6px 0 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-divider {
+  margin-top: 8px;
+  border-top: 1px solid #1a2d44;
+  padding-top: 10px;
+}
+
+.section-badge {
+  font-size: 10px;
+  padding: 1px 8px;
+  border-radius: 3px;
+  font-weight: 700;
+}
+
+.section-badge.ok {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.1);
+}
+
+.section-badge.ng {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
 }
 </style>
