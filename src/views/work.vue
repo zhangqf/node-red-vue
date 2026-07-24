@@ -13,7 +13,7 @@ import {gen32BitArray,handleCalculate,parseWsData,findRelayIndex, startBeforeTes
 import type {WSSTATUS,ActionRelays,TestItem} from "@/utils/interface"
 import {relayConfigList,StartPowerConfig,StartBeforeTestConfig,contact24Closed,contact13Closed} from '@/utils/config'
 
-
+import {speak} from "@/utils/speech"
 
 const route = useRoute();
 const router = useRouter();
@@ -220,9 +220,9 @@ const handleActionRelays = (data:Record<string, any>) => {
   //  console.log(idxArr)
   
   // 模拟继电器状态
-  const tempArr = new Array(32).fill(0)
-  tempArr[31] = 1
-  tempArr[30] = 1
+  // const tempArr = new Array(32).fill(0)
+  // tempArr[31] = 1
+  // tempArr[30] = 1
   powerStatus.value = powerStatusJudgmen(coilArr,idxArr);
   lastCoilArr.value = coilArr.slice(0, terminals.value.length);
 }
@@ -302,11 +302,19 @@ const funWsRealData = (data) => {
 };
 
 
+const speakDelayTime =ref(0)
 
 const funWsStatus = (data) => {
   if (!data.connected) {
     lastCoilArr.value = [];
     isThreePhase.value = false;
+  }
+  if(!data.connected && speakDelayTime.value<=0){
+    speak("通讯异常，请检查通讯连接或设备状态")
+  }
+  speakDelayTime.value++;
+  if(speakDelayTime.value >=7){
+    speakDelayTime.value = 0
   }
   modbusStatus.value = data;
 };
@@ -469,8 +477,10 @@ function initTestResults() {
     testResults.value = [];
     return;
   }
+  console.log(relayConfigList)
+  console.log(relayData)
   testResults.value = relayConfigList
-    .filter((item) => relayData[item.field].length > 0)
+    .filter((item) => relayData[item.field]&&relayData[item.field].length > 0)
     .map((item) => ({
       type: item.type,
       name: item.name,
