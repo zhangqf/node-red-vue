@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import { ref } from "vue";
+
 export interface TestItem {
   name: string;
   type: string;
   status: boolean | "NT";
   realCheck: boolean;
   relayName: string[];
+  relayTips?: Record<string, string>[];
 }
 
 defineProps<{
@@ -37,6 +40,21 @@ defineProps<{
   diagnosisMessages: string[];
   startBeforeLoading: boolean;
 }>();
+
+const perviewImg = ref("");
+
+const detailVisible = ref(false);
+
+function handleView(url: string) {
+  detailVisible.value = true;
+  perviewImg.value = url;
+}
+
+const circuitLoopExpanded = ref<Record<number, boolean>>({});
+
+function toggleCircuitLoop(idx: number) {
+  circuitLoopExpanded.value[idx] = !circuitLoopExpanded.value[idx];
+}
 </script>
 
 <template>
@@ -75,6 +93,8 @@ defineProps<{
               :class="availableDirections.FC ? 'ok' : 'ng'">
               {{ availableDirections.FC ? "可用" : "不可用" }}
             </span>
+            <!-- <span class="circuit-link" @click="handleView">查看电路图</span> -->
+            <!-- 查看电路图按钮 -->
           </div>
         </div>
 
@@ -138,47 +158,139 @@ defineProps<{
         style="color: #c18232">
         暂无表示继电器配置，跳过该组状态校验
       </h4>
-      <div
+      <template
         v-if="
           (powerStatusIsRunning && availableDirections.DC) ||
           availableDirections.FC
-        "
-        v-for="(test, idx) in tests?.length ? tests : []"
-        :key="idx"
-        class="test-item">
-        <div class="test-header">
-          <span
-            class="test-dot"
-            :class="
-              test.status == 'NT' ? '' : test.status ? 'ok' : 'ng'
-            "></span>
-          <span class="test-name">{{ test.name }}</span>
+        ">
+        <div class="relay-results">
+          <div
+            v-for="(test, idx) in tests?.length ? tests : []"
+            :key="idx"
+            class="test-item">
+            <div class="test-item-main">
+              <div class="test-header">
+                <span
+                  class="test-dot"
+                  :class="
+                    test.status == 'NT' ? '' : test.status ? 'ok' : 'ng'
+                  "></span>
+                <span class="test-name">{{ test.name }}</span>
+              </div>
+              <div
+                class="test-result"
+                v-if="
+                  test?.type === 'GreenLight' || test?.type === 'YellowLight'
+                ">
+                <span class="action-light">
+                  <span
+                    class="light"
+                    :class="{
+                      green:
+                        test.type === 'GreenLight' &&
+                        test.status !== 'NT' &&
+                        test.status,
+                      yellow:
+                        test.type === 'YellowLight' &&
+                        test.status !== 'NT' &&
+                        test.status,
+                    }"></span>
+                </span>
+              </div>
+              <div
+                v-else
+                class="test-result"
+                :class="test.status == 'NT' ? '' : test.status ? 'ok' : 'ng'">
+                {{ test.status == "NT" ? "--" : test.status ? "OK" : "NG" }}
+              </div>
+              <div
+                style="display: flex"
+                v-if="
+                  test.relayTips && test.relayTips.length > 0 && test.realCheck
+                ">
+                <button
+                  style="margin-right: 14px"
+                  class="circuit-view-btn"
+                  @click="toggleCircuitLoop(idx)">
+                  <span
+                    class="circuit-toggle-icon"
+                    :class="{ expanded: !circuitLoopExpanded[idx] }"
+                    >&#9654;</span
+                  >
+                  电路环路
+                </button>
+                <button class="circuit-view-btn" @click="handleView(test.img)">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <path d="m21 15-5-5L5 21" />
+                  </svg>
+                  查看电路图
+                </button>
+              </div>
+            </div>
+            <!-- 电路环路详情 -->
+            <div
+              v-if="
+                test.relayTips &&
+                test.relayTips.length > 0 &&
+                !circuitLoopExpanded[idx] &&
+                test.realCheck
+              "
+              class="circuit-loop-panel">
+              <div
+                v-for="(tip, tipIdx) in test.relayTips"
+                :key="tipIdx"
+                class="circuit-loop-row">
+                <template v-for="(path, port) in tip" :key="port">
+                  <span class="circuit-port-badge">{{ port }}</span>
+                  <span class="circuit-path-text">{{ path }}</span>
+                </template>
+              </div>
+            </div>
+          </div>
         </div>
-        <div v-if="test?.type === 'GreenLight' || test?.type === 'YellowLight'">
-          <span class="action-light">
-            <span
-              class="light"
-              :class="{
-                green:
-                  test.type === 'GreenLight' &&
-                  test.status !== 'NT' &&
-                  test.status,
-                yellow:
-                  test.type === 'YellowLight' &&
-                  test.status !== 'NT' &&
-                  test.status,
-              }"></span>
-          </span>
-        </div>
-        <div
-          v-else
-          class="test-result"
-          :class="test.status == 'NT' ? '' : test.status ? 'ok' : 'ng'">
-          {{ test.status == "NT" ? "--" : test.status ? "OK" : "NG" }}
-        </div>
-        <div v-if="test.realCheck"></div>
-      </div>
+      </template>
     </div>
+    <Teleport to="body">
+      <div
+        v-if="detailVisible"
+        class="modal-overlay"
+        @click.self="detailVisible = false">
+        <div class="modal-card">
+          <div class="modal-header">
+            <div class="modal-header-left">
+              <h3 class="modal-title">电路图</h3>
+            </div>
+            <button
+              class="modal-close"
+              @click="
+                detailVisible = false;
+                perviewImg = '';
+              ">
+              <svg viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M4 4L12 12M12 4L4 12"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round" />
+              </svg>
+            </button>
+          </div>
+          <div style="width: 100%; height: 80vh; padding: 10px">
+            <img :src="perviewImg" alt="" width="100%" height="100%" />
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -312,7 +424,6 @@ defineProps<{
 
 .action-light {
   align-self: center;
-  margin-left: 30px;
 }
 
 .light {
@@ -432,6 +543,22 @@ defineProps<{
   margin: 0 4px;
 }
 
+.circuit-link {
+  margin-left: auto;
+  font-size: 12px;
+  color: #5a92d0;
+  cursor: pointer;
+  border: 1px solid rgba(90, 146, 208, 0.25);
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.circuit-link:hover {
+  color: #8fb4d8;
+  background: rgba(90, 146, 208, 0.1);
+  border-color: rgba(90, 146, 208, 0.4);
+}
+
 /* ---- 诊断信息 ---- */
 .diagnosis-box {
   background: rgba(248, 113, 113, 0.06);
@@ -486,5 +613,219 @@ defineProps<{
 .section-badge.ng {
   color: #f87171;
   background: rgba(248, 113, 113, 0.1);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-card {
+  background: #0b1d33;
+  border: 1px solid #1a2d44;
+  border-radius: 14px;
+  width: 860px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+.modal-card::-webkit-scrollbar {
+  display: none;
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px 28px 0;
+}
+
+.modal-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #e0e8f0;
+}
+
+.modal-subtitle {
+  font-size: 13px;
+  color: #5a7288;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid #1a2d44;
+  border-radius: 6px;
+  color: #5a7288;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.modal-close:hover {
+  color: #e0e8f0;
+  border-color: #2d5280;
+  background: rgba(90, 146, 208, 0.08);
+}
+
+/* Modal stats */
+.modal-stats {
+  display: flex;
+  gap: 12px;
+  padding: 20px 28px;
+}
+
+/* ---- 电路环路（仅作用于常规继电器结果区域） ---- */
+.relay-results .test-item {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  background: transparent;
+  border-left: 3px solid #1a2d44;
+  overflow: hidden;
+}
+
+.relay-results .test-item:has(.test-dot.ok) {
+  border-left-color: #34d399;
+}
+
+.relay-results .test-item:has(.test-dot.ng) {
+  border-left-color: #f87171;
+}
+
+.test-item-main {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.circuit-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  padding: 2px 8px;
+  background: rgba(90, 146, 208, 0.08);
+  border: 1px solid rgba(90, 146, 208, 0.2);
+  border-radius: 3px;
+  color: #5a92d0;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.circuit-toggle:hover {
+  background: rgba(90, 146, 208, 0.16);
+  border-color: rgba(90, 146, 208, 0.35);
+  color: #8fb4d8;
+}
+
+.circuit-toggle-icon {
+  display: inline-block;
+  font-size: 8px;
+  transition: transform 0.2s ease;
+}
+
+.circuit-toggle-icon.expanded {
+  transform: rotate(90deg);
+}
+
+.circuit-loop-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.3);
+  border-top: 1px solid rgba(90, 146, 208, 0.1);
+}
+
+.circuit-loop-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 24px;
+  transition: background 0.15s;
+}
+
+.circuit-loop-row:hover {
+  background: rgba(90, 146, 208, 0.04);
+}
+
+.circuit-port-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 20px;
+  padding: 0 6px;
+  background: rgba(90, 146, 208, 0.15);
+  border: 1px solid rgba(90, 146, 208, 0.25);
+  border-radius: 3px;
+  color: #8fb4d8;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: "SF Mono", "Monaco", "Menlo", monospace;
+  flex-shrink: 0;
+}
+
+.circuit-path-text {
+  font-size: 11px;
+  color: #6a8fa8;
+  font-family: "SF Mono", "Monaco", "Menlo", monospace;
+  word-break: break-all;
+  line-height: 1.5;
+  letter-spacing: 0.2px;
+}
+
+/* ---- 查看电路图按钮行 ---- */
+.circuit-view-row {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 4px;
+  margin-left: auto;
+}
+
+.circuit-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  background: rgba(90, 146, 208, 0.08);
+  border: 1px solid rgba(90, 146, 208, 0.2);
+  border-radius: 4px;
+  color: #5a92d0;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.circuit-view-btn:hover {
+  background: rgba(90, 146, 208, 0.16);
+  border-color: rgba(90, 146, 208, 0.4);
+  color: #8fb4d8;
+}
+
+.circuit-view-btn svg {
+  flex-shrink: 0;
 }
 </style>

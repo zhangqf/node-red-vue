@@ -90,7 +90,7 @@
         "x": 74,
         "y": 419,
         "w": 992,
-        "h": 302
+        "h": 342
     },
     {
         "id": "a78c98a47184b2fa",
@@ -384,12 +384,13 @@
             "fa6adc257e705b7c",
             "8d1c4fc5a1ecd863",
             "004c06110970a837",
-            "0fabe0243ee29da8"
+            "0fabe0243ee29da8",
+            "37653c2a49dc3995"
         ],
         "x": 114,
-        "y": 4299,
+        "y": 4279,
         "w": 1612,
-        "h": 422
+        "h": 442
     },
     {
         "id": "264be9ece447ca9d",
@@ -419,7 +420,7 @@
             "7e26b810a0a911ef",
             "bc4417b23d6b2293"
         ],
-        "x": 1254,
+        "x": 1134,
         "y": 419,
         "w": 1012,
         "h": 342
@@ -3118,7 +3119,8 @@
         "y": 4400,
         "wires": [
             [
-                "18087b30c35111f7"
+                "18087b30c35111f7",
+                "37653c2a49dc3995"
             ]
         ]
     },
@@ -3128,7 +3130,7 @@
         "z": "e4bbd3713100fe17",
         "g": "8f47e2e3400d33b2",
         "name": "写入JSON",
-        "func": " const fs = global.get('fs');\n  const path = global.get('path');\n  const rootPath = global.get('rootPath');\n\n  const payload = msg.payload;\n\n  // 生成文件名\n  const now = new Date();\n  const month = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;\n  const timestamp =\n  `${month}-${String(now.getDate()).padStart(2,'0')}${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;\n  \n   const safeDeviceName = payload.device_name.replace(/[ #]/g, '-');\n  const fileName = `${timestamp}-${payload.op_type}-${safeDeviceName}.json`;\n  // const fileName = `${timestamp}-${payload.op_type}-${payload.device_name}.json`;\n\n  // 目录：records/2025-01/\n  const dir = path.join(rootPath, '/data/records', month);\n  if (!fs.existsSync(dir)) {\n      fs.mkdirSync(dir, { recursive: true });\n  }\n\n  const data = {\n    data:payload.curve_data,\n    time:payload.time_data\n  }\n\n  // 如果存在功率数据，也写入\n  if (payload.power_A && payload.power_A.length) {\n    data.power_A = payload.power_A;\n    data.power_B = payload.power_B;\n    data.power_C = payload.power_C;\n    data.power_time = payload.power_time;\n  }\n\n  let status = \"success\"\n\n  if(payload.result.length > 0) {\n    const res = payload.result.filter(v => v.status=== false)\n    if(res.length > 0) status = \"error\"\n  } \n\n  payload.status = status\n\n  // 写曲线数据\n  const filePath = path.join(dir, fileName);\n  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));\n\n  // 把路径和参数传给下一个节点\n  msg.curve_file = path.join('records', month, fileName);\n  msg.params = [\n      payload.device_name,\n      payload.combination_name,\n      payload.config_name,\n      payload.op_type,\n      payload.status,\n      payload.peak_current,\n      payload.valley_current,\n      msg.curve_file,\n      JSON.stringify(payload.result),\n  ];\n  return msg;",
+        "func": " const fs = global.get('fs');\n  const path = global.get('path');\n  const rootPath = global.get('rootPath');\n\n  const payload = msg.payload;\n\n  // 生成文件名\n  const now = new Date();\n  const month = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;\n  const timestamp =\n  `${month}-${String(now.getDate()).padStart(2,'0')}${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;\n  \n   const safeDeviceName = payload.device_name.replace(/[ #]/g, '-');\n  const fileName = `${timestamp}-${payload.op_type}-${safeDeviceName}.json`;\n  // const fileName = `${timestamp}-${payload.op_type}-${payload.device_name}.json`;\n\n  // 目录：records/2025-01/\n  const dir = path.join(rootPath, '/data/records', month);\n  if (!fs.existsSync(dir)) {\n      fs.mkdirSync(dir, { recursive: true });\n  }\n\n  const data = {\n    data:payload.curve_data,\n    time:payload.time_data\n  }\n\n  // 如果存在功率数据，也写入\n  if (payload.power_A && payload.power_A.length) {\n    data.power_A = payload.power_A;\n    data.power_B = payload.power_B;\n    data.power_C = payload.power_C;\n    data.power_time = payload.power_time;\n  }\n\n  let status = \"success\"\n\n  if(payload.result.length > 0) {\n    const res = payload.result.filter(v => v.status=== false)\n    if(res.length > 0) status = \"error\"\n  } \n\n  payload.status = status\n\n  // 写曲线数据\n  const filePath = path.join(dir, fileName);\n  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));\n\n  // 把路径和参数传给下一个节点\n  msg.curve_file = path.join('records', month, fileName);\n  msg.params = [\n      payload.device_name,\n      payload.combination_name,\n      payload.config_name,\n      payload.op_type,\n      payload.status,\n      payload.peak_current,\n      payload.valley_current,\n      msg.curve_file,\n      JSON.stringify(payload.result),\n      JSON.stringify(payload.pre_test || null),\n  ];\n  return msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -3150,7 +3152,7 @@
         "g": "8f47e2e3400d33b2",
         "mydb": "a074385e545da94b",
         "sqlquery": "prepared",
-        "sql": "  INSERT INTO operation_records\n    (device_name, combination_name, config_name, op_type, status, peak_current, valley_current, curve_file,result)\n  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "sql": "  INSERT INTO operation_records\n    (device_name, combination_name, config_name, op_type, status, peak_current, valley_current, curve_file,result,pre_test)\n  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         "name": "",
         "x": 760,
         "y": 4400,
@@ -3833,7 +3835,7 @@
         "delayOnStart": false,
         "enableDeformedMessages": false,
         "startDelayTime": "",
-        "x": 1720,
+        "x": 1600,
         "y": 680,
         "wires": [
             [
@@ -3864,7 +3866,7 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1350,
+        "x": 1230,
         "y": 680,
         "wires": [
             [
@@ -3886,7 +3888,7 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 2080,
+        "x": 1960,
         "y": 720,
         "wires": []
     },
@@ -3984,7 +3986,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1510,
+        "x": 1390,
         "y": 680,
         "wires": [
             [
@@ -4026,7 +4028,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1930,
+        "x": 1810,
         "y": 620,
         "wires": [
             []
@@ -4046,7 +4048,7 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 2160,
+        "x": 2040,
         "y": 620,
         "wires": []
     },
@@ -4058,7 +4060,7 @@
         "name": "三相交流采集器",
         "server": "4b736505764b58bb",
         "client": "",
-        "x": 2140,
+        "x": 2020,
         "y": 540,
         "wires": []
     },
@@ -4943,7 +4945,7 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1470,
+        "x": 1350,
         "y": 560,
         "wires": [
             [
@@ -4956,15 +4958,15 @@
         "type": "function",
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
-        "name": "function 28",
-        "func": "\nconst data =[17,15,17,15]\n\n// const data = [1,1,1,1,1,1,1,1,]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 6,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
+        "name": "电阻模块表示",
+        "func": "\nconst data =[10000000,15,17,10000000]\n\n// const data = [1,,1,1,1,1,1,1,]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 6,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1730,
+        "x": 1620,
         "y": 560,
         "wires": [
             [
@@ -5020,7 +5022,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 780,
-        "y": 680,
+        "y": 720,
         "wires": []
     },
     {
@@ -5028,15 +5030,15 @@
         "type": "function",
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
-        "name": "function 19",
-        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst data = [1,1,1,1,1,1,1,1,]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 3,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
+        "name": "表示",
+        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst data = [0,0,0,0,0,0,0,0,1,1,0,0,0,1,1,1]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 3,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1730,
+        "x": 1590,
         "y": 460,
         "wires": [
             [
@@ -5066,7 +5068,7 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1470,
+        "x": 1350,
         "y": 460,
         "wires": [
             [
@@ -5079,15 +5081,15 @@
         "type": "function",
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
-        "name": "function 29",
-        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst tempArr = new Array(32).fill(0)\n\ntempArr[31] = 1\ntempArr[30] = 1\n\nconst data = [1,1,1,1,1,1,1,1,]\n\nmsg.sendData = {\n    data:tempArr,\n    type:\"modbusRealData\",\n    unitId: 1,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
+        "name": "开启电源",
+        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst tempArr = new Array(32).fill(0)\n\ntempArr[31] = 1\ntempArr[30] = 1\ntempArr[29] = 1\nconst data = [1,1,1,1,1,1,1,1,]\n\nmsg.sendData = {\n    data:tempArr,\n    type:\"modbusRealData\",\n    unitId: 1,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1730,
+        "x": 1600,
         "y": 500,
         "wires": [
             [
@@ -5117,12 +5119,30 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1480,
+        "x": 1360,
         "y": 500,
         "wires": [
             [
                 "7e26b810a0a911ef"
             ]
         ]
+    },
+    {
+        "id": "37653c2a49dc3995",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "8f47e2e3400d33b2",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 470,
+        "y": 4320,
+        "wires": []
     }
 ]

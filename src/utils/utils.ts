@@ -1,4 +1,10 @@
-import { StartBeforeTestConfig, CHANNEL_CONFIG } from "./config";
+import {
+  StartBeforeTestConfig,
+  CHANNEL_CONFIG,
+  ZD6Serial,
+  ModelConfig,
+  collectConfig,
+} from "./config";
 import type {
   ChannelExpect,
   ResistanceState,
@@ -224,8 +230,6 @@ export const startBeforeTestExpress = (
  */
 
 export const powerStatusJudgmen = (arr: number[], idxArr: number[]) => {
-  console.log(arr);
-  console.log(idxArr);
   let allPullIn = true;
   for (const idx of idxArr) {
     if (idx < 0 || idx >= arr.length || arr[idx] !== 1) {
@@ -238,3 +242,15 @@ export const powerStatusJudgmen = (arr: number[], idxArr: number[]) => {
     desc: allPullIn ? "电源已开启" : "请先开启电源",
   };
 };
+
+export function getCircuits(
+  series: string,
+  model: string,
+  cfg: string,
+  field: string,
+) {
+  if (!series || !model || !cfg) return;
+  const ser = ZD6Serial[model];
+  const mod = ModelConfig[cfg];
+  return collectConfig[series][ser][mod];
+}

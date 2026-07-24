@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { HTTP_URL } from "@/config/config";
+import { CHANNEL_CONFIG, type ChannelExpect } from "@/utils/config";
 import { useToast } from "@/composables/useToast";
 
 const { withLoading, showToast } = useToast();
@@ -17,6 +18,10 @@ interface RecordItem {
   curve_file: string;
   created_at: string;
   result?: string;
+  pre_test?: {
+    direction: { DC: boolean; FC: boolean; diagnosis: string[] };
+    channels: { name: string; value: number; state: string }[];
+  };
 }
 
 const records = ref<RecordItem[]>([]);
@@ -33,7 +38,12 @@ const searchStatus = ref("");
 const detailVisible = ref(false);
 const currentRecord = ref<RecordItem | null>(null);
 const curveData = ref<{ t: number; v: number }[]>([]);
-const powerCurveData = ref<{ power_A: number[]; power_B: number[]; power_C: number[]; power_time: string[] } | null>(null);
+const powerCurveData = ref<{
+  power_A: number[];
+  power_B: number[];
+  power_C: number[];
+  power_time: string[];
+} | null>(null);
 const hasPowerData = computed(() => powerCurveData.value != null);
 const chartContainer = ref<HTMLElement | null>(null);
 const chartSize = ref({ width: 0, height: 0 });
@@ -79,17 +89,44 @@ onUnmounted(() => {
 const opTypeLabels: Record<string, string> = {
   DC: "定操",
   FC: "反操",
+  DCB: "定操B",
+  DCC: "定操C",
+  FCB: "反操B",
+  FCC: "反操C",
   CD: "传动",
   HX: "混线",
   JD: "接地",
 };
+
+function preTestLabel(r: RecordItem): string {
+  const pt = r.pre_test;
+  if (!pt) return "-";
+  const d = pt.direction;
+  if (d.DC && d.FC) return "定操/反操";
+  if (d.DC) return "定操";
+  if (d.FC) return "反操";
+  return "不可用";
+}
+
+function getChannelTip(
+  state: string,
+  expect: string,
+  cfg: ChannelExpect,
+): string {
+  if (state === "SHORT") return cfg.shortTip;
+  if (state === "UNKNOWN") return "阻值不在判定区间";
+  if (state === expect) return "正常";
+  if (state === "OPEN") return cfg.openFaultTip;
+  return "阻值正常但应为开路";
+}
 
 async function getList() {
   const params = new URLSearchParams();
   params.set("page", String(currentPage.value));
   params.set("pageSize", String(pageSize.value));
   if (searchDevice.value) params.set("device_name", searchDevice.value);
-  if (searchCombination.value) params.set("combination_name", searchCombination.value);
+  if (searchCombination.value)
+    params.set("combination_name", searchCombination.value);
   if (searchConfig.value) params.set("config_name", searchConfig.value);
   if (searchOpType.value) params.set("op_type", searchOpType.value);
   if (searchStatus.value) params.set("status", searchStatus.value);
@@ -97,11 +134,23 @@ async function getList() {
   const res = await fetch(HTTP_URL + "/operationRecords?" + params.toString());
   const json = await res.json();
   if (json.data) {
-    records.value = json.data;
+    records.value = json.data.map((r: any) => ({
+      ...r,
+      pre_test:
+        typeof r.pre_test === "string" ? JSON.parse(r.pre_test) : r.pre_test,
+    }));
     total.value = json.total || json.data.length;
   } else {
-    records.value = json;
-    total.value = json.length;
+    records.value = Array.isArray(json)
+      ? json.map((r: any) => ({
+          ...r,
+          pre_test:
+            typeof r.pre_test === "string"
+              ? JSON.parse(r.pre_test)
+              : r.pre_test,
+        }))
+      : json;
+    total.value = Array.isArray(json) ? json.length : 0;
   }
 }
 
@@ -125,7 +174,9 @@ function handlePageChange(page: number) {
   getList();
 }
 
-const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)));
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(total.value / pageSize.value)),
+);
 
 async function openDetail(record: RecordItem) {
   currentRecord.value = record;
@@ -232,13 +283,23 @@ function classifyPhase(data: number[]): string[] {
     const win = data.slice(ws, we + 1);
     if (win.length < 6) return "flat";
     const wRange = Math.max(...win) - Math.min(...win);
-    let largeJumps = 0, signChanges = 0, lastSign = 0;
+    let largeJumps = 0,
+      signChanges = 0,
+      lastSign = 0;
     for (let j = 1; j < win.length; j++) {
       const d = win[j] - win[j - 1];
-      if (d > 1.0) { largeJumps++; if (lastSign < 0) signChanges++; lastSign = 1; }
-      else if (d < -1.0) { largeJumps++; if (lastSign > 0) signChanges++; lastSign = -1; }
+      if (d > 1.0) {
+        largeJumps++;
+        if (lastSign < 0) signChanges++;
+        lastSign = 1;
+      } else if (d < -1.0) {
+        largeJumps++;
+        if (lastSign > 0) signChanges++;
+        lastSign = -1;
+      }
     }
-    if (largeJumps >= 2 && signChanges >= 1 && signChanges / largeJumps >= 0.4) return "square";
+    if (largeJumps >= 2 && signChanges >= 1 && signChanges / largeJumps >= 0.4)
+      return "square";
     if (wRange < 0.2) return "flat";
     const diffs: number[] = [];
     for (let j = 1; j < win.length; j++) diffs.push(win[j] - win[j - 1]);
@@ -246,54 +307,85 @@ function classifyPhase(data: number[]): string[] {
     for (let j = 1; j < diffs.length; j++) dd.push(diffs[j] - diffs[j - 1]);
     const pos = dd.filter((d) => d > 0).length;
     const neg = dd.filter((d) => d < 0).length;
-    if (Math.max(pos, neg) >= dd.length * 0.45 && wRange > 1) return "parabolic";
+    if (Math.max(pos, neg) >= dd.length * 0.45 && wRange > 1)
+      return "parabolic";
     return "flat";
   });
   for (let i = 0; i < rawLabels.length; i++) {
     if (rawLabels[i] === "parabolic") {
-      const ls = Math.max(0, i - 2), le = Math.min(data.length - 1, i + 2);
+      const ls = Math.max(0, i - 2),
+        le = Math.min(data.length - 1, i + 2);
       let md = 0;
-      for (let j = ls; j < le; j++) md = Math.max(md, Math.abs(data[j + 1] - data[j]));
+      for (let j = ls; j < le; j++)
+        md = Math.max(md, Math.abs(data[j + 1] - data[j]));
       if (md < 0.2) rawLabels[i] = "flat";
     }
   }
   return rawLabels.map((_, i) => {
     const votes: Record<string, number> = { parabolic: 0, flat: 0, square: 0 };
-    for (let j = Math.max(0, i - 2); j <= Math.min(data.length - 1, i + 2); j++) votes[rawLabels[j]]++;
+    for (let j = Math.max(0, i - 2); j <= Math.min(data.length - 1, i + 2); j++)
+      votes[rawLabels[j]]++;
     return Object.entries(votes).sort((a, b) => b[1] - a[1])[0][0];
   });
 }
 
 function makePhaseSeries(
-  data: number[], labels: string[], name: string, key: "parabolic" | "flat" | "square",
-  colors: Record<string, string>, lineWidth: number,
+  data: number[],
+  labels: string[],
+  name: string,
+  key: "parabolic" | "flat" | "square",
+  colors: Record<string, string>,
+  lineWidth: number,
 ) {
   return {
-    name, type: "line",
+    name,
+    type: "line",
     data: buildSegments(data, labels, (l: string) => l === key),
-    smooth: false, symbol: "none",
+    smooth: false,
+    symbol: "none",
     color: colors[key],
     itemStyle: { color: colors[key] },
-    lineStyle: { color: colors[key], width: lineWidth, shadowBlur: lineWidth >= 2 ? 6 : 4, shadowColor: gradient(colors[key], 0.35) },
+    lineStyle: {
+      color: colors[key],
+      width: lineWidth,
+      shadowBlur: lineWidth >= 2 ? 6 : 4,
+      shadowColor: gradient(colors[key], 0.35),
+    },
     areaStyle: {
       color: {
-        type: "linear", x: 0, y: 0, x2: 0, y2: 1,
-        colorStops: [{ offset: 0, color: gradient(colors[key], 0.18) }, { offset: 1, color: gradient(colors[key], 0.01) }],
+        type: "linear",
+        x: 0,
+        y: 0,
+        x2: 0,
+        y2: 1,
+        colorStops: [
+          { offset: 0, color: gradient(colors[key], 0.18) },
+          { offset: 1, color: gradient(colors[key], 0.01) },
+        ],
       },
     },
     connectNulls: false,
   };
 }
 
-function buildSegments(data: number[], labels: string[], match: (l: string) => boolean) {
+function buildSegments(
+  data: number[],
+  labels: string[],
+  match: (l: string) => boolean,
+) {
   const result = new Array(data.length).fill(null);
   let i = 0;
   while (i < data.length) {
     if (match(labels[i])) {
       if (i > 0) result[i - 1] = data[i - 1];
-      while (i < data.length && match(labels[i])) { result[i] = data[i]; i++; }
+      while (i < data.length && match(labels[i])) {
+        result[i] = data[i];
+        i++;
+      }
       if (i < data.length) result[i] = data[i];
-    } else { i++; }
+    } else {
+      i++;
+    }
   }
   return result;
 }
@@ -323,13 +415,34 @@ const chartOpt = computed(() => {
     const labelsC = classifyPhase(dataC);
 
     const seriesArr = [
-      makePhaseSeries(dataA, labelsA, "A-启动电流", "parabolic", COLORS_3A, 1.5),
+      makePhaseSeries(
+        dataA,
+        labelsA,
+        "A-启动电流",
+        "parabolic",
+        COLORS_3A,
+        1.5,
+      ),
       makePhaseSeries(dataA, labelsA, "A-工作电流", "flat", COLORS_3A, 1.5),
       makePhaseSeries(dataA, labelsA, "A-摩擦电流", "square", COLORS_3A, 1.5),
-      makePhaseSeries(dataB, labelsB, "B-启动电流", "parabolic", COLORS_3B, 1.5),
+      makePhaseSeries(
+        dataB,
+        labelsB,
+        "B-启动电流",
+        "parabolic",
+        COLORS_3B,
+        1.5,
+      ),
       makePhaseSeries(dataB, labelsB, "B-工作电流", "flat", COLORS_3B, 1.5),
       makePhaseSeries(dataB, labelsB, "B-摩擦电流", "square", COLORS_3B, 1.5),
-      makePhaseSeries(dataC, labelsC, "C-启动电流", "parabolic", COLORS_3C, 1.5),
+      makePhaseSeries(
+        dataC,
+        labelsC,
+        "C-启动电流",
+        "parabolic",
+        COLORS_3C,
+        1.5,
+      ),
       makePhaseSeries(dataC, labelsC, "C-工作电流", "flat", COLORS_3C, 1.5),
       makePhaseSeries(dataC, labelsC, "C-摩擦电流", "square", COLORS_3C, 1.5),
     ];
@@ -341,28 +454,62 @@ const chartOpt = computed(() => {
         backgroundColor: "rgba(11,29,51,0.96)",
         borderColor: "#2d5280",
         textStyle: { color: "#e0e8f0", fontSize: 12 },
-        extraCssText: "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
+        extraCssText:
+          "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
       },
       backgroundColor: "transparent",
       grid: { left: 55, right: 20, top: 12, bottom: 50 },
       xAxis: {
-        type: "category", data: timeLabels,
+        type: "category",
+        data: timeLabels,
         axisLine: { lineStyle: { color: "#1a2d44" } },
         axisTick: { show: false },
-        splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
-        axisLabel: { color: "#5a7288", fontSize: 10, interval: Math.max(Math.floor((timeLabels.length || 1) / 6), 0) },
+        splitLine: {
+          show: true,
+          lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" },
+        },
+        axisLabel: {
+          color: "#5a7288",
+          fontSize: 10,
+          interval: Math.max(Math.floor((timeLabels.length || 1) / 6), 0),
+        },
       },
       yAxis: {
-        type: "value", min: Math.max(0, minVal - padding), max: maxVal + padding, splitNumber: 4,
-        axisLine: { show: false }, axisTick: { show: false },
-        splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
-        axisLabel: { color: "#5a7288", fontSize: 11, formatter: (v: number) => v.toFixed(1) },
+        type: "value",
+        min: Math.max(0, minVal - padding),
+        max: maxVal + padding,
+        splitNumber: 4,
+        axisLine: { show: false },
+        axisTick: { show: false },
+        splitLine: {
+          show: true,
+          lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" },
+        },
+        axisLabel: {
+          color: "#5a7288",
+          fontSize: 11,
+          formatter: (v: number) => v.toFixed(1),
+        },
       },
       legend: {
-        data: ["A-启动电流", "A-工作电流", "A-摩擦电流", "B-启动电流", "B-工作电流", "B-摩擦电流", "C-启动电流", "C-工作电流", "C-摩擦电流"],
-        bottom: 0, left: 55, type: "scroll",
+        data: [
+          "A-启动电流",
+          "A-工作电流",
+          "A-摩擦电流",
+          "B-启动电流",
+          "B-工作电流",
+          "B-摩擦电流",
+          "C-启动电流",
+          "C-工作电流",
+          "C-摩擦电流",
+        ],
+        bottom: 0,
+        left: 55,
+        type: "scroll",
         textStyle: { color: "#8fb4d8", fontSize: 10 },
-        icon: "roundRect", itemWidth: 14, itemHeight: 8,
+        icon: "roundRect",
+        itemWidth: 14,
+        itemHeight: 8,
       },
       series: seriesArr,
     };
@@ -404,40 +551,81 @@ const chartOpt = computed(() => {
       { idx: minIdx, val: minV, label: "最小值", color: COLORS.flat },
     ].forEach((m) => {
       graphic.push({
-        type: "text", left: toX(m.idx) - 24, top: toY(m.val) - 22,
-        style: { text: `${m.label} ${m.val.toFixed(1)}A`, fill: "#fff", fontSize: 11, fontWeight: 600, textAlign: "center", textShadowBlur: 4, textShadowColor: "rgba(0,0,0,0.7)" },
+        type: "text",
+        left: toX(m.idx) - 24,
+        top: toY(m.val) - 22,
+        style: {
+          text: `${m.label} ${m.val.toFixed(1)}A`,
+          fill: "#fff",
+          fontSize: 11,
+          fontWeight: 600,
+          textAlign: "center",
+          textShadowBlur: 4,
+          textShadowColor: "rgba(0,0,0,0.7)",
+        },
         z: 100,
       });
       graphic.push({
-        type: "circle", shape: { cx: toX(m.idx), cy: toY(m.val), r: 5 },
-        style: { fill: m.color, stroke: "#fff", lineWidth: 2 }, z: 100,
+        type: "circle",
+        shape: { cx: toX(m.idx), cy: toY(m.val), r: 5 },
+        style: { fill: m.color, stroke: "#fff", lineWidth: 2 },
+        z: 100,
       });
     });
   }
 
   return {
     graphic,
-    animationDuration: 0, animationEasing: "cubicOut",
-    tooltip: hasData ? {
-      trigger: "axis",
-      axisPointer: { type: "cross", crossStyle: { color: "#3a5670" }, label: { backgroundColor: "#0b1d33", color: "#e0e8f0" } },
-      backgroundColor: "rgba(11,29,51,0.96)", borderColor: "#2d5280",
-      textStyle: { color: "#e0e8f0", fontSize: 12 },
-      extraCssText: "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
-    } : undefined,
+    animationDuration: 0,
+    animationEasing: "cubicOut",
+    tooltip: hasData
+      ? {
+          trigger: "axis",
+          axisPointer: {
+            type: "cross",
+            crossStyle: { color: "#3a5670" },
+            label: { backgroundColor: "#0b1d33", color: "#e0e8f0" },
+          },
+          backgroundColor: "rgba(11,29,51,0.96)",
+          borderColor: "#2d5280",
+          textStyle: { color: "#e0e8f0", fontSize: 12 },
+          extraCssText:
+            "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
+        }
+      : undefined,
     backgroundColor: "transparent",
     grid: { left: 55, right: 20, top: 20, bottom: 50 },
     xAxis: {
-      type: "category", data: timeLabels,
-      axisLine: { lineStyle: { color: "#1a2d44" } }, axisTick: { show: false },
-      splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
-      axisLabel: { color: "#5a7288", fontSize: 10, interval: hasData ? Math.max(Math.floor(data.length / 6), 0) : 0 },
+      type: "category",
+      data: timeLabels,
+      axisLine: { lineStyle: { color: "#1a2d44" } },
+      axisTick: { show: false },
+      splitLine: {
+        show: true,
+        lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" },
+      },
+      axisLabel: {
+        color: "#5a7288",
+        fontSize: 10,
+        interval: hasData ? Math.max(Math.floor(data.length / 6), 0) : 0,
+      },
     },
     yAxis: {
-      type: "value", min: Math.max(0, minVal - padding), max: maxVal + padding, splitNumber: 4,
-      axisLine: { show: false }, axisTick: { show: false },
-      splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
-      axisLabel: { color: "#5a7288", fontSize: 11, formatter: (v: number) => v.toFixed(1) },
+      type: "value",
+      min: Math.max(0, minVal - padding),
+      max: maxVal + padding,
+      splitNumber: 4,
+      axisLine: { show: false },
+      axisTick: { show: false },
+      splitLine: {
+        show: true,
+        lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" },
+      },
+      axisLabel: {
+        color: "#5a7288",
+        fontSize: 11,
+        formatter: (v: number) => v.toFixed(1),
+      },
     },
     legend: hasData ? LEGEND_RECORD : undefined,
     series: seriesArr,
@@ -473,10 +661,19 @@ const powerChartOpt = computed(() => {
       smooth: false,
       symbol: "none",
       color,
-      lineStyle: { color, width: 1.5, shadowBlur: 4, shadowColor: gradient(color, 0.35) },
+      lineStyle: {
+        color,
+        width: 1.5,
+        shadowBlur: 4,
+        shadowColor: gradient(color, 0.35),
+      },
       areaStyle: {
         color: {
-          type: "linear", x: 0, y: 0, x2: 0, y2: 1,
+          type: "linear",
+          x: 0,
+          y: 0,
+          x2: 0,
+          y2: 1,
           colorStops: [
             { offset: 0, color: gradient(color, 0.15) },
             { offset: 1, color: gradient(color, 0.01) },
@@ -494,7 +691,8 @@ const powerChartOpt = computed(() => {
       backgroundColor: "rgba(11,29,51,0.96)",
       borderColor: "#2d5280",
       textStyle: { color: "#e0e8f0", fontSize: 11 },
-      extraCssText: "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
+      extraCssText:
+        "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
     },
     backgroundColor: "transparent",
     grid: { left: 48, right: 16, top: 10, bottom: 36 },
@@ -503,8 +701,15 @@ const powerChartOpt = computed(() => {
       data: pd.power_time,
       axisLine: { lineStyle: { color: "#1a2d44" } },
       axisTick: { show: false },
-      splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
-      axisLabel: { color: "#5a7288", fontSize: 9, interval: Math.max(Math.floor((pd.power_time.length || 1) / 5), 0) },
+      splitLine: {
+        show: true,
+        lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" },
+      },
+      axisLabel: {
+        color: "#5a7288",
+        fontSize: 9,
+        interval: Math.max(Math.floor((pd.power_time.length || 1) / 5), 0),
+      },
     },
     yAxis: {
       type: "value",
@@ -513,15 +718,24 @@ const powerChartOpt = computed(() => {
       splitNumber: 3,
       axisLine: { show: false },
       axisTick: { show: false },
-      splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
-      axisLabel: { color: "#5a7288", fontSize: 10, formatter: (v: number) => v.toFixed(0) + "W" },
+      splitLine: {
+        show: true,
+        lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" },
+      },
+      axisLabel: {
+        color: "#5a7288",
+        fontSize: 10,
+        formatter: (v: number) => v.toFixed(0) + "W",
+      },
     },
     legend: {
       data: ["A相功率", "B相功率", "C相功率"],
-      bottom: 0, left: 48,
+      bottom: 0,
+      left: 48,
       textStyle: { color: "#8fb4d8", fontSize: 10 },
       icon: "roundRect",
-      itemWidth: 14, itemHeight: 8,
+      itemWidth: 14,
+      itemHeight: 8,
     },
     series: [
       makeLine("A相功率", pd.power_A, P_COLORS.A),
@@ -586,7 +800,11 @@ const isThreePhaseCurve = computed(() => {
 function formatPeakValley(val: any): string {
   if (val == null) return "-";
   if (typeof val === "string") {
-    try { val = JSON.parse(val); } catch { return val; }
+    try {
+      val = JSON.parse(val);
+    } catch {
+      return val;
+    }
   }
   if (typeof val === "number") return val.toFixed(1);
   if (typeof val === "object") {
@@ -620,20 +838,17 @@ onMounted(async () => {
           v-model="searchDevice"
           class="search-input"
           placeholder="设备名称"
-          @keyup.enter="handleSearch"
-        />
+          @keyup.enter="handleSearch" />
         <input
           v-model="searchCombination"
           class="search-input"
           placeholder="组合方式"
-          @keyup.enter="handleSearch"
-        />
+          @keyup.enter="handleSearch" />
         <input
           v-model="searchConfig"
           class="search-input"
           placeholder="测试机型"
-          @keyup.enter="handleSearch"
-        />
+          @keyup.enter="handleSearch" />
         <select v-model="searchOpType" class="search-select">
           <option value="">操作类型</option>
           <option v-for="(label, key) in opTypeLabels" :key="key" :value="key">
@@ -663,6 +878,7 @@ onMounted(async () => {
             <th class="col-op">操作类型</th>
             <th class="col-status">状态</th>
             <th class="col-result">检测结果</th>
+            <th class="col-pretest">启动前测试</th>
             <th class="col-time">测试时间</th>
             <th class="col-action">操作</th>
           </tr>
@@ -696,10 +912,23 @@ onMounted(async () => {
                   v-for="(item, idx) in JSON.parse(r.result)"
                   :key="idx"
                   class="result-tag"
-                  :class="item.status ? 'pass' : 'fail'">
+                  :class="item.status && item.status != 'NT' ? 'pass' : 'fail'">
                   {{ item.name }}
                 </span>
               </div>
+              <span v-else class="no-data">-</span>
+            </td>
+            <td class="col-pretest">
+              <span
+                v-if="r.pre_test"
+                class="pretest-tag"
+                :class="
+                  r.pre_test.direction.DC || r.pre_test.direction.FC
+                    ? 'ok'
+                    : 'ng'
+                ">
+                {{ preTestLabel(r) }}
+              </span>
               <span v-else class="no-data">-</span>
             </td>
             <td class="col-time time-cell">{{ formatDate(r.created_at) }}</td>
@@ -802,9 +1031,7 @@ onMounted(async () => {
           @click="handlePageChange(p)">
           {{ p }}
         </button>
-        <span
-          v-else-if="Math.abs(p - currentPage) === 3"
-          class="page-ellipsis">
+        <span v-else-if="Math.abs(p - currentPage) === 3" class="page-ellipsis">
           …
         </span>
       </template>
@@ -823,85 +1050,149 @@ onMounted(async () => {
         v-if="detailVisible"
         class="modal-overlay"
         @click.self="detailVisible = false">
-          <div class="modal-card">
-            <div class="modal-header">
-              <div class="modal-header-left">
-                <h3 class="modal-title">电流曲线</h3>
-                <span class="modal-subtitle">
-                  {{ currentRecord?.device_name }} ·
-                  {{ opTypeLabels[currentRecord?.op_type || ""] }}
-                </span>
-              </div>
-              <button class="modal-close" @click="detailVisible = false">
-                <svg viewBox="0 0 16 16" fill="none">
-                  <path
-                    d="M4 4L12 12M12 4L4 12"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round" />
-                </svg>
-              </button>
+        <div class="modal-card">
+          <div class="modal-header">
+            <div class="modal-header-left">
+              <h3 class="modal-title">电流曲线</h3>
+              <span class="modal-subtitle">
+                {{ currentRecord?.device_name }} ·
+                {{ opTypeLabels[currentRecord?.op_type || ""] }}
+              </span>
             </div>
+            <button class="modal-close" @click="detailVisible = false">
+              <svg viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M4 4L12 12M12 4L4 12"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round" />
+              </svg>
+            </button>
+          </div>
 
-            <div class="modal-stats">
-              <div class="stat-block">
-                <span class="stat-label">峰值电流</span>
-                <span class="stat-value peak"
-                  >{{ formatPeakValley(currentRecord?.peak_current) }}<small>A</small></span
-                >
-              </div>
-              <div class="stat-block">
-                <span class="stat-label">谷值电流</span>
-                <span class="stat-value valley"
-                  >{{ formatPeakValley(currentRecord?.valley_current) }}<small>A</small></span
-                >
-              </div>
-              <div class="stat-block">
-                <span class="stat-label">测试时间</span>
-                <span class="stat-value time">{{
-                  formatDate(currentRecord?.created_at || "")
-                }}</span>
-              </div>
+          <div class="modal-stats">
+            <div class="stat-block">
+              <span class="stat-label">峰值电流</span>
+              <span class="stat-value peak"
+                >{{ formatPeakValley(currentRecord?.peak_current)
+                }}<small>A</small></span
+              >
+            </div>
+            <div class="stat-block">
+              <span class="stat-label">谷值电流</span>
+              <span class="stat-value valley"
+                >{{ formatPeakValley(currentRecord?.valley_current)
+                }}<small>A</small></span
+              >
+            </div>
+            <div class="stat-block">
+              <span class="stat-label">测试时间</span>
+              <span class="stat-value time">{{
+                formatDate(currentRecord?.created_at || "")
+              }}</span>
+            </div>
+          </div>
+          <!-- 启动前测试 -->
+          <div class="modal-pretest" v-if="currentRecord?.pre_test">
+            <span class="result-section-label">启动前测试</span>
+            <div class="pretest-direction-row">
+              <span class="pretest-dir-label">定操</span>
+              <span
+                class="pretest-dir-status"
+                :class="currentRecord.pre_test.direction.DC ? 'ok' : 'ng'">
+                {{ currentRecord.pre_test.direction.DC ? "可用" : "不可用" }}
+              </span>
+              <span class="pretest-dir-divider">|</span>
+              <span class="pretest-dir-label">反操</span>
+              <span
+                class="pretest-dir-status"
+                :class="currentRecord.pre_test.direction.FC ? 'ok' : 'ng'">
+                {{ currentRecord.pre_test.direction.FC ? "可用" : "不可用" }}
+              </span>
             </div>
             <div
-              class="modal-result"
-              v-if="
-                currentRecord?.result &&
-                JSON.parse(currentRecord.result).length > 0
-              ">
-              <span class="result-section-label">检测项</span>
-              <div class="result-tags">
-                <span
-                  v-for="(item, idx) in JSON.parse(currentRecord.result)"
-                  :key="idx"
-                  class="result-tag"
-                  :class="item.status ? 'pass' : 'fail'">
-                  <span class="result-check">{{
-                    item.status ? "✓" : "✗"
-                  }}</span>
-                  {{ item.name }}
-                  <span class="relay-name" v-if="item.relayName?.length">
-                    ({{ item.relayName.join(", ") }})
-                  </span>
+              v-if="currentRecord.pre_test.direction.diagnosis.length > 0"
+              class="pretest-diagnosis">
+              <div
+                v-for="(msg, idx) in currentRecord.pre_test.direction.diagnosis"
+                :key="idx"
+                class="pretest-diagnosis-item">
+                {{ msg }}
+              </div>
+            </div>
+            <table class="pretest-table">
+              <thead>
+                <tr>
+                  <th>通道</th>
+                  <th>阻值</th>
+                  <th>状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(ch, idx) in currentRecord.pre_test.channels"
+                  :key="idx">
+                  <td>{{ ch.name }}</td>
+                  <td class="pretest-val">{{ ch.value }}Ω</td>
+                  <td>
+                    <span
+                      class="pretest-state"
+                      :class="ch.state === 'NORMAL' ? 'ok' : 'ng'">
+                      {{
+                        ch.state === "NORMAL"
+                          ? "正常"
+                          : ch.state === "OPEN"
+                            ? "开路"
+                            : ch.state === "SHORT"
+                              ? "短路"
+                              : "异常"
+                      }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div
+            class="modal-result"
+            v-if="
+              currentRecord?.result &&
+              JSON.parse(currentRecord.result).length > 0
+            ">
+            <span class="result-section-label">检测项</span>
+            <div class="result-tags">
+              <span
+                v-for="(item, idx) in JSON.parse(currentRecord.result)"
+                :key="idx"
+                class="result-tag"
+                :class="item.status != 'NT' && item.status ? 'pass' : 'fail'">
+                <span class="result-check">{{
+                  item.status != "NT" && item.status ? "✓" : "✗"
+                }}</span>
+                {{ item.name }}
+                <span class="relay-name" v-if="item.relayName?.length">
+                  ({{ item.relayName.join(", ") }})
                 </span>
-              </div>
+              </span>
             </div>
-            <div v-else class="modal-result">
-              <span class="result-tag fail">未检测</span>
+          </div>
+          <div v-else class="modal-result">
+            <span class="result-tag fail">未检测</span>
+          </div>
+          <div ref="chartContainer" class="modal-chart">
+            <v-chart :option="chartOpt" autoresize />
+          </div>
+          <div v-if="hasPowerData" class="modal-power-section">
+            <div class="modal-power-header">
+              <h3 class="modal-title">功率曲线</h3>
             </div>
-            <div ref="chartContainer" class="modal-chart">
-              <v-chart :option="chartOpt" autoresize />
-            </div>
-            <div v-if="hasPowerData" class="modal-power-section">
-              <div class="modal-power-header">
-                <h3 class="modal-title">功率曲线</h3>
-              </div>
-              <div ref="powerChartContainer" class="modal-chart power-chart">
-                <v-chart :option="powerChartOpt" autoresize />
-              </div>
+            <div ref="powerChartContainer" class="modal-chart power-chart">
+              <v-chart :option="powerChartOpt" autoresize />
             </div>
           </div>
         </div>
+      </div>
     </Teleport>
   </div>
 </template>
@@ -1193,6 +1484,9 @@ onMounted(async () => {
 .col-result {
   min-width: 160px;
 }
+.col-pretest {
+  width: 100px;
+}
 .col-num {
   width: 70px;
   text-align: right;
@@ -1324,6 +1618,24 @@ onMounted(async () => {
 
 .no-data {
   color: #4a6078;
+}
+
+.pretest-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.pretest-tag.ok {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.1);
+}
+
+.pretest-tag.ng {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
 }
 
 /* ---- Actions ---- */
@@ -1563,6 +1875,126 @@ onMounted(async () => {
   font-weight: 400;
 }
 
+/* ---- Modal pre-test ---- */
+.modal-pretest {
+  padding: 0 28px 16px;
+}
+
+.pretest-direction-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 153, 255, 0.06);
+  border: 1px solid rgba(0, 153, 255, 0.15);
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+}
+
+.pretest-dir-label {
+  font-size: 13px;
+  color: #8fb4d8;
+  font-weight: 600;
+}
+
+.pretest-dir-status {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 4px;
+}
+
+.pretest-dir-status.ok {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.1);
+}
+
+.pretest-dir-status.ng {
+  color: #5a7288;
+  background: rgba(90, 114, 136, 0.1);
+}
+
+.pretest-dir-divider {
+  color: #1a2d44;
+  margin: 0 4px;
+}
+
+.pretest-diagnosis {
+  background: rgba(248, 113, 113, 0.06);
+  border: 1px solid rgba(248, 113, 113, 0.15);
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+}
+
+.pretest-diagnosis-item {
+  font-size: 11px;
+  color: #fca5a5;
+  line-height: 1.8;
+  font-family: "SF Mono", "Monaco", "Menlo", monospace;
+}
+
+.pretest-diagnosis-item::before {
+  content: "! ";
+  color: #f87171;
+  font-weight: 700;
+}
+
+.pretest-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #051424;
+  border: 1px solid #152238;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.pretest-table th {
+  text-align: left;
+  padding: 8px 14px;
+  background: #0a1628;
+  color: #5a7288;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #152238;
+}
+
+.pretest-table td {
+  padding: 9px 14px;
+  color: #c0d0e0;
+  font-size: 13px;
+  border-bottom: 1px solid #111f33;
+}
+
+.pretest-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.pretest-val {
+  font-family: "SF Mono", "Monaco", "Menlo", monospace;
+  color: #8fb4d8;
+}
+
+.pretest-state {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.pretest-state.ok {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.1);
+}
+
+.pretest-state.ng {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+}
+
 /* Modal chart */
 .modal-chart {
   height: 360px;
@@ -1581,5 +2013,4 @@ onMounted(async () => {
 .modal-power-header {
   padding: 0 28px 8px;
 }
-
 </style>
