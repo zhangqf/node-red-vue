@@ -136,9 +136,10 @@ watch(
 }
 
 html,
-body,
+html body,
 #app {
   height: 100%;
+  display: block;
   background: #051424;
   color: #e0e8f0;
   font-family:

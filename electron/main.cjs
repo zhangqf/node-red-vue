@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, ipcMain } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain, session } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const crypto = require("crypto");
@@ -130,6 +130,18 @@ function createWindow() {
     },
   });
 
+  // // 全局会话注入CSP响应头
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        "Content-Security-Policy": [
+          "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: file:; font-src 'self' data:; connect-src 'self' http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:* https://cdn.jsdelivr.net; worker-src 'self';",
+        ],
+      },
+    });
+  });
+
   // F12 切换 DevTools
   mainWindow.webContents.on("before-input-event", (_e, input) => {
     if (input.key === "F12" && input.type === "keyDown") {
@@ -138,7 +150,7 @@ function createWindow() {
   });
 
   if (isDev) {
-    mainWindow.loadURL("http://localhost:5174");
+    mainWindow.loadURL("http://localhost:5173");
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, "..", "dist", "index.html"));
@@ -250,7 +262,11 @@ if (!gotTheLock) {
         try {
           fs.writeFileSync(
             authFilePath,
-            JSON.stringify({ passwordHash: hashPassword(newPassword) }, null, 2),
+            JSON.stringify(
+              { passwordHash: hashPassword(newPassword) },
+              null,
+              2,
+            ),
             "utf8",
           );
           return { success: true };

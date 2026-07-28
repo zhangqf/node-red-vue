@@ -6,6 +6,7 @@ import * as echarts from "echarts/core";
 // 图表：折线图 LineChart
 import { LineChart } from "echarts/charts";
 // 正确组件列表，删掉不存在的 AxisComponent
+
 import {
   TitleComponent, // 标题
   TooltipComponent, // 悬浮提示
@@ -19,6 +20,7 @@ import { LabelLayout, UniversalTransition } from "echarts/features";
 // 必须引入渲染器
 import { CanvasRenderer } from "echarts/renderers";
 
+// main.ts
 import "@/index.css";
 // 注册所有模块
 echarts.use([

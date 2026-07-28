@@ -30,11 +30,19 @@ const indicationGroups = [
   "YJCDFWBS",
   "EJCDDWBS",
   "EJCDFWBS",
+  "DCB",
+  "DCC",
+  "FCB",
+  "FCC",
 ];
 const contactGroups = [...actionGroups, ...indicationGroups];
 const contactGroupLabels: Record<string, string> = {
   DC: "定操",
   FC: "反操",
+  DCB: "定操B",
+  DCC: "定操C",
+  FCB: "反操B",
+  FCC: "反操C",
   DWBS: "定位表示",
   FWBS: "反位表示",
   YJCDDWBS: "一级传动定位表示",

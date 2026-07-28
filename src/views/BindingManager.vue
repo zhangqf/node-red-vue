@@ -176,7 +176,6 @@ async function fetchCombinations() {
   try {
     const res = await fetch(HTTP_URL + "/getCombination");
     combinations.value = await res.json();
-    console.log("组合方式数据:", combinations.value);
   } catch {
     combinations.value = [
       {
@@ -205,7 +204,6 @@ async function fetchConfigs() {
   try {
     const res = await fetch(HTTP_URL + "/getConfig");
     configs.value = await res.json();
-    console.log("测试机型数据:", configs.value);
   } catch {
     configs.value = [
       {
@@ -239,7 +237,6 @@ async function fetchBindings() {
   try {
     const res = await fetch(HTTP_URL + "/getBingings");
     const data = await res.json();
-    console.log(data);
     BindData.value = data;
   } catch {
     bindings.value = [
@@ -269,7 +266,6 @@ const filteredCombinations = computed(() => {
 });
 const getInnerText = (text) => {
   const match = text.match(/【([^】]+)】/);
-  console.log("getInnerText:", text, match ? match[1] : null);
   return match ? match[1] : null;
 };
 
@@ -401,6 +397,10 @@ onMounted(async () => {
   padding: 24px;
   flex: 1;
   overflow-y: auto;
+}
+
+.manager-page::-webkit-scrollbar {
+  display: none;
 }
 
 .page-header {

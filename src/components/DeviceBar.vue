@@ -19,6 +19,7 @@ const props = defineProps<{
   active?: string;
   itemConfig: ItemConfigItem[];
   contactActive?: string;
+  deviceType?: string;
 }>();
 
 const contactConfig = [
@@ -54,14 +55,15 @@ const handleButtonClick = (id: string) => {
         <button class="back-btn" @click="emit('back')">← 返回</button>
         <span class="info-label">设备</span>
         <span class="info-value">{{ deviceName || "-" }}</span>
+        <span class="info-label">设备类型</span>
+        <span class="info-value">{{ deviceType || "-" }}</span>
         <span class="info-sep">›</span>
         <span class="info-label">组合方式</span>
         <span class="info-value">{{ combinationName || "-" }}</span>
         <span class="info-sep">›</span>
         <span class="info-label">测试机型</span>
         <span class="info-value highlight">{{ configName || "-" }}</span>
-      </div>
-      <div style="margin-left: 20px">
+
         <button
           v-for="item in contactConfig"
           class="contactConfig-btn"
@@ -71,7 +73,13 @@ const handleButtonClick = (id: string) => {
           {{ item.name }}
         </button>
       </div>
+      <!-- <div class="nav-right">
+        <button class="emergency-btn" @click="emit('menu-click', 'emergency')">
+          开启电源/紧急停止
+        </button>
+      </div> -->
     </div>
+
     <!-- <div class="switch-bar">
       <div class="switch-buttons">
         <button
@@ -96,8 +104,8 @@ const handleButtonClick = (id: string) => {
 .info-bar {
   display: flex;
   align-items: center;
-  /* justify-content: space-between; */
-  height: 36px;
+  justify-content: space-between;
+  height: 66px;
   background: #0b1d33;
   padding: 0 20px;
 }
@@ -172,7 +180,7 @@ const handleButtonClick = (id: string) => {
   border: 1px solid #1a2d44;
   color: #7a8fa0;
   font-size: 12px;
-  padding: 2px 12px;
+  padding: 8px 12px;
   border-radius: 3px;
   cursor: pointer;
   transition: all 0.2s;
@@ -193,5 +201,27 @@ const handleButtonClick = (id: string) => {
 .switch-btn:hover:not(.active) {
   border-color: #2d5280;
   color: #bccfde;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+}
+
+.emergency-btn {
+  background: #d93025;
+  color: #fff;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.2s;
+}
+
+.emergency-btn:hover {
+  background: #e8473b;
 }
 </style>
