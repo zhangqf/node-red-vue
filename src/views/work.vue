@@ -171,6 +171,7 @@ const handleWsRelayData = (data: number[]) => {
     if (targetArr.length < 1) return item;
    const resCollect = handleFindCollect(field)
    const relayTips = []
+   console.log(item)
    if(item.relayName.length > 0) {
     item.relayName.forEach(v => {
       if(deviceType.value === "ZYJ7") {
@@ -206,6 +207,7 @@ const handleWsRelayData = (data: number[]) => {
       realCheck: res.allClosed,
     };
   });
+  console.log(testResults.value)
 };
 
 
@@ -275,6 +277,7 @@ const handleStartBeforeTestExpress = (data) => {
     availableDirections.value = { DC: false, FC: false }
     diagnosisMessages.value = result.direction.diagnosis
   }
+  initTestResults()
 }
 
 
@@ -448,7 +451,7 @@ const handleStartBeforeTest = () => {
   
   sendCmd(result, "startBeforeTestRelays");
 
-  initTestResults()
+  
 }
 
 // 单个更新
@@ -478,9 +481,33 @@ function initTestResults() {
     return;
   }
   console.log(relayConfigList)
-  console.log(relayData)
-  testResults.value = relayConfigList
-    .filter((item) => relayData[item.field]&&relayData[item.field].length > 0)
+
+
+  // for (const [key, value] of Object.entries(availableDirections.value)) {
+  //   console.log(key, value);
+  //   if(value) {
+  //     console.log(Object.keys(relayConfigList.values).includes(key))
+  //     if(Object.keys(relayConfigList.values).includes(key)){
+       
+  //     }
+  //   }
+  // }
+  let list: any[] = []
+  // 二次过滤
+    const {DC, FC} = availableDirections.value
+    if(!DC && !FC) {
+      testResults.value = []
+    } else {
+      list = relayConfigList.filter(item => {
+        console.log(item)
+        if(DC&&(item.field.includes("DC") || item.field === "DWBS")) return true;
+        if(FC&&(item.field.includes("FC") || item.field === "FWBS")) return true;
+        return false
+       })
+    }
+
+   testResults.value  = list
+    .filter((item) =>  relayData[item.field]&&relayData[item.field].length > 0)
     .map((item) => ({
       type: item.type,
       name: item.name,
@@ -488,6 +515,8 @@ function initTestResults() {
       realCheck: false,
       relayName: relayData[item.field],
     }));
+
+    
 
   if (testResults.value.length === 0) {
     testResults.value = [
@@ -594,12 +623,14 @@ const handleDo = () => {
   let result = terminals.value.map((item) =>
     item.default_status
   );
-  
+  console.log(deviceType.value)
   let idxArr = StartPowerConfig[deviceType.value as keyof typeof StartPowerConfig];
-  if(!powerStatus?.isRunning){
+  console.log(idxArr)
+  console.log(powerStatus)
+  if(powerStatus?.isRunning){
     idxArr = []
   }
-
+  console.log(idxArr)
   wsSendData.value = gen32BitArray(result,idxArr);
   sendCmd(wsSendData.value, "relays");
 };

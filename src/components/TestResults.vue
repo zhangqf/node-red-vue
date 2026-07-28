@@ -205,8 +205,7 @@ function toggleCircuitLoop(idx: number) {
               </div>
               <div
                 style="display: flex"
-                v-if="
-                  test.relayTips && test.relayTips.length > 0 && test.realCheck
+               
                 ">
                 <button
                   style="margin-right: 14px"
@@ -242,8 +241,8 @@ function toggleCircuitLoop(idx: number) {
               v-if="
                 test.relayTips &&
                 test.relayTips.length > 0 &&
-                !circuitLoopExpanded[idx] &&
-                test.realCheck
+                !circuitLoopExpanded[idx] 
+                
               "
               class="circuit-loop-panel">
               <div
