@@ -1,6 +1,7 @@
 import {
   StartBeforeTestConfig,
   CHANNEL_CONFIG,
+  CHANNEL_CONFIGZD6,
   ZD6Serial,
   ModelConfig,
   collectConfig,
@@ -114,8 +115,17 @@ export const findRelayIndex = (
  * UNKNOWN：不在以上区间，阻值异常无法判定
  */
 function classifyResistance(val: number): ResistanceState {
-  if (val >= 12 && val <= 17) return "NORMAL";
+  if (val >= 0 && val <= 60) return "NORMAL";
   if (val >= 10000000) return "OPEN";
+  if (val <= 0.5) return "SHORT";
+  return "UNKNOWN";
+}
+
+// 10 -15
+
+function classifyResistanceZD6(val: number): ResistanceState {
+  if (val >= 0 && val <= 60) return "NORMAL";
+  if (val >= 80000) return "OPEN";
   if (val <= 0.5) return "SHORT";
   return "UNKNOWN";
 }
@@ -137,8 +147,13 @@ function getDirectionTip(
   state: ResistanceState,
   expect: "NORMAL" | "OPEN",
   cfg: ChannelExpect,
+  direction: "DC" | "FC",
 ): { tip: string; isNormal: boolean } {
-  if (state === "SHORT") return { tip: cfg.shortTip, isNormal: false };
+  if (state === "SHORT")
+    return {
+      tip: direction === "DC" ? cfg.dcShortTip : cfg.fcShortTip,
+      isNormal: false,
+    };
   if (state === "UNKNOWN") return { tip: "阻值不在判定区间", isNormal: false };
   if (state === expect) return { tip: "正常", isNormal: true };
   // state 与 expect 不匹配
@@ -162,14 +177,32 @@ function getDirectionTip(
 
 export const startBeforeTestExpress = (
   arr: number[],
+  deviceType: string,
 ): StartBeforeTestReturn => {
-  const states = arr.map(classifyResistance);
+  let states = [];
 
-  const dcResult: ChannelResult[] = CHANNEL_CONFIG.map((cfg, i) => {
+  let configOption = [];
+  console.log(arr);
+  if (deviceType === "ZD6" || deviceType === "ZD9") {
+    states = arr.map(classifyResistanceZD6);
+    console.log(states);
+    console.log("states");
+    configOption = CHANNEL_CONFIGZD6;
+  }
+  if (deviceType === "ZYJ7" || deviceType === "ZDJ9") {
+    console.log(arr);
+    arr = arr.slice(2);
+    states = arr.map(classifyResistance);
+    console.log(states);
+    configOption = CHANNEL_CONFIG;
+  }
+
+  const dcResult: ChannelResult[] = configOption.map((cfg, i) => {
     const { tip, isNormal } = getDirectionTip(
       states[i] ?? "UNKNOWN",
       cfg.dcExpect,
       cfg,
+      "DC",
     );
     return {
       channelName: cfg.name,
@@ -177,14 +210,16 @@ export const startBeforeTestExpress = (
       state: states[i] ?? "UNKNOWN",
       tip,
       isNormal,
+      circuitField: cfg.circuitField,
     };
   });
 
-  const fcResult: ChannelResult[] = CHANNEL_CONFIG.map((cfg, i) => {
+  const fcResult: ChannelResult[] = configOption.map((cfg, i) => {
     const { tip, isNormal } = getDirectionTip(
       states[i] ?? "UNKNOWN",
       cfg.fcExpect,
       cfg,
+      "FC",
     );
     return {
       channelName: cfg.name,
@@ -192,6 +227,7 @@ export const startBeforeTestExpress = (
       state: states[i] ?? "UNKNOWN",
       tip,
       isNormal,
+      circuitField: cfg.circuitField,
     };
   });
 
@@ -253,4 +289,16 @@ export function getCircuits(
   const ser = ZD6Serial[model];
   const mod = ModelConfig[cfg];
   return collectConfig[series][ser][mod];
+}
+
+export function mergeResistance(data: number[]) {
+  let mergeData: number[] = [];
+  console.log(data);
+  if (Array.isArray(data)) {
+    data.reduce((prev, curr, idx) => {
+      if (idx % 2 === 1) mergeData.push(Number(prev * 65535 + curr) / 100);
+      return curr;
+    }, null);
+  }
+  return mergeData;
 }

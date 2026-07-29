@@ -100,52 +100,87 @@ export const contact24Closed = ref<ActionRelays>({
 
 // ===== 4路阻值合并配置 =====
 // dcExpect / fcExpect: 该方向时期望的阻值状态
-// shortTip: 混线(<0.5Ω)时的故障提示
+// dcShortTip / fcShortTip: 定操/反操方向下混线(<0.5Ω)时的故障提示
 // openFaultTip: 期望NORMAL但实际OPEN时的断线故障提示
+// circuitField: 关联的回路图 field，用于未通过时查看电路图
 export interface ChannelExpect {
   name: string;
   dcExpect: "NORMAL" | "OPEN";
   fcExpect: "NORMAL" | "OPEN";
-  shortTip: string;
+  dcShortTip: string;
+  fcShortTip: string;
   openFaultTip: string;
+  circuitField: string;
 }
 
 export const CHANNEL_CONFIG: ChannelExpect[] = [
   {
+    name: "第3路",
+    dcExpect: "NORMAL",
+    fcExpect: "OPEN",
+    dcShortTip: "D1D2混线",
+    fcShortTip: "D1D2混线",
+    openFaultTip: "D1至绕组1断线或D2至绕组2断线",
+    circuitField: "DWBS",
+  },
+  {
+    name: "第4路",
+    dcExpect: "OPEN",
+    fcExpect: "NORMAL",
+    dcShortTip: "D1D3混线",
+    fcShortTip: "D1D3混线",
+    openFaultTip: "D1至绕组1断线或D3至绕组2断线",
+    circuitField: "FWBS",
+  },
+  {
+    name: "第5路",
+    dcExpect: "OPEN",
+    fcExpect: "NORMAL",
+    dcShortTip: "D1D4混线",
+    fcShortTip: "D1D4混线",
+    openFaultTip: "D1至绕组1断线或D4至绕组3断线",
+    circuitField: "FWBS",
+  },
+  {
+    name: "第6路",
+    dcExpect: "NORMAL",
+    fcExpect: "OPEN",
+    dcShortTip: "D1D5混线",
+    fcShortTip: "D1D5混线",
+    openFaultTip: "D1至绕组1断线或D5至绕组3断线",
+    circuitField: "DWBS",
+  },
+];
+
+export const CHANNEL_CONFIGZD6: ChannelExpect[] = [
+  {
     name: "第1路",
     dcExpect: "NORMAL",
     fcExpect: "OPEN",
-    shortTip: "D1D2混线",
-    openFaultTip: "D1至绕组1断线或D2至绕组2断线",
+    dcShortTip: "D1D5混线",
+    fcShortTip: "D1D2混线",
+    openFaultTip: "D1至绕组1或D5至绕4组断线",
+    circuitField: "DWBS",
   },
   {
     name: "第2路",
     dcExpect: "OPEN",
     fcExpect: "NORMAL",
-    shortTip: "D1D3混线",
-    openFaultTip: "D1至绕组1断线或D3至绕组2断线",
-  },
-  {
-    name: "第3路",
-    dcExpect: "OPEN",
-    fcExpect: "NORMAL",
-    shortTip: "D1D4混线",
-    openFaultTip: "D1至绕组1断线或D4至绕组3断线",
-  },
-  {
-    name: "第4路",
-    dcExpect: "NORMAL",
-    fcExpect: "OPEN",
-    shortTip: "D1D5混线",
-    openFaultTip: "D1至绕组1断线或D5至绕组3断线",
+    dcShortTip: "D1D2混线",
+    fcShortTip: "D2D5混线",
+    openFaultTip: "D2至绕组2或D5至绕4组断线",
+    circuitField: "FWBS",
   },
 ];
+
 export interface ChannelResult {
   channelName: string;
   value: number;
   state: ResistanceState;
   tip: string;
   isNormal: boolean;
+  circuitField: string;
+  circuitImg?: string;
 }
 
 export interface DirectionResult {
