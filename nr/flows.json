@@ -127,7 +127,9 @@
             "d6e3f9de70144c49",
             "50538159a7121897",
             "46556195a075bb2a",
-            "4642e91abc419f31"
+            "4642e91abc419f31",
+            "2554bbfae63dc703",
+            "ffc0d70102bcad37"
         ],
         "x": 74,
         "y": 59,
@@ -832,6 +834,36 @@
         "tcpPort": 502,
         "tcpType": "DEFAULT",
         "serialPort": "/dev/tty.usbserial-110",
+        "serialType": "RTU-BUFFERD",
+        "serialBaudrate": "115200",
+        "serialDatabits": 8,
+        "serialStopbits": 1,
+        "serialParity": "none",
+        "serialConnectionDelay": 100,
+        "serialAsciiResponseStartDelimiter": "0x3A",
+        "unit_id": 1,
+        "commandDelay": 1,
+        "clientTimeout": 1000,
+        "reconnectOnTimeout": true,
+        "reconnectTimeout": 2000,
+        "parallelUnitIdsAllowed": true,
+        "showErrors": false,
+        "showWarnings": true,
+        "showLogs": true
+    },
+    {
+        "id": "204844d6e0cc683e",
+        "type": "modbus-client",
+        "name": "",
+        "clienttype": "simpleser",
+        "bufferCommands": true,
+        "stateLogEnabled": false,
+        "queueLogEnabled": false,
+        "failureLogEnabled": true,
+        "tcpHost": "127.0.0.1",
+        "tcpPort": 502,
+        "tcpType": "DEFAULT",
+        "serialPort": "/dev/tty.usbserial-2110",
         "serialType": "RTU-BUFFERD",
         "serialBaudrate": "115200",
         "serialDatabits": 8,
@@ -3807,16 +3839,16 @@
         "z": "e4bbd3713100fe17",
         "g": "a78c98a47184b2fa",
         "name": "",
-        "showStatusActivities": false,
-        "showErrors": false,
+        "showStatusActivities": true,
+        "showErrors": true,
         "showWarnings": true,
         "logIOActivities": false,
-        "server": "",
+        "server": "204844d6e0cc683e",
         "useIOFile": false,
         "ioFile": "",
         "useIOForPayload": false,
-        "emptyMsgOnFail": false,
-        "keepMsgProperties": false,
+        "emptyMsgOnFail": true,
+        "keepMsgProperties": true,
         "delayOnStart": false,
         "enableDeformedMessages": false,
         "startDelayTime": "",
@@ -3828,7 +3860,8 @@
                 "4642e91abc419f31"
             ],
             [
-                "700a863ee09e4103"
+                "700a863ee09e4103",
+                "2554bbfae63dc703"
             ]
         ]
     },
@@ -3961,7 +3994,8 @@
         "y": 480,
         "wires": [
             [
-                "50538159a7121897"
+                "50538159a7121897",
+                "ffc0d70102bcad37"
             ]
         ]
     },
@@ -5123,7 +5157,7 @@
         "z": "e4bbd3713100fe17",
         "g": "a78c98a47184b2fa",
         "name": "debug 2",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -5276,6 +5310,42 @@
         "statusType": "auto",
         "x": 470,
         "y": 660,
+        "wires": []
+    },
+    {
+        "id": "2554bbfae63dc703",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "debug 7",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 900,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "ffc0d70102bcad37",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "debug 8",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 470,
+        "y": 540,
         "wires": []
     }
 ]

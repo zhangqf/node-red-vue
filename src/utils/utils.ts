@@ -116,7 +116,7 @@ export const findRelayIndex = (
  */
 function classifyResistance(val: number): ResistanceState {
   if (val >= 0 && val <= 60) return "NORMAL";
-  if (val >= 10000000) return "OPEN";
+  if (val >= 10000) return "OPEN";
   if (val <= 0.5) return "SHORT";
   return "UNKNOWN";
 }
@@ -125,7 +125,7 @@ function classifyResistance(val: number): ResistanceState {
 
 function classifyResistanceZD6(val: number): ResistanceState {
   if (val >= 0 && val <= 60) return "NORMAL";
-  if (val >= 80000) return "OPEN";
+  if (val >= 10000) return "OPEN";
   if (val <= 0.5) return "SHORT";
   return "UNKNOWN";
 }
