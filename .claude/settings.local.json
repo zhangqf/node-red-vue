@@ -3,7 +3,15 @@
     "allow": [
       "Bash(npx vue-tsc *)",
       "Bash(identify /Users/zhangfeng/project/node-red-vue/switch-machine/1.png)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Bash(sqlite3 *)",
+      "Bash(sort -t: -k2 -rn)",
+      "Bash(grep -oP '.{0,50}\\\\.content.{0,50}' /Users/zhangfeng/project/node-red-vue/switch-machine/dist/assets/index-C89paTx0.js)",
+      "Bash(grep -oE '.{0,50}\\\\.content.{0,50}' /Users/zhangfeng/project/node-red-vue/switch-machine/dist/assets/index-C89paTx0.js)",
+      "Bash(xxd)",
+      "Bash(sed -i '' '284s/^\t\t  /\t  /' /Users/zhangfeng/project/node-red-vue/switch-machine/src/views/work.vue)",
+      "Bash(sed -i '' '285s/^\t\t    /\t    /' /Users/zhangfeng/project/node-red-vue/switch-machine/src/views/work.vue)",
+      "Bash(sed -i '' '286s/^\t    /\t    /' /Users/zhangfeng/project/node-red-vue/switch-machine/src/views/work.vue)"
     ]
   }
 }

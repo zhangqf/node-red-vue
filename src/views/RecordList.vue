@@ -112,8 +112,10 @@ function getChannelTip(
   state: string,
   expect: string,
   cfg: ChannelExpect,
+  direction: "DC" | "FC" = "DC",
 ): string {
-  if (state === "SHORT") return cfg.shortTip;
+  if (state === "SHORT")
+    return direction === "DC" ? cfg.dcShortTip : cfg.fcShortTip;
   if (state === "UNKNOWN") return "阻值不在判定区间";
   if (state === expect) return "正常";
   if (state === "OPEN") return cfg.openFaultTip;

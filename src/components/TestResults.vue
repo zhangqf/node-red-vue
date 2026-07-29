@@ -64,6 +64,7 @@ function toggleCircuitLoop(idx: number) {
         modbusStatus && modbusStatus.connected ? "测试结果" : "通讯异常"
       }}</span>
     </div>
+    
     <!-- 通讯异常 -->
     <div
       class="modbusStatus-content"
@@ -125,6 +126,13 @@ function toggleCircuitLoop(idx: number) {
           </div>
           <div class="test-result" :class="test.isNormal ? 'ok' : 'ng'">
             {{ test.tip }}
+            <button
+              v-if="!test.isNormal && test.circuitImg"
+              class="circuit-view-btn"
+              style="margin-left:8px"
+              @click="handleView(test.circuitImg!)">
+              查看电路图
+            </button>
           </div>
         </div>
 
@@ -146,23 +154,25 @@ function toggleCircuitLoop(idx: number) {
           </div>
           <div class="test-result" :class="test.isNormal ? 'ok' : 'ng'">
             {{ test.tip }}
+            <button
+              v-if="!test.isNormal && test.circuitImg"
+              class="circuit-view-btn"
+              style="margin-left:8px"
+              @click="handleView(test.circuitImg!)">
+              查看电路图
+            </button>
           </div>
         </div>
 
         <div class="section-divider"></div>
       </template>
-
       <!-- 常规表示继电器结果 -->
       <h4
-        v-if="tests && tests?.length > 0 && tests[0].type === 'empty'"
+        v-if="powerStatusIsRunning && tests && tests?.length > 0 && tests[0].type === 'empty'"
         style="color: #c18232">
         暂无表示继电器配置，跳过该组状态校验
       </h4>
-      <template
-        v-if="
-          (powerStatusIsRunning && availableDirections.DC) ||
-          availableDirections.FC
-        ">
+     
         <div class="relay-results">
           <div
             v-for="(test, idx) in tests?.length ? tests : []"
@@ -257,7 +267,6 @@ function toggleCircuitLoop(idx: number) {
             </div>
           </div>
         </div>
-      </template>
     </div>
     <Teleport to="body">
       <div
