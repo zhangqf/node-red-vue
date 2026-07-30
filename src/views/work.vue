@@ -961,7 +961,6 @@ onMounted(async () => {
           <span v-if="butItemStatus === 'FC'" class="light light-yellow"></span>
         </span>
         <button
-          v-if="availableDirections.DC"
           class="action-btn"
           :disabled="butItemIsDisable"
           :class="butItemStatus === 'DC' ? 'active' : ''"
@@ -969,7 +968,6 @@ onMounted(async () => {
           定操
         </button>
         <button
-          v-if="availableDirections.FC"
           class="action-btn"
           :disabled="butItemIsDisable"
           :class="butItemStatus === 'FC' ? 'active' : ''"
