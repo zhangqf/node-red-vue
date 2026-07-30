@@ -249,18 +249,19 @@ const handleExpressRelays = (data:Record<string,any>) => {
 
 /* 采集直流曲线 */
 const handleCollectDCCurve = (data) => {
+  console.log(data)
   const rawReg = Array.isArray(data.data) ? data.data : [];
     tempDate.unshift(rawReg);
-
+  
     // 限制最大20条，超出截断
     if (tempDate.length > 20) {
       tempDate = tempDate.slice(0, 20);
     }
-    if (isAction.value) {
+    // if (isAction.value) {
       tempDate.forEach((element) => {
         lastRegisterArr.value = element;
       });
-    }
+    // }
 }
 
 
@@ -438,9 +439,13 @@ watch(active, (newkey) => {
 
 
 watch(powerStatus?.isRunning,(newKey) => {
-  startBeforeTestFinshed.value = !newKey
-  if (!newKey) {
+  if (newKey) {
+    startBeforeTestFinshed.value = true
+    availableDirections.value = { DC: true, FC: true }
+    initTestResults()
+  } else {
     startBeforeLoading.value = false
+    startBeforeTestFinshed.value = false
     availableDirections.value = { DC: false, FC: false }
     diagnosisMessages.value = []
     startBeforeTestTips.value = null
@@ -951,13 +956,12 @@ onMounted(async () => {
         </button>
       </div>
       <div class="action-buttons" style="flex: 1" v-if="isShowButtons &&  powerStatus?.isRunning">
-        <button class="action-btn" v-if="!startBeforeTestFinshed" @click="handleStartBeforeTest">启动前测试</button>
         <span class="action-light">
           <span v-if="butItemStatus === 'DC'" class="light light-green"></span>
           <span v-if="butItemStatus === 'FC'" class="light light-yellow"></span>
         </span>
         <button
-          v-if="startBeforeTestFinshed && availableDirections.DC"
+          v-if="availableDirections.DC"
           class="action-btn"
           :disabled="butItemIsDisable"
           :class="butItemStatus === 'DC' ? 'active' : ''"
@@ -965,7 +969,7 @@ onMounted(async () => {
           定操
         </button>
         <button
-          v-if="startBeforeTestFinshed && availableDirections.FC"
+          v-if="availableDirections.FC"
           class="action-btn"
           :disabled="butItemIsDisable"
           :class="butItemStatus === 'FC' ? 'active' : ''"

@@ -833,7 +833,7 @@
         "tcpHost": "127.0.0.1",
         "tcpPort": 502,
         "tcpType": "DEFAULT",
-        "serialPort": "/dev/tty.usbserial-110",
+        "serialPort": "/dev/tty.usbserial-1110",
         "serialType": "RTU-BUFFERD",
         "serialBaudrate": "115200",
         "serialDatabits": 8,
@@ -863,7 +863,7 @@
         "tcpHost": "127.0.0.1",
         "tcpPort": 502,
         "tcpType": "DEFAULT",
-        "serialPort": "/dev/tty.usbserial-2110",
+        "serialPort": "/dev/tty.usbserial-110",
         "serialType": "RTU-BUFFERD",
         "serialBaudrate": "115200",
         "serialDatabits": 8,
@@ -1114,7 +1114,7 @@
                 "p": "payload"
             }
         ],
-        "repeat": "0.1",
+        "repeat": "0.2",
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
@@ -3860,7 +3860,6 @@
                 "4642e91abc419f31"
             ],
             [
-                "700a863ee09e4103",
                 "2554bbfae63dc703"
             ]
         ]
@@ -3982,15 +3981,15 @@
         "type": "function",
         "z": "e4bbd3713100fe17",
         "g": "a78c98a47184b2fa",
-        "name": "function 18",
-        "func": "\n  msg.payload = {\n    \"fc\":3,\n    \"unitid\":4,\n    \"address\":4086,\n    \"quantity\":124\n  };\n\n\n\nreturn msg;",
+        "name": "45",
+        "func": "\n//   // msg.payload = {\n   \n//   // };\n\n\nconst deviceList = [\n  {\n    \"fc\":3,\n    \"unitid\":5,\n    \"address\":4086,\n    \"quantity\":124\n  }, \n  {\n     \"fc\":3,\n    \"unitid\":4,\n    \"address\":14,\n    \"quantity\":1, \n    \"name\":\"直流\"\n  }, \n]\n\n// // 读取循环下标\n// let idx = context.get(\"idx\") || 0;\n// const dev = deviceList[idx];\n// msg.modbus = {};\n\n// msg.payload = {\n//     fc: dev.fc,\n//     unitid: dev.unitid,\n//     address: dev.address,\n//     quantity: dev.quantity\n// };\n\nmsg.payload = \n {\n    \"fc\":3,\n    \"unitid\":4,\n    \"address\":14,\n    \"quantity\":1, \n    \"name\":\"直流\"\n  }\n\n\n\n\n// msg.deviceName = dev.name;\n// // 循环计数\n// idx = idx + 1;\n// if(idx >= deviceList.length){\n//     idx = 0;\n// }\n// context.set(\"idx\", idx);\n\n// return msg;\n\n\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 350,
+        "x": 330,
         "y": 480,
         "wires": [
             [
@@ -5279,7 +5278,7 @@
         "z": "e4bbd3713100fe17",
         "g": "a78c98a47184b2fa",
         "name": "function 3",
-        "func": "\n\n\n\nlet sendData = {};\n\nconst data = msg;\n\nif(data.modbusRequest.unitid=== 4) {\n    msg.payload[0] = msg.payload[0] / 100.0\n}\n\nmsg.sendData = {\n    data:msg.payload,\n    type:\"modbusRealData\",\n    unitId: data.modbusRequest.unitid,\n\tfc: data.modbusRequest.fc,\n\taddress:data.modbusRequest.address,\n\tquantity: data.modbusRequest.quantity,\n}\n\n\nreturn msg;",
+        "func": "\n\n\n\nlet sendData = {};\n\n\n\nif(msg.modbusRequest.unitid=== 4) {\n    const data = msg;\n    msg.payload[0] = msg.payload[0] / 100.0\n    msg.sendData = {\n    data:msg.payload,\n    type:\"modbusRealData\",\n    unitId: data.modbusRequest.unitid,\n\tfc: data.modbusRequest.fc,\n\taddress:data.modbusRequest.address,\n\tquantity: data.modbusRequest.quantity,\n    }\n}\n\n\nif(msg.modbusRequest.unitid=== 5) {\n    const data = msg.payload;\n    const mergeData = [];\n    if (Array.isArray(data)) {\n    data.reduce((prev, curr, idx) => {\n        if (idx % 2 === 1) mergeData.push(Number(prev + \"\" + curr));\n        return curr;\n    }, null);\n    }\n    msg.sendData = {\n    type: \"ThreePhaseACCollector\",\n    value:mergeData\n    };\n}\n\nreturn msg;\n\n\n\nreturn msg;\n\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
