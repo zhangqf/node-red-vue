@@ -422,7 +422,9 @@
             "30151d7bd9eec3f3",
             "a20ffea59d710210",
             "7e26b810a0a911ef",
-            "bc4417b23d6b2293"
+            "bc4417b23d6b2293",
+            "b1dce3197decb5c8",
+            "d54c3d24b64be8a2"
         ],
         "x": 1154,
         "y": 679,
@@ -1114,7 +1116,7 @@
                 "p": "payload"
             }
         ],
-        "repeat": "0.1",
+        "repeat": "0.2",
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
@@ -5346,5 +5348,56 @@
         "x": 470,
         "y": 540,
         "wires": []
+    },
+    {
+        "id": "b1dce3197decb5c8",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "264be9ece447ca9d",
+        "name": "function 18",
+        "func": "\n\n\nmsg.sendData = {\n    data:[40],\n    type:\"modbusRealData\",\n    unitId: 4,\n\tfc: 3,\n\taddress:14,\n\tquantity: 1\n}\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1490,
+        "y": 880,
+        "wires": [
+            [
+                "7410291c8a0585e6"
+            ]
+        ]
+    },
+    {
+        "id": "d54c3d24b64be8a2",
+        "type": "inject",
+        "z": "e4bbd3713100fe17",
+        "g": "264be9ece447ca9d",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 1270,
+        "y": 880,
+        "wires": [
+            [
+                "b1dce3197decb5c8"
+            ]
+        ]
     }
 ]

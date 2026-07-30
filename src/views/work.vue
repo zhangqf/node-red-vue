@@ -250,6 +250,7 @@ const handleExpressRelays = (data:Record<string,any>) => {
 /* 采集直流曲线 */
 const handleCollectDCCurve = (data) => {
   console.log(data)
+  console.log("220")
   const rawReg = Array.isArray(data.data) ? data.data : [];
     tempDate.unshift(rawReg);
   
@@ -257,11 +258,11 @@ const handleCollectDCCurve = (data) => {
     if (tempDate.length > 20) {
       tempDate = tempDate.slice(0, 20);
     }
-    // if (isAction.value) {
+    if (isAction.value) {
       tempDate.forEach((element) => {
         lastRegisterArr.value = element;
       });
-    // }
+    }
 }
 
 
@@ -310,8 +311,8 @@ const funWsRealData = (data) => {
       // 表示
       handleExpressRelays(data);
       break;
-    case 1:
-      // 采集直流曲线
+    case 4:
+      // 采集220曲线
       handleCollectDCCurve(data);
       break;
     case 6:
