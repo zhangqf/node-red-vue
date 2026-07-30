@@ -415,8 +415,9 @@ const handleContactDialogSelect = (type: string) => {
 };
 
 const handleBack = () => {
-  wsSendData.value = gen32BitArray();
-  sendCmd(wsSendData.value, "relays",deviceType.value );
+  const result = terminals.value.map(() => 0);
+  wsSendData.value = gen32BitArray(result, []);
+  sendCmd(wsSendData.value, "relays", deviceType.value);
   router.back()
 }
 
@@ -456,9 +457,16 @@ watch(powerStatus?.isRunning,(newKey) => {
   }
 })
 
-/* 开启电源 */
+/* 开启电源 / 紧急停止 */
 const handleStart = () => {
-  handleDo();
+  if (powerStatus.value?.isRunning) {
+    // 紧急停止：全关，不包含电源位
+    const result = terminals.value.map(() => 0);
+    wsSendData.value = gen32BitArray(result, []);
+    sendCmd(wsSendData.value, "relays", deviceType.value);
+  } else {
+    handleDo();
+  }
 };
 
 
@@ -661,12 +669,7 @@ const handleDo = () => {
   );
   console.log(powerStatus)
   let idxArr = StartPowerConfig[deviceType.value as keyof typeof StartPowerConfig];
-  if(powerStatus.value?.isRunning){
-    idxArr = []
-    wsSendData.value = gen32BitArray()
-  } else {
-     wsSendData.value = gen32BitArray(result,idxArr);
-  }
+  wsSendData.value = gen32BitArray(result, idxArr);
  
   sendCmd(wsSendData.value, "relays",deviceType.value );
 };
