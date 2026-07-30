@@ -511,7 +511,7 @@ function initTestResults(direction?: "DC" | "FC") {
   const showFC = direction ? direction === "FC" : availableDirections.value.FC;
 
   const list = relayConfigList.filter(item => {
-    if (item.field === "DWBS" || item.field === "FWBS") return true;
+    if (item.field.includes("DWBS") || item.field.includes("FWBS")) return true;
     if (showDC && item.field.includes("DC")) return true;
     if (showFC && item.field.includes("FC")) return true;
     return false
