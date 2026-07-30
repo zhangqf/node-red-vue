@@ -249,8 +249,6 @@ const handleExpressRelays = (data:Record<string,any>) => {
 
 /* 采集直流曲线 */
 const handleCollectDCCurve = (data) => {
-  console.log(data)
-  console.log("220")
   const rawReg = Array.isArray(data.data) ? data.data : [];
     tempDate.unshift(rawReg);
   
@@ -416,6 +414,11 @@ const handleContactDialogSelect = (type: string) => {
   showContactDialog.value = false;
 };
 
+const handleBack = () => {
+  wsSendData.value = gen32BitArray();
+  sendCmd(wsSendData.value, "relays",deviceType.value );
+  router.back()
+}
 
 
 async function getConfig(itemType: string) {
@@ -656,11 +659,15 @@ const handleDo = () => {
   let result = terminals.value.map((item) =>
     item.default_status
   );
+  console.log(powerStatus)
   let idxArr = StartPowerConfig[deviceType.value as keyof typeof StartPowerConfig];
-  if(powerStatus?.isRunning){
+  if(powerStatus.value?.isRunning){
     idxArr = []
+    wsSendData.value = gen32BitArray()
+  } else {
+     wsSendData.value = gen32BitArray(result,idxArr);
   }
-  wsSendData.value = gen32BitArray(result,idxArr);
+ 
   sendCmd(wsSendData.value, "relays",deviceType.value );
 };
 
@@ -908,7 +915,7 @@ onMounted(async () => {
       :contact-active="selectedContactType"
       v-model:active="active"
       @contactConfigClick="handleContactConfigClick"
-      @back="router.back()" />
+      @back="handleBack()" />
     <div class="main-content">
       <CurrentCurve
         :start-current="currentData.startCurrent"
