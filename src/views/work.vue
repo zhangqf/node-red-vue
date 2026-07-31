@@ -268,7 +268,7 @@ const handleCollectDCCurve = (data) => {
   启动前测试表示
   */
 const handleStartBeforeTestExpress = (data) => {
-
+  return // TODO: 暂时屏蔽启动前测试
   if (!startBeforeLoading.value) return
   const r = mergeResistance(data.data)
   const result = startBeforeTestExpress(r, deviceType.value)
@@ -473,6 +473,7 @@ const handleStart = () => {
 
 /* 启动前测试 */
 const handleStartBeforeTest = () => {
+  return // TODO: 暂时屏蔽启动前测试
   // availableDirections.value = { DC: false, FC: false };
   // startBeforeTestTips.value = null
   // testResults.value = []
@@ -519,16 +520,7 @@ function initTestResults(direction?: "DC" | "FC") {
     return;
   }
 
-  const showDC = direction ? direction === "DC" : availableDirections.value.DC;
-  const showFC = direction ? direction === "FC" : availableDirections.value.FC;
-
-  const list = relayConfigList.filter(item => {
-    if (item.field.includes("DWBS") || item.field.includes("FWBS")) return true;
-    if (showDC && item.field.includes("DC")) return true;
-    if (showFC && item.field.includes("FC")) return true;
-    return false
-  })
-   testResults.value  = list
+  testResults.value  = relayConfigList
     .filter((item) =>  relayData[item.field]&&relayData[item.field].length > 0)
     .map((item) => ({
       type: item.type,
@@ -882,6 +874,10 @@ onMounted(async () => {
       default:
         await getList();
         break;
+    }
+    if (route.query.universal === "true") {
+      combinationName.value = "通用模式";
+      configName.value = "通用模式";
     }
     // await getList();
   }, "数据加载成功");

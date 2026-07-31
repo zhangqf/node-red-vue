@@ -12,13 +12,26 @@ const loading = ref(true);
 const configsLoading = ref(false);
 const error = ref("");
 const selectedCombination = ref<any>(null);
+const deviceType = ref("");
+
+const UNIVERSAL_ID = "__universal__";
 
 async function getCombinations(id: string) {
   loading.value = true;
   error.value = "";
   try {
     const res = await fetch(HTTP_URL + "/getDeviceCombination/" + id);
-    combinations.value = await res.json();
+    const list = await res.json();
+    deviceType.value = list[0]?.deviceType || "";
+    // ZD6 设备在列表头部注入通用模式
+    if (deviceType.value === "ZD6") {
+      combinations.value = [
+        { id: UNIVERSAL_ID, name: "通用模式", deviceType: "ZD6" },
+        ...list,
+      ];
+    } else {
+      combinations.value = list;
+    }
   } catch {
     error.value = "数据加载失败";
   } finally {
@@ -27,6 +40,11 @@ async function getCombinations(id: string) {
 }
 
 async function selectCombination(combo: any) {
+  // 通用模式：找到双动双机组合 + 一动J机(103B4)配置，直接进 work
+  if (combo.id === UNIVERSAL_ID) {
+    await handleUniversalMode();
+    return;
+  }
   selectedCombination.value = combo;
   configsLoading.value = true;
   configs.value = [];
@@ -44,6 +62,46 @@ async function selectCombination(combo: any) {
     configs.value = [];
   } finally {
     configsLoading.value = false;
+  }
+}
+
+async function handleUniversalMode() {
+  const zd6Combo = combinations.value.find(
+    (c) => c.name === "双动双机" && c.id !== UNIVERSAL_ID,
+  );
+  if (!zd6Combo) {
+    error.value = "未找到双动双机组合方式";
+    return;
+  }
+  try {
+    const res = await fetch(
+      HTTP_URL +
+        "/getConfigsByBinding/" +
+        route.params.deviceId +
+        "/" +
+        zd6Combo.id,
+    );
+    const configList = await res.json();
+    // 匹配一动J机：cfg 为 103B4
+    const targetConfig = configList.find((c: any) => {
+      const cfg = (c.name || "").replace(/(【.+?】)$/, "");
+      return cfg === "一动J机";
+    });
+    if (!targetConfig) {
+      error.value = "未找到一动J机(103B4)配置";
+      return;
+    }
+    router.push({
+      name: "work",
+      params: {
+        deviceId: route.params.deviceId,
+        combinationId: zd6Combo.id,
+        configId: targetConfig.id,
+      },
+      query: { universal: "true" },
+    });
+  } catch {
+    error.value = "通用模式加载失败";
   }
 }
 const selectedConfig = ref<any>(null);
