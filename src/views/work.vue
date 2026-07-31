@@ -482,7 +482,7 @@ const handleStartBeforeTest = () => {
   const idxArr = StartBeforeTestConfig[deviceType.value as keyof typeof StartBeforeTestConfig];
   const powerArr = StartPowerConfig[deviceType.value as keyof typeof StartPowerConfig];
 
-  const result = gen32BitArray([], [...idxArr,...powerArr],);
+  const result = gen32BitArray([], [...idxArr],);
   
   sendCmd(result, "startBeforeTestRelays", deviceType.value);
 
