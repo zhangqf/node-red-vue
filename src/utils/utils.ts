@@ -266,6 +266,7 @@ export const startBeforeTestExpress = (
  */
 
 export const powerStatusJudgmen = (arr: number[], idxArr: number[]) => {
+  console.log(arr);
   let allPullIn = true;
   for (const idx of idxArr) {
     if (idx < 0 || idx >= arr.length || arr[idx] !== 1) {
@@ -275,7 +276,7 @@ export const powerStatusJudgmen = (arr: number[], idxArr: number[]) => {
   }
   return {
     isRunning: allPullIn,
-    desc: allPullIn ? "电源已开启" : "请先开启电源",
+    desc: allPullIn ? "电源已开启" : "请先开启动作电源",
   };
 };
 

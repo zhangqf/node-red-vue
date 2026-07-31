@@ -39,6 +39,7 @@ defineProps<{
   availableDirections: { DC: boolean; FC: boolean };
   diagnosisMessages: string[];
   startBeforeLoading: boolean;
+  startBeforeTestFinshed: boolean;
 }>();
 
 const perviewImg = ref("");
@@ -73,8 +74,8 @@ function toggleCircuitLoop(idx: number) {
     </div>
 
     <div v-else class="test-list">
-      <template v-if="!powerStatusIsRunning">
-        <div class="modbusStatus-content">开启电源</div>
+      <template v-if="!powerStatusIsRunning && startBeforeTestFinshed">
+        <div class="modbusStatus-content">开启动作电源</div>
       </template>
       <template v-if="startBeforeLoading"> 启动前测试，等待结果中... </template>
       <!-- 启动前测试结果（始终显示，不隐藏） -->

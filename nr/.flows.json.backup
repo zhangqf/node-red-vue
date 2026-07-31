@@ -429,7 +429,7 @@
         "x": 1154,
         "y": 679,
         "w": 912,
-        "h": 242
+        "h": 262
     },
     {
         "id": "cf823ce89da7f786",
@@ -4062,9 +4062,11 @@
         "finalize": "",
         "libs": [],
         "x": 1730,
-        "y": 880,
+        "y": 900,
         "wires": [
-            []
+            [
+                "7410291c8a0585e6"
+            ]
         ]
     },
     {
@@ -4990,7 +4992,7 @@
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
         "name": "电阻模块表示",
-        "func": "\n// const data =[\n//    0.2,0.2,14,15\n//   ]\n\nconst data = [1,1,1,1,1,1,1,1,]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 6,\n\tfc: 3,\n\taddress:0,\n\tquantity:16,\n}\n\nreturn msg",
+        "func": "\n// const data =[\n//    0.2,0.2,14,15\n//   ]\n\nconst data = [0,1700,0,1700,0,1700,0,1700,0,1700,0,1700,0,1700,0,1700,0,1700]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 6,\n\tfc: 3,\n\taddress:0,\n\tquantity:16,\n}\n\nreturn msg",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -5114,8 +5116,8 @@
         "type": "function",
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
-        "name": "开启电源",
-        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst tempArr = new Array(32).fill(0)\n\ntempArr[31] = 1\ntempArr[30] = 1\ntempArr[29] = 1\nconst data = [1,1,1,1,1,1,1,1,]\n\nmsg.sendData = {\n    data:tempArr,\n    type:\"modbusRealData\",\n    unitId: 1,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
+        "name": "开启动作电源",
+        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst tempArr = new Array(32).fill(0)\n\ntempArr[31] = 1\ntempArr[30] = 1\ntempArr[29] = 1\nconst data = [1,1,1,1,1,1,1,1,]\n\nmsg.sendData = {\n    data:tempArr,\n    type:\"modbusRealData\",\n    unitId: 2,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -5381,7 +5383,7 @@
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
         "name": "function 18",
-        "func": "\n\n\nmsg.sendData = {\n    data:[40],\n    type:\"modbusRealData\",\n    unitId: 4,\n\tfc: 3,\n\taddress:14,\n\tquantity: 1\n}\nreturn msg;",
+        "func": "\n\nconst data = [0,0,0,0,0,0,0,0,0,4575,0,22099,0,22303,0,22225,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,3,0,243,0,919,65535,65312,0,205,0,0,0,23995,0,12042,0,5000,0,49,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 5,\n\tfc: 3,\n\taddress:4086, quantity:124,\n}\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -5392,7 +5394,7 @@
         "y": 880,
         "wires": [
             [
-                "7410291c8a0585e6"
+                "148b8a45e307ace5"
             ]
         ]
     },
@@ -5400,7 +5402,6 @@
         "id": "d54c3d24b64be8a2",
         "type": "inject",
         "z": "e4bbd3713100fe17",
-        "d": true,
         "g": "264be9ece447ca9d",
         "name": "",
         "props": [
