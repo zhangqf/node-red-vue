@@ -241,7 +241,6 @@ const startBeforeTestTips = ref<{
 /* 表示继电器 */
 const handleExpressRelays = (data:Record<string,any>) => {
   //  if (isAction.value) {
-  console.log(data)
     return  handleWsRelayData(data.data);
     // }
 }
@@ -655,7 +654,6 @@ const handleDo = () => {
   let result = terminals.value.map((item) =>
     item.default_status
   );
-  console.log(powerStatus)
   let idxArr = StartPowerConfig[deviceType.value as keyof typeof StartPowerConfig];
   wsSendData.value = gen32BitArray(result, idxArr);
  
@@ -692,26 +690,32 @@ const handleOpe = (type: string) => {
   butItemStatus.value = type;
   butItemIsDisable.value = true;
 
-  switch (type) {
-    case "DC":
-      handleDC();
-      break;
-    case "FC":
-      handleFC();
-      break;
-  }
-  // 开启每秒递减
-  timerId = window.setInterval(() => {
-    nextDoTime.value--;
-    // 倒计时到0，清除定时器、解锁按钮
-    if (nextDoTime.value <= 0) {
-      nextDoTime.value = 15;
-      clearInterval(timerId!);
-      timerId = null;
-      butItemIsDisable.value = false;
-      butItemStatus.value = "";
+  // 关闭启动前测试继电器，恢复原有吸合状态，等2s后执行
+  handleDo();
+  nextDoTime.value = 2;
+
+  setTimeout(() => {
+    switch (type) {
+      case "DC":
+        handleDC();
+        break;
+      case "FC":
+        handleFC();
+        break;
     }
-  }, 1000);
+    nextDoTime.value = 15;
+    // 开启每秒递减
+    timerId = window.setInterval(() => {
+      nextDoTime.value--;
+      if (nextDoTime.value <= 0) {
+        nextDoTime.value = 15;
+        clearInterval(timerId!);
+        timerId = null;
+        butItemIsDisable.value = false;
+        butItemStatus.value = "";
+      }
+    }, 1000);
+  }, 2000);
 };
 
 
