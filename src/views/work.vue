@@ -296,8 +296,16 @@ const handleStartBeforeTestExpress = (data) => {
 const funWsRealData = (data) => {
   let unitId = data.unitId;
   switch (unitId) {
-    case 1:
+    // case 1:
+    // case 2:
+    //   handleActionRelays(data);
+    //   break;
+      case 1:
+      if(deviceType.value==="ZYJ7"||deviceType.value==="ZDJ9") return
+      handleActionRelays(data);
+      break;
     case 2:
+      if(deviceType.value==="ZD6"||deviceType.value==="ZD9") return
       handleActionRelays(data);
       break;
     case 3:
