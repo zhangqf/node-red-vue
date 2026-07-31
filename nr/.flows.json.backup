@@ -1089,7 +1089,7 @@
         "z": "e4bbd3713100fe17",
         "g": "a78c98a47184b2fa",
         "name": "1236",
-        "func": "const deviceList = [\n  {\n    \"fc\":1,\n    \"unitid\":1,\n    \"address\":0,\n    \"quantity\":32,\n    \"name\":\"ZD6\"\n  }, \n  {\n    \"fc\":1,\n    \"unitid\":2,\n    \"address\":0,\n    \"quantity\":32,\n    \"name\":\"ZYJ7\"\n  }, \n  {\n    \"fc\":2,\n    \"unitid\":3,\n    \"address\":0,\n    \"quantity\":16,\n    \"name\":\"表示\"\n  },\n  {\n    \"fc\":3,\n    \"unitid\":6,\n    \"address\":0,\n    \"quantity\":16,\n    \"name\":\"电阻\"\n  }\n]\n\n// 读取循环下标\nlet idx = context.get(\"idx\") || 0;\nconst dev = deviceList[idx];\nmsg.modbus = {};\n\nmsg.payload = {\n    fc: dev.fc,\n    unitid: dev.unitid,\n    address: dev.address,\n    quantity: dev.quantity\n};\n\n// msg.payload = \n//  {\n//     \"fc\":1,\n//     \"unitid\":1,\n//     \"address\":0,\n//     \"quantity\":32,\n//   }\n\n\n\n\nmsg.deviceName = dev.name;\n// 循环计数\nidx = idx + 1;\nif(idx >= deviceList.length){\n    idx = 0;\n}\ncontext.set(\"idx\", idx);\n\nreturn msg;",
+        "func": "const deviceType = flow.get(\"deviceType\") || \"\";\nconst isZYJ7orZDJ9 = deviceType === \"ZYJ7\" || deviceType === \"ZDJ9\";\n\nconst allDevices = [\n  { fc:1, unitid:1, address:0, quantity:32, name:\"ZD6\" },\n  { fc:1, unitid:2, address:0, quantity:32, name:\"ZYJ7\" },\n  { fc:2, unitid:3, address:0, quantity:16, name:\"表示\" },\n  { fc:3, unitid:6, address:0, quantity:16, name:\"电阻\" }\n];\n\nconst deviceList = allDevices.filter(d => {\n    if (isZYJ7orZDJ9 && d.unitid === 1) return false;\n    if (!isZYJ7orZDJ9 && d.unitid === 2) return false;\n    return true;\n});\n\nlet idx = context.get(\"idx\") || 0;\nif (idx >= deviceList.length) idx = 0;\nconst dev = deviceList[idx];\nmsg.modbus = {};\nmsg.payload = {\n    fc: dev.fc,\n    unitid: dev.unitid,\n    address: dev.address,\n    quantity: dev.quantity\n};\nmsg.deviceName = dev.name;\nidx = idx + 1;\nif (idx >= deviceList.length) idx = 0;\ncontext.set(\"idx\", idx);\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -3919,11 +3919,16 @@
                 "t": "eq",
                 "v": "startBeforeTestRelays",
                 "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "setDeviceType",
+                "vt": "str"
             }
         ],
         "checkall": "true",
         "repair": false,
-        "outputs": 3,
+        "outputs": 4,
         "x": 330,
         "y": 720,
         "wires": [
@@ -3936,7 +3941,29 @@
             ],
             [
                 "bd98acdecbf1659f"
+            ],
+            [
+                "setDeviceTypeHandler"
             ]
+        ]
+    },
+    {
+        "id": "setDeviceTypeHandler",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "9e2d670578adbe41",
+        "name": "设置设备类型",
+        "func": "if (msg.payload && msg.payload.deviceType) {\n    flow.set(\"deviceType\", msg.payload.deviceType);\n}\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 530,
+        "y": 860,
+        "wires": [
+            []
         ]
     },
     {
@@ -3984,7 +4011,7 @@
         "z": "e4bbd3713100fe17",
         "g": "a78c98a47184b2fa",
         "name": "45",
-        "func": "\n//   // msg.payload = {\n   \n//   // };\n\n\nconst deviceList = [\n  {\n    \"fc\":3,\n    \"unitid\":5,\n    \"address\":4086,\n    \"quantity\":124\n  }, \n  {\n     \"fc\":3,\n    \"unitid\":4,\n    \"address\":14,\n    \"quantity\":1, \n    \"name\":\"直流\"\n  }, \n]\n\n// // 读取循环下标\n// let idx = context.get(\"idx\") || 0;\n// const dev = deviceList[idx];\n// msg.modbus = {};\n\n// msg.payload = {\n//     fc: dev.fc,\n//     unitid: dev.unitid,\n//     address: dev.address,\n//     quantity: dev.quantity\n// };\n\nmsg.payload = \n {\n    \"fc\":3,\n    \"unitid\":4,\n    \"address\":14,\n    \"quantity\":1, \n    \"name\":\"直流\"\n  }\n\n\n\n\n// msg.deviceName = dev.name;\n// // 循环计数\n// idx = idx + 1;\n// if(idx >= deviceList.length){\n//     idx = 0;\n// }\n// context.set(\"idx\", idx);\n\n// return msg;\n\n\n\nreturn msg;",
+        "func": "const deviceType = flow.get(\"deviceType\") || \"\";\nconst isZYJ7orZDJ9 = deviceType === \"ZYJ7\" || deviceType === \"ZDJ9\";\n\nconst allDevices = [\n  { fc:3, unitid:5, address:4086, quantity:124, name:\"三相交流\" },\n  { fc:3, unitid:4, address:14, quantity:1, name:\"直流\" }\n];\n\nconst deviceList = allDevices.filter(d => {\n    if (isZYJ7orZDJ9 && d.unitid === 4) return false;\n    if (!isZYJ7orZDJ9 && d.unitid === 5) return false;\n    return true;\n});\n\nlet idx = context.get(\"idx2\") || 0;\nif (idx >= deviceList.length) idx = 0;\nconst dev = deviceList[idx];\nmsg.payload = {\n    fc: dev.fc,\n    unitid: dev.unitid,\n    address: dev.address,\n    quantity: dev.quantity\n};\nmsg.deviceName = dev.name;\nidx = idx + 1;\nif (idx >= deviceList.length) idx = 0;\ncontext.set(\"idx2\", idx);\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -5004,7 +5031,7 @@
         "finalize": "",
         "libs": [],
         "x": 510,
-        "y": 880,
+        "y": 900,
         "wires": [
             [
                 "ca862f075ce41d0c",
@@ -5088,7 +5115,7 @@
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
         "name": "开启电源",
-        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst tempArr = new Array(32).fill(0)\n\ntempArr[31] = 0\ntempArr[30] = 1\ntempArr[29] = 0\nconst data = [1,1,1,1,1,1,1,1,]\n\nmsg.sendData = {\n    data:tempArr,\n    type:\"modbusRealData\",\n    unitId: 1,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
+        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst tempArr = new Array(32).fill(0)\n\ntempArr[31] = 1\ntempArr[30] = 1\ntempArr[29] = 1\nconst data = [1,1,1,1,1,1,1,1,]\n\nmsg.sendData = {\n    data:tempArr,\n    type:\"modbusRealData\",\n    unitId: 1,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
