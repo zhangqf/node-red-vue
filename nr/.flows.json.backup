@@ -4990,7 +4990,7 @@
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
         "name": "电阻模块表示",
-        "func": "\nconst data =[\n   0.2,0.2,14,15\n  ]\n\n// const data = [1,,1,1,1,1,1,1,]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 6,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
+        "func": "\n// const data =[\n//    0.2,0.2,14,15\n//   ]\n\nconst data = [1,1,1,1,1,1,1,1,]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 6,\n\tfc: 3,\n\taddress:0,\n\tquantity:16,\n}\n\nreturn msg",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -5031,7 +5031,7 @@
         "finalize": "",
         "libs": [],
         "x": 510,
-        "y": 900,
+        "y": 880,
         "wires": [
             [
                 "ca862f075ce41d0c",
@@ -5063,7 +5063,7 @@
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
         "name": "表示",
-        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst data = [0,0,0,0,0,0,0,0,1,1,0,0,0,1,1,1]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 3,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
+        "func": "\nconst data =[17,10000000,100000000,15]\n\n// const data = [0,0,0,0,0,0,0,0,1,1,0,0,0,1,1,1]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 3,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -5145,14 +5145,14 @@
                 "vt": "str"
             }
         ],
-        "repeat": "1",
+        "repeat": "",
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1260,
+        "x": 1250,
         "y": 760,
         "wires": [
             [

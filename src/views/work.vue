@@ -121,6 +121,7 @@ const configId = route.params.configId as string;
 
 const opeModel = route.query.opeModel as string;
 const codeName = route.query.name as string;
+const isUniversalMode = route.query.universal === "true";
 const indicationRelay = ref<any[]>([]);
 
 
@@ -267,7 +268,7 @@ const handleCollectDCCurve = (data) => {
   启动前测试表示
   */
 const handleStartBeforeTestExpress = (data) => {
-  return // TODO: 暂时屏蔽启动前测试
+  console.log(startBeforeLoading.value)
   if (!startBeforeLoading.value) return
   const r = mergeResistance(data.data)
   const result = startBeforeTestExpress(r, deviceType.value)
@@ -358,13 +359,14 @@ const funThreePhaseACCollector = (data) => {
   phaseAPower.value = handleCalculate(data[12], 10000);
   phaseBPower.value = handleCalculate(data[13], 10000);
   phaseCPower.value = handleCalculate(data[14], 10000);
-  // 每次创建新数组赋值，确保引用变化，watch 才能检测
-  registerArrA.value = [phaseACurrent.value];
-  registerArrB.value = [phaseBCurrent.value];
-  registerArrC.value = [phaseCCurrent.value];
-  powerArrA.value = [phaseAPower.value];
-  powerArrB.value = [phaseBPower.value];
-  powerArrC.value = [phaseCPower.value];
+  if (isAction.value) {
+    registerArrA.value = [phaseACurrent.value];
+    registerArrB.value = [phaseBCurrent.value];
+    registerArrC.value = [phaseCCurrent.value];
+    powerArrA.value = [phaseAPower.value];
+    powerArrB.value = [phaseBPower.value];
+    powerArrC.value = [phaseCPower.value];
+  }
 };
 
 // 监听ws消息，自动更新对应缓存，另一个数组保留旧值
@@ -397,15 +399,9 @@ const coilArr = computed(() => lastCoilArr.value);
 
 
 // 三相功率（W = V × I）
-const powerA = computed(
-  () => +(phaseAVoltage.value * phaseACurrent.value).toFixed(1),
-);
-const powerB = computed(
-  () => +(phaseBVoltage.value * phaseBCurrent.value).toFixed(1),
-);
-const powerC = computed(
-  () => +(phaseCVoltage.value * phaseCCurrent.value).toFixed(1),
-);
+const powerA = computed(() => phaseAPower.value);
+const powerB = computed(() => phaseBPower.value);
+const powerC = computed(() => phaseCPower.value);
 const totalPower = computed(
   () => +(powerA.value + powerB.value + powerC.value).toFixed(1),
 );
@@ -448,8 +444,6 @@ watch(active, (newkey) => {
 
 watch(powerStatus?.isRunning,(newKey) => {
   if (newKey) {
-    startBeforeTestFinshed.value = true
-    availableDirections.value = { DC: true, FC: true }
     initTestResults()
   } else {
     startBeforeLoading.value = false
@@ -476,7 +470,6 @@ const handleStart = () => {
 
 /* 启动前测试 */
 const handleStartBeforeTest = () => {
-  return // TODO: 暂时屏蔽启动前测试
   // availableDirections.value = { DC: false, FC: false };
   // startBeforeTestTips.value = null
   // testResults.value = []
@@ -885,10 +878,6 @@ onMounted(async () => {
         await getList();
         break;
     }
-    if (route.query.universal === "true") {
-      combinationName.value = "通用模式";
-      configName.value = "通用模式";
-    }
     // await getList();
   }, "数据加载成功");
 });
@@ -917,9 +906,9 @@ onMounted(async () => {
   <div class="dashboard">
     <DeviceBar
       :device-name="device.name"
-      :combination-name="combinationName"
+      :combination-name="isUniversalMode ? '通用模式' : combinationName"
       :device-type="deviceType"
-      :config-name="configName"
+      :config-name="isUniversalMode ? '通用模式' : configName"
       :item-config="itemConfig"
       :contact-active="selectedContactType"
       v-model:active="active"
@@ -972,25 +961,39 @@ onMounted(async () => {
           {{ powerStatus?.isRunning ? '紧急停止' : '开启电源' }}
         </button>
       </div>
-      <div class="action-buttons" style="flex: 1" v-if="isShowButtons &&  powerStatus?.isRunning">
-        <span class="action-light">
-          <span v-if="butItemStatus === 'DC'" class="light light-green"></span>
-          <span v-if="butItemStatus === 'FC'" class="light light-yellow"></span>
-        </span>
+      <div class="action-buttons" style="flex: 1" v-if="isShowButtons && powerStatus?.isRunning">
+        <!-- 启动前测试按钮 -->
         <button
-          class="action-btn"
-          :disabled="butItemIsDisable"
-          :class="butItemStatus === 'DC' ? 'active' : ''"
-          @click="handleOpe('DC')">
-          定操
+          v-if="!startBeforeTestFinshed && !startBeforeLoading"
+          class="action-btn test-btn"
+          @click="handleStartBeforeTest()">
+          启动前测试
         </button>
-        <button
-          class="action-btn"
-          :disabled="butItemIsDisable"
-          :class="butItemStatus === 'FC' ? 'active' : ''"
-          @click="handleOpe('FC')">
-          反操
-        </button>
+        <span v-if="startBeforeLoading" class="action-tips">启动前测试中...</span>
+
+        <!-- 定操/反操按钮 -->
+        <template v-if="startBeforeTestFinshed">
+          <span class="action-light">
+            <span v-if="butItemStatus === 'DC'" class="light light-green"></span>
+            <span v-if="butItemStatus === 'FC'" class="light light-yellow"></span>
+          </span>
+          <button
+            v-if="availableDirections.DC"
+            class="action-btn"
+            :disabled="butItemIsDisable"
+            :class="butItemStatus === 'DC' ? 'active' : ''"
+            @click="handleOpe('DC')">
+            定操
+          </button>
+          <button
+            v-if="availableDirections.FC"
+            class="action-btn"
+            :disabled="butItemIsDisable"
+            :class="butItemStatus === 'FC' ? 'active' : ''"
+            @click="handleOpe('FC')">
+            反操
+          </button>
+        </template>
         <span class="action-tips" v-if="butItemIsDisable">
           {{ nextDoTime }}s后可以再次操作</span
         >
