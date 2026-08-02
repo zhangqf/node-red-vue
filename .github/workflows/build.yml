@@ -40,6 +40,7 @@ jobs:
         run: pnpm run ${{ matrix.build-script }}
 
       - name: Deploy to JD Cloud
+        shell: bash
         env:
           SSH_KEY: ${{ secrets.JD_CLOUD_SSH_KEY }}
           SSH_HOST: ${{ secrets.JD_CLOUD_HOST }}
