@@ -37,7 +37,7 @@
     "npmRebuild": true,
     "publish": {
       "provider": "generic",
-      "url": "http://111.228.6.91:8443/updates/"
+      "url": "http://111.228.6.91:8443/"
     },
     "directories": {
       "output": "release",
