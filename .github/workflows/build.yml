@@ -13,21 +13,12 @@ jobs:
   build:
     strategy:
       matrix:
-#        os: [windows-latest, macos-latest, ubuntu-latest]
-         os: [windows-latest]
+        os: [windows-latest]
         include:
           - os: windows-latest
             build-script: electron:build:win
             artifact-name: win-package
             artifact-pattern: release/*.exe
-#          - os: macos-latest
-#            build-script: electron:build:mac
-#            artifact-name: mac-package
-#            artifact-pattern: release/*.dmg
-#          - os: ubuntu-latest
-#            build-script: electron:build:linux
-#            artifact-name: linux-package
-#            artifact-pattern: release/*.AppImage
 
     runs-on: ${{ matrix.os }}
 
