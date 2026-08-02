@@ -998,7 +998,7 @@ onMounted(async () => {
         </span>
         <button
           v-if="availableDirections.DC"
-          class="action-btn"
+          class="action-btn dc-btn"
           :disabled="butItemIsDisable"
           :class="butItemStatus === 'DC' ? 'active' : ''"
           @click="handleOpe('DC')">
@@ -1006,7 +1006,7 @@ onMounted(async () => {
         </button>
         <button
           v-if="availableDirections.FC"
-          class="action-btn"
+          class="action-btn fc-btn"
           :disabled="butItemIsDisable"
           :class="butItemStatus === 'FC' ? 'active' : ''"
           @click="handleOpe('FC')">
@@ -1143,6 +1143,27 @@ onMounted(async () => {
   border-color: #5a92d0;
   color: #fff;
 }
+.dc-btn {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+}
+.dc-btn.active {
+  background: rgba(52, 211, 153, 0.35);
+  border-color: #34d399;
+  color: #fff;
+}
+.fc-btn {
+  background: rgba(255, 197, 32, 0.15);
+  border-color: #ffc520;
+  color: #ffc520;
+}
+.fc-btn.active {
+  background: rgba(255, 197, 32, 0.35);
+  border-color: #ffc520;
+  color: #fff;
+}
+
 .action-btn:disabled {
   background: rgba(149, 178, 211, 0.25);
   border-color: #759dcc;

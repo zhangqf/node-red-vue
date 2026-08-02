@@ -13,61 +13,10 @@ const emit = defineEmits<{ start: [type: string] }>();
 
 const MAX_POINTS = 300;
 
-const COLORS_SINGLE = {
-  parabolic: "#f04b4b",
-  flat: "#4dabf7",
-  square: "#51cf66",
-};
-
-const COLORS_A = {
-  parabolic: "#f04b4b",
-  flat: "#e88b8b",
-  square: "#c0392b",
-};
-
-const COLORS_B = {
-  parabolic: "#4dabf7",
-  flat: "#74c0fc",
-  square: "#1c7ed6",
-};
-
-const COLORS_C = {
-  parabolic: "#51cf66",
-  flat: "#8ce99a",
-  square: "#2f9e44",
-};
-
-type PhaseColors = typeof COLORS_SINGLE;
-
-// 稳定的 legend 配置引用，避免每次新建对象导致 ECharts 重置选中状态
-const LEGEND_SINGLE = {
-  data: ["启动电流", "工作电流", "摩擦电流"],
-  bottom: 0,
-  left: 55,
-  textStyle: { color: "#8fb4d8", fontSize: 11 },
-  icon: "roundRect",
-} as const;
-
-const LEGEND_THREE = {
-  data: [
-    "A-启动电流",
-    "A-工作电流",
-    "A-摩擦电流",
-    "B-启动电流",
-    "B-工作电流",
-    "B-摩擦电流",
-    "C-启动电流",
-    "C-工作电流",
-    "C-摩擦电流",
-  ],
-  bottom: 0,
-  left: 55,
-  type: "scroll",
-  textStyle: { color: "#8fb4d8", fontSize: 10 },
-  icon: "roundRect",
-  itemWidth: 14,
-  itemHeight: 8,
-} as const;
+const COLOR_SINGLE = "#4dabf7";
+const COLOR_A = "#f04b4b";
+const COLOR_B = "#4dabf7";
+const COLOR_C = "#51cf66";
 
 function gradient(hex: string, alpha: number) {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -76,113 +25,24 @@ function gradient(hex: string, alpha: number) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-/* ---- 共享：电流曲线分类 ---- */
-function classifyData(data: number[]): string[] {
-  const HALF_WIN = 12;
-  const rawLabels = data.map((_, i) => {
-    const ws = Math.max(0, i - HALF_WIN);
-    const we = Math.min(data.length - 1, i + HALF_WIN);
-    const win = data.slice(ws, we + 1);
-    if (win.length < 6) return "flat";
-
-    const wRange = Math.max(...win) - Math.min(...win);
-
-    let largeJumps = 0;
-    let signChanges = 0;
-    let lastSign = 0;
-    for (let j = 1; j < win.length; j++) {
-      const d = win[j] - win[j - 1];
-      if (d > 1.0) {
-        largeJumps++;
-        if (lastSign < 0) signChanges++;
-        lastSign = 1;
-      } else if (d < -1.0) {
-        largeJumps++;
-        if (lastSign > 0) signChanges++;
-        lastSign = -1;
-      }
-    }
-    if (largeJumps >= 2 && signChanges >= 1 && signChanges / largeJumps >= 0.4)
-      return "square";
-    if (wRange < 0.2) return "flat";
-
-    const diffs: number[] = [];
-    for (let j = 1; j < win.length; j++) diffs.push(win[j] - win[j - 1]);
-    const dd: number[] = [];
-    for (let j = 1; j < diffs.length; j++) dd.push(diffs[j] - diffs[j - 1]);
-    const pos = dd.filter((d) => d > 0).length;
-    const neg = dd.filter((d) => d < 0).length;
-    if (Math.max(pos, neg) >= dd.length * 0.45 && wRange > 1)
-      return "parabolic";
-    return "flat";
-  });
-
-  // 二次修正：低波动的 parabolic → flat
-  for (let i = 0; i < rawLabels.length; i++) {
-    if (rawLabels[i] === "parabolic") {
-      const ls = Math.max(0, i - 2);
-      const le = Math.min(data.length - 1, i + 2);
-      let maxLocalDiff = 0;
-      for (let j = ls; j < le; j++)
-        maxLocalDiff = Math.max(maxLocalDiff, Math.abs(data[j + 1] - data[j]));
-      if (maxLocalDiff < 0.2) rawLabels[i] = "flat";
-    }
-  }
-
-  // 投票平滑
-  return rawLabels.map((_, i) => {
-    const votes: Record<string, number> = { parabolic: 0, flat: 0, square: 0 };
-    for (let j = Math.max(0, i - 2); j <= Math.min(data.length - 1, i + 2); j++)
-      votes[rawLabels[j]]++;
-    return Object.entries(votes).sort((a, b) => b[1] - a[1])[0][0];
-  });
-}
-
-/* ---- 共享：按分类分段 ---- */
-function buildSegments(
-  data: number[],
-  labels: string[],
-  match: (l: string) => boolean,
-) {
-  const result = new Array(data.length).fill(null);
-  let i = 0;
-  while (i < data.length) {
-    if (match(labels[i])) {
-      if (i > 0) result[i - 1] = data[i - 1];
-      while (i < data.length && match(labels[i])) {
-        result[i] = data[i];
-        i++;
-      }
-      if (i < data.length) result[i] = data[i];
-    } else {
-      i++;
-    }
-  }
-  return result;
-}
-
-/* ---- 共享：构建一个系列的 option ---- */
-function makeSeries(
+function makeLineSeries(
   name: string,
   data: number[],
-  labels: string[],
-  key: keyof PhaseColors,
-  colors: PhaseColors,
+  color: string,
   lineWidth: number,
 ) {
   return {
     name,
     type: "line",
-    data: buildSegments(data, labels, (l) => l === key),
+    data,
     smooth: false,
     symbol: "none",
-    color: colors[key],
-    itemStyle: { color: colors[key] },
+    itemStyle: { color },
     lineStyle: {
-      color: colors[key],
+      color,
       width: lineWidth,
       shadowBlur: lineWidth >= 2 ? 6 : 4,
-      shadowColor: gradient(colors[key], 0.35),
+      shadowColor: gradient(color, 0.35),
     },
     areaStyle: {
       color: {
@@ -192,8 +52,8 @@ function makeSeries(
         x2: 0,
         y2: 1,
         colorStops: [
-          { offset: 0, color: gradient(colors[key], 0.18) },
-          { offset: 1, color: gradient(colors[key], 0.01) },
+          { offset: 0, color: gradient(color, 0.18) },
+          { offset: 1, color: gradient(color, 0.01) },
         ],
       },
     },
@@ -201,7 +61,6 @@ function makeSeries(
   };
 }
 
-/* ---- 共享：构建坐标轴、grid 等公共 option ---- */
 function baseOption(
   xLabels: string[],
   hasData: boolean,
@@ -273,7 +132,6 @@ function baseOption(
 function buildChartOpt(
   data: number[],
   xLabels: string[],
-  colors: PhaseColors,
   chartWidth: number,
   chartHeight: number,
 ) {
@@ -291,46 +149,24 @@ function buildChartOpt(
 
   const option: any = {
     ...baseOption(xLabels, hasData, minVal, maxVal, padding, 20),
-    legend: hasData ? LEGEND_SINGLE : undefined,
     series: [],
     graphic: [],
   };
 
   if (hasData) {
-    const labels = classifyData(data);
-    option.series = [
-      makeSeries("启动电流", data, labels, "parabolic", colors, 2),
-      makeSeries("工作电流", data, labels, "flat", colors, 2),
-      makeSeries("摩擦电流", data, labels, "square", colors, 2),
-    ];
+    option.series = [makeLineSeries("电流", data, COLOR_SINGLE, 2)];
 
     if (data.length > 1 && chartWidth > 0) {
-      addMarkers(
-        option,
-        data,
-        labels,
-        minVal,
-        maxVal,
-        padding,
-        chartWidth,
-        chartHeight,
-        55,
-        20,
-        50,
-        colors,
-        11,
-      );
+      addMarkers(option, data, minVal, maxVal, padding, chartWidth, chartHeight, 55, 20, 50, COLOR_SINGLE, 11);
     }
   }
 
   return { option, peak, valley };
 }
 
-/* ---- 共享：在 graphic 中添加 max/min 标记 ---- */
 function addMarkers(
   option: any,
   data: number[],
-  _labels: string[],
   yMin: number,
   yMax: number,
   padding: number,
@@ -339,7 +175,7 @@ function addMarkers(
   gridLeft: number,
   gridTop: number,
   gridBottom: number,
-  colors: PhaseColors,
+  color: string,
   fontSize: number,
 ) {
   const G = { left: gridLeft, right: 20, top: gridTop, bottom: gridBottom };
@@ -356,7 +192,7 @@ function addMarkers(
   const maxIdx = data.indexOf(maxV);
   const minIdx = data.indexOf(minV);
 
-  const mk = (idx: number, val: number, label: string, color: string) => {
+  const mk = (idx: number, val: number, label: string, mkColor: string) => {
     option.graphic.push(
       {
         type: "text",
@@ -376,14 +212,14 @@ function addMarkers(
       {
         type: "circle",
         shape: { cx: toX(idx), cy: toY(val), r: 4 },
-        style: { fill: color, stroke: "#fff", lineWidth: 2 },
+        style: { fill: mkColor, stroke: "#fff", lineWidth: 2 },
         z: 100,
       },
     );
   };
 
-  mk(maxIdx, maxV, "最大值", colors.parabolic);
-  mk(minIdx, minV, "最小值", colors.flat);
+  mk(maxIdx, maxV, "最大值", color);
+  mk(minIdx, minV, "最小值", color);
 }
 
 /* ---- 三相合一图表 ---- */
@@ -398,24 +234,10 @@ function buildThreePhaseChartOpt(
   const allData = [...dataA, ...dataB, ...dataC];
   const hasData = allData.length > 0;
 
-  let peakA = 0,
-    valleyA = 0,
-    peakB = 0,
-    valleyB = 0,
-    peakC = 0,
-    valleyC = 0;
-  if (dataA.length > 0) {
-    peakA = Math.max(...dataA);
-    valleyA = Math.min(...dataA);
-  }
-  if (dataB.length > 0) {
-    peakB = Math.max(...dataB);
-    valleyB = Math.min(...dataB);
-  }
-  if (dataC.length > 0) {
-    peakC = Math.max(...dataC);
-    valleyC = Math.min(...dataC);
-  }
+  let peakA = 0, valleyA = 0, peakB = 0, valleyB = 0, peakC = 0, valleyC = 0;
+  if (dataA.length > 0) { peakA = Math.max(...dataA); valleyA = Math.min(...dataA); }
+  if (dataB.length > 0) { peakB = Math.max(...dataB); valleyB = Math.min(...dataB); }
+  if (dataC.length > 0) { peakC = Math.max(...dataC); valleyC = Math.min(...dataC); }
 
   const maxVal = hasData ? Math.max(...allData, 0.01) : 10;
   const minVal = hasData ? Math.min(...allData, 0) : 0;
@@ -423,26 +245,15 @@ function buildThreePhaseChartOpt(
 
   const option: any = {
     ...baseOption(xLabels, hasData, minVal, maxVal, padding, 12),
-    legend: hasData ? LEGEND_THREE : undefined,
     series: [],
     graphic: [],
   };
 
   if (hasData) {
-    const labelsA = classifyData(dataA);
-    const labelsB = classifyData(dataB);
-    const labelsC = classifyData(dataC);
-
     option.series = [
-      makeSeries("A-启动电流", dataA, labelsA, "parabolic", COLORS_A, 1.5),
-      makeSeries("A-工作电流", dataA, labelsA, "flat", COLORS_A, 1.5),
-      makeSeries("A-摩擦电流", dataA, labelsA, "square", COLORS_A, 1.5),
-      makeSeries("B-启动电流", dataB, labelsB, "parabolic", COLORS_B, 1.5),
-      makeSeries("B-工作电流", dataB, labelsB, "flat", COLORS_B, 1.5),
-      makeSeries("B-摩擦电流", dataB, labelsB, "square", COLORS_B, 1.5),
-      makeSeries("C-启动电流", dataC, labelsC, "parabolic", COLORS_C, 1.5),
-      makeSeries("C-工作电流", dataC, labelsC, "flat", COLORS_C, 1.5),
-      makeSeries("C-摩擦电流", dataC, labelsC, "square", COLORS_C, 1.5),
+      makeLineSeries("A相电流", dataA, COLOR_A, 1.5),
+      makeLineSeries("B相电流", dataB, COLOR_B, 1.5),
+      makeLineSeries("C相电流", dataC, COLOR_C, 1.5),
     ];
 
     if (chartWidth > 0) {
@@ -451,17 +262,10 @@ function buildThreePhaseChartOpt(
       const gh = chartHeight - G.top - G.bottom;
       const yRange = maxVal + padding - Math.max(0, minVal - padding) || 1;
       const yBase = Math.max(0, minVal - padding);
-      const toX = (i: number, len: number) =>
-        G.left + (len > 1 ? i / (len - 1) : 0) * gw;
+      const toX = (i: number, len: number) => G.left + (len > 1 ? i / (len - 1) : 0) * gw;
       const toY = (v: number) => G.top + (1 - (v - yBase) / yRange) * gh;
 
-      const mk = (
-        idx: number,
-        val: number,
-        label: string,
-        color: string,
-        len: number,
-      ) => {
+      const mk = (idx: number, val: number, label: string, mkColor: string, len: number) => {
         if (len < 2) return;
         option.graphic.push(
           {
@@ -482,36 +286,18 @@ function buildThreePhaseChartOpt(
           {
             type: "circle",
             shape: { cx: toX(idx, len), cy: toY(val), r: 3 },
-            style: { fill: color, stroke: "#fff", lineWidth: 1.5 },
+            style: { fill: mkColor, stroke: "#fff", lineWidth: 1.5 },
             z: 100,
           },
         );
       };
 
-      mk(
-        dataA.indexOf(peakA),
-        peakA,
-        "A max",
-        COLORS_A.parabolic,
-        dataA.length,
-      );
-      mk(dataA.indexOf(valleyA), valleyA, "A min", COLORS_A.flat, dataA.length);
-      mk(
-        dataB.indexOf(peakB),
-        peakB,
-        "B max",
-        COLORS_B.parabolic,
-        dataB.length,
-      );
-      mk(dataB.indexOf(valleyB), valleyB, "B min", COLORS_B.flat, dataB.length);
-      mk(
-        dataC.indexOf(peakC),
-        peakC,
-        "C max",
-        COLORS_C.parabolic,
-        dataC.length,
-      );
-      mk(dataC.indexOf(valleyC), valleyC, "C min", COLORS_C.flat, dataC.length);
+      mk(dataA.indexOf(peakA), peakA, "A max", COLOR_A, dataA.length);
+      mk(dataA.indexOf(valleyA), valleyA, "A min", COLOR_A, dataA.length);
+      mk(dataB.indexOf(peakB), peakB, "B max", COLOR_B, dataB.length);
+      mk(dataB.indexOf(valleyB), valleyB, "B min", COLOR_B, dataB.length);
+      mk(dataC.indexOf(peakC), peakC, "C max", COLOR_C, dataC.length);
+      mk(dataC.indexOf(valleyC), valleyC, "C min", COLOR_C, dataC.length);
     }
   }
 
@@ -557,7 +343,6 @@ watch(
       const { option, peak, valley } = buildChartOpt(
         history.value,
         xLabels.value,
-        COLORS_SINGLE,
         sizeSingle.value.width,
         sizeSingle.value.height,
       );
@@ -648,10 +433,7 @@ function useChartSize(
     watch(
       container,
       (el) => {
-        if (obs) {
-          obs.disconnect();
-          obs = null;
-        }
+        if (obs) { obs.disconnect(); obs = null; }
         if (!el) return;
         const fn = () => {
           sizeRef.value = { width: el.clientWidth, height: el.clientHeight };
@@ -669,7 +451,6 @@ function useChartSize(
 useChartSize(containerSingle, sizeSingle);
 useChartSize(containerThree, sizeThree);
 
-/* ---- 操作 ---- */
 function resetSingle() {
   valleySingle.value = 0;
   peakSingle.value = 0;
@@ -698,24 +479,13 @@ const resetData = () => {
 };
 
 defineExpose({
-  peakA,
-  valleyA,
-  peakB,
-  valleyB,
-  peakC,
-  valleyC,
-  peakSingle,
-  valleySingle,
+  peakA, valleyA, peakB, valleyB, peakC, valleyC,
+  peakSingle, valleySingle,
   isThreePhase,
-  resetSingle,
-  resetThree,
-  resetData,
-  currentHistory: history,
-  xLabels: xLabels,
-  currentHistoryA: historyA,
-  currentHistoryB: historyB,
-  currentHistoryC: historyC,
-  xLabels3: xLabels3,
+  resetSingle, resetThree, resetData,
+  currentHistory: history, xLabels,
+  currentHistoryA: historyA, currentHistoryB: historyB, currentHistoryC: historyC,
+  xLabels3,
 });
 </script>
 
@@ -725,17 +495,14 @@ defineExpose({
       <span class="panel-title">{{ title || "电流曲线" }}</span>
     </div>
 
-    <!-- 单相 -->
     <div v-if="!isThreePhase" ref="containerSingle" class="chart-container">
       <v-chart :option="chartOptSingle" autoresize />
     </div>
 
-    <!-- 三相合一 -->
     <div v-else ref="containerThree" class="chart-container">
       <v-chart :option="chartOptThree" autoresize />
     </div>
 
-    <!-- 底部参数 -->
     <div class="params-row" v-if="!isThreePhase">
       <div class="param">
         <span class="param-label">电流峰值</span>
@@ -772,10 +539,6 @@ defineExpose({
         <span class="param-label">C谷值</span>
         <span class="param-value c">{{ valleyC }}</span>
       </div>
-    </div>
-
-    <div class="power-btn-section">
-      <!-- <button class="power-btn" @click="handleStart">同步继电器状态</button> -->
     </div>
   </div>
 </template>
@@ -838,36 +601,7 @@ defineExpose({
   color: #bccfde;
 }
 
-.param-value.a {
-  color: #f04b4b;
-}
-.param-value.b {
-  color: #4dabf7;
-}
-.param-value.c {
-  color: #51cf66;
-}
-
-.power-btn-section {
-  padding: 8px 16px;
-  border-top: 1px solid #1a2d44;
-}
-
-.power-btn {
-  width: 100%;
-  background: rgba(90, 146, 208, 0.15);
-  border: 1px solid #2a4a68;
-  color: #8fb4d8;
-  font-size: 14px;
-  padding: 6px 0;
-  border-radius: 3px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.power-btn:hover {
-  background: rgba(90, 146, 208, 0.25);
-  border-color: #5a92d0;
-  color: #fff;
-}
+.param-value.a { color: #f04b4b; }
+.param-value.b { color: #4dabf7; }
+.param-value.c { color: #51cf66; }
 </style>

@@ -229,7 +229,7 @@ function toggleCircuitLoop(idx: number) {
                   >
                   电路环路
                 </button>
-                <button class="circuit-view-btn" @click="handleView(test.img)">
+                <button v-if="test.img" class="circuit-view-btn" @click="handleView(test.img)">
                   <svg
                     width="14"
                     height="14"
