@@ -75,7 +75,7 @@ const handleButtonClick = (id: string) => {
       </div>
       <!-- <div class="nav-right">
         <button class="emergency-btn" @click="emit('menu-click', 'emergency')">
-          开启电源/紧急停止
+          开启动作电源/紧急停止
         </button>
       </div> -->
     </div>

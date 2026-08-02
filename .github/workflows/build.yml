@@ -16,15 +16,15 @@ jobs:
         os: [windows-latest, macos-latest, ubuntu-latest]
         include:
           - os: windows-latest
-            build-script: electron:build:ci:win
+            build-script: electron:build:win
             artifact-name: win-package
             artifact-pattern: release/*.exe
           - os: macos-latest
-            build-script: electron:build:ci:mac
+            build-script: electron:build:mac
             artifact-name: mac-package
             artifact-pattern: release/*.dmg
           - os: ubuntu-latest
-            build-script: electron:build:ci:linux
+            build-script: electron:build:linux
             artifact-name: linux-package
             artifact-pattern: release/*.AppImage
 
@@ -45,10 +45,20 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Build & Publish Electron
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build Electron
         run: pnpm run ${{ matrix.build-script }}
+
+      - name: Deploy to JD Cloud
+        env:
+          SSH_KEY: ${{ secrets.JD_CLOUD_SSH_KEY }}
+          SSH_HOST: ${{ secrets.JD_CLOUD_HOST }}
+          SSH_USER: ${{ secrets.JD_CLOUD_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key $SSH_USER@$SSH_HOST "mkdir -p /var/www/updates"
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key release/* $SSH_USER@$SSH_HOST:/var/www/updates/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7

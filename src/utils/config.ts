@@ -65,8 +65,8 @@ export const StartPowerConfig = {
 export const StartBeforeTestConfig = {
   ZD6: [19, 20, 21, 22, 23],
   ZD9: [19, 20, 21, 22, 23],
-  ZYJ7: [15, 16, 17, 18, 19, 23, 24, 25, 26, 27],
-  ZDJ9: [15, 16, 17, 18, 19, 23, 24, 25, 26, 27],
+  ZYJ7: [13, 14, 15, 16, 17, 18, 19, 20, 23, 24, 25, 26, 27],
+  ZDJ9: [13, 14, 15, 16, 17, 18, 19, 20, 23, 24, 25, 26, 27],
 };
 
 export const contact13Closed = ref<ActionRelays>({

@@ -1,0 +1,76 @@
+name: Build Electron App
+
+on:
+  push:
+    branches: [main, release]
+    tags: ["v*"]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: checkout@v1
+
+      - name: Setup Node.js
+        uses: setup-node@v1
+        with:
+          node-version: 22
+
+      - name: Build
+        run: |
+          corepack enable
+          pnpm install --no-frozen-lockfile
+          pnpm electron:build:win
+
+      - name: Upload artifact
+        uses: upload-artifact@v1
+        with:
+          name: win-package
+          path: release/*.exe
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: checkout@v1
+
+      - name: Setup Node.js
+        uses: setup-node@v1
+        with:
+          node-version: 22
+
+      - name: Build
+        run: |
+          corepack enable
+          pnpm install --no-frozen-lockfile
+          pnpm electron:build:mac
+
+      - name: Upload artifact
+        uses: upload-artifact@v1
+        with:
+          name: mac-package
+          path: release/*.dmg
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: checkout@v1
+
+      - name: Setup Node.js
+        uses: setup-node@v1
+        with:
+          node-version: 22
+
+      - name: Build
+        run: |
+          corepack enable
+          pnpm install --no-frozen-lockfile
+          pnpm electron:build:linux
+
+      - name: Upload artifact
+        uses: upload-artifact@v1
+        with:
+          name: linux-package
+          path: release/*.AppImage

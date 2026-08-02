@@ -11,7 +11,11 @@
       "Bash(xxd)",
       "Bash(sed -i '' '284s/^\t\t  /\t  /' /Users/zhangfeng/project/node-red-vue/switch-machine/src/views/work.vue)",
       "Bash(sed -i '' '285s/^\t\t    /\t    /' /Users/zhangfeng/project/node-red-vue/switch-machine/src/views/work.vue)",
-      "Bash(sed -i '' '286s/^\t    /\t    /' /Users/zhangfeng/project/node-red-vue/switch-machine/src/views/work.vue)"
+      "Bash(sed -i '' '286s/^\t    /\t    /' /Users/zhangfeng/project/node-red-vue/switch-machine/src/views/work.vue)",
+      "Bash(gh release *)",
+      "Bash(git reset *)",
+      "Bash(git commit *)",
+      "Bash(git checkout *)"
     ]
   }
 }
