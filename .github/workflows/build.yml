@@ -19,14 +19,14 @@ jobs:
             build-script: electron:build:win
             artifact-name: win-package
             artifact-pattern: release/*.exe
-          - os: macos-latest
-            build-script: electron:build:mac
-            artifact-name: mac-package
-            artifact-pattern: release/*.dmg
-          - os: ubuntu-latest
-            build-script: electron:build:linux
-            artifact-name: linux-package
-            artifact-pattern: release/*.AppImage
+#          - os: macos-latest
+#            build-script: electron:build:mac
+#            artifact-name: mac-package
+#            artifact-pattern: release/*.dmg
+#          - os: ubuntu-latest
+#            build-script: electron:build:linux
+#            artifact-name: linux-package
+#            artifact-pattern: release/*.AppImage
 
     runs-on: ${{ matrix.os }}
 
@@ -49,6 +49,7 @@ jobs:
         run: pnpm run ${{ matrix.build-script }}
 
       - name: Deploy to JD Cloud
+        shell: bash
         env:
           SSH_KEY: ${{ secrets.JD_CLOUD_SSH_KEY }}
           SSH_HOST: ${{ secrets.JD_CLOUD_HOST }}
@@ -58,7 +59,7 @@ jobs:
           echo "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key $SSH_USER@$SSH_HOST "mkdir -p /var/www/updates"
-          scp -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key release/* $SSH_USER@$SSH_HOST:/var/www/updates/
+          find release -maxdepth 1 -type f -exec scp -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key {} $SSH_USER@$SSH_HOST:/var/www/updates/ \;
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
