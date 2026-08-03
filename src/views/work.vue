@@ -253,8 +253,8 @@ const handleCollectDCCurve = (data) => {
   tempDate.unshift(rawReg);
 
   // 限制最大20条，超出截断
-  if (tempDate.length > 20) {
-    tempDate = tempDate.slice(0, 20);
+  if (tempDate.length > 5) {
+    tempDate = tempDate.slice(0, 5);
   }
   if (isAction.value) {
     tempDate.forEach((element) => {
@@ -367,9 +367,9 @@ const funThreePhaseACCollector = (data) => {
     registerArrA.value = [phaseACurrent.value];
     registerArrB.value = [phaseBCurrent.value];
     registerArrC.value = [phaseCCurrent.value];
-    powerArrA.value = [phaseAPower.value];
-    powerArrB.value = [phaseBPower.value];
-    powerArrC.value = [phaseCPower.value];
+    powerArrA.value = [+(phaseAVoltage.value * phaseACurrent.value).toFixed(1)];
+    powerArrB.value = [+(phaseBVoltage.value * phaseBCurrent.value).toFixed(1)];
+    powerArrC.value = [+(phaseCVoltage.value * phaseCCurrent.value).toFixed(1)];
   }
 };
 
@@ -401,9 +401,15 @@ watch(
 const coilArr = computed(() => lastCoilArr.value);
 
 // 三相功率（W = V × I）
-const powerA = computed(() => phaseAPower.value);
-const powerB = computed(() => phaseBPower.value);
-const powerC = computed(() => phaseCPower.value);
+const powerA = computed(
+  () => +(phaseAVoltage.value * phaseACurrent.value).toFixed(1),
+);
+const powerB = computed(
+  () => +(phaseBVoltage.value * phaseBCurrent.value).toFixed(1),
+);
+const powerC = computed(
+  () => +(phaseCVoltage.value * phaseCCurrent.value).toFixed(1),
+);
 const totalPower = computed(
   () => +(powerA.value + powerB.value + powerC.value).toFixed(1),
 );
@@ -992,10 +998,10 @@ onMounted(async () => {
         v-if="
           isShowButtons && startBeforeTestFinshed && powerStatus?.isRunning
         ">
-        <span class="action-light">
+        <!-- <span class="action-light">
           <span v-if="butItemStatus === 'DC'" class="light light-green"></span>
           <span v-if="butItemStatus === 'FC'" class="light light-yellow"></span>
-        </span>
+        </span> -->
         <button
           v-if="availableDirections.DC"
           class="action-btn dc-btn"
@@ -1017,7 +1023,7 @@ onMounted(async () => {
         >
       </div>
     </div>
-    <div class="terminal-bar">
+    <!-- <div class="terminal-bar">
       <span class="terminal-bar-title">期望端子状态</span>
 
       <div
@@ -1044,7 +1050,7 @@ onMounted(async () => {
         }}</span>
         <span class="terminal-bar-dot" :class="{ ok: t, ng: !t }"></span>
       </div>
-    </div>
+    </div> -->
     <div class="status-bar">
       <span class="status-text">{{ ws.status }}</span>
       <span
