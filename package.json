@@ -36,8 +36,7 @@
     "productName": "Switch Machine",
     "npmRebuild": true,
     "publish": {
-      "provider": "generic",
-      "url": "http://111.228.6.91:8443/"
+      "provider": "github"
     },
     "directories": {
       "output": "release",

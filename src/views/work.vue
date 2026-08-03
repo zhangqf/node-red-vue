@@ -436,6 +436,11 @@ async function getConfig(itemType: string) {
     const { indicationRelays, relays } = await response.json();
     terminals.value = relays;
     indicationRelay.value = indicationRelays;
+
+    // WS 连上后先发端子默认状态（不带电源），电源等用户点击"开启动作电源"时再发
+    const initResult = terminals.value.map((item) => item.default_status);
+    wsSendData.value = gen32BitArray(initResult, []);
+    sendCmd(wsSendData.value, "relays", deviceType.value);
   } catch (e) {
     console.error("加载配置失败:", e);
     terminals.value = [];
@@ -1023,7 +1028,7 @@ onMounted(async () => {
         >
       </div>
     </div>
-    <!-- <div class="terminal-bar">
+    <div class="terminal-bar">
       <span class="terminal-bar-title">期望端子状态</span>
 
       <div
@@ -1050,7 +1055,7 @@ onMounted(async () => {
         }}</span>
         <span class="terminal-bar-dot" :class="{ ok: t, ng: !t }"></span>
       </div>
-    </div> -->
+    </div>
     <div class="status-bar">
       <span class="status-text">{{ ws.status }}</span>
       <span
