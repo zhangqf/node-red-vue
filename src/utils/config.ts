@@ -257,15 +257,15 @@ export const ModelConfig = {
 // 图片生成函数
 function getImgZD6(model: string, type: "DW" | "FW" | "DWC" | "FWC") {
   const prefix = model.includes("A") ? "ZD6E-A" : "ZD6J-B";
-  return `/img/${prefix}-${type}.png`;
+  return `./img/${prefix}-${type}.png`;
 }
 function getImgZDJ9(type: "DW" | "FW") {
   const prefix = "ZDJ9";
-  return `/img/${prefix}-${type}.png`;
+  return `./img/${prefix}-${type}.png`;
 }
 function getImgZYJ7(type: "DW" | "FW" | "FCB" | "FCC" | "DCB" | "DCC") {
   const prefix = "ZYJ7";
-  return `/img/${prefix}-${type}.png`;
+  return `./img/${prefix}-${type}.png`;
 }
 
 const generaZDJ9config = () => {
