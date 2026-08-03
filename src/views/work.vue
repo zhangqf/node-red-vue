@@ -197,12 +197,12 @@ const handleWsRelayData = (data: number[]) => {
               relayTips.push({ [v]: resCollect[v] });
           }
         } else {
-          relayTips.push({ [v]: resCollect[v] });
+          relayTips.push({ [v]: resCollect?.[v] || "" });
         }
       });
     }
     const res = findRelayIndex(targetArr, realData, sampleData);
-    const img = resCollect.img[field] || "";
+    const img = resCollect?.img?.[field] || "";
     return {
       ...item,
       relayTips,
