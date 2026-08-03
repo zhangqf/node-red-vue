@@ -178,6 +178,7 @@ if (!gotTheLock) {
 
       autoUpdater.on("checking-for-update", () => {
         console.log("[autoUpdater] 正在检查更新...");
+        mainWindow?.webContents.send("update-status", "checking");
       });
       autoUpdater.on("update-available", (info) => {
         console.log(`[autoUpdater] 发现新版本: ${info.version}`);
@@ -210,11 +211,17 @@ if (!gotTheLock) {
         mainWindow?.webContents.send("update-error", err.message);
       });
 
-      try {
-        autoUpdater.checkForUpdates();
-      } catch (e) {
-        console.warn("Update check skipped (dev mode):", e.message);
-      }
+      // 等 3 秒确保渲染进程加载完毕再检查更新
+      setTimeout(() => {
+        try {
+          autoUpdater.checkForUpdates();
+        } catch (e) {
+          console.warn("Update check skipped (dev mode):", e.message);
+        }
+      }, 3000);
+
+      // IPC：获取当前版本号
+      ipcMain.handle("get-app-version", () => app.getVersion());
 
       // IPC：renderer 请求立即安装更新
       ipcMain.handle("install-update", () => {

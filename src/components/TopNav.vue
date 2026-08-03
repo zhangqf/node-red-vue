@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from "vue";
 
 defineProps<{
   activeMenu?: string;
+  appVersion?: string;
 }>();
 
 const emit = defineEmits<{
@@ -100,9 +101,7 @@ onUnmounted(() => {
       </div>
     </div>
     <div class="nav-right">
-      <!-- <button class="emergency-btn" @click="emit('menu-click', 'emergency')">
-        紧急停止
-      </button> -->
+      <span v-if="appVersion" class="version-badge">v{{ appVersion }}</span>
     </div>
   </div>
 </template>
@@ -212,6 +211,16 @@ onUnmounted(() => {
 .nav-right {
   display: flex;
   align-items: center;
+}
+
+.version-badge {
+  padding: 2px 8px;
+  background: rgba(90, 146, 208, 0.1);
+  border: 1px solid rgba(90, 146, 208, 0.2);
+  border-radius: 3px;
+  font-size: 11px;
+  color: #5a7288;
+  font-family: "SF Mono", monospace;
 }
 
 .emergency-btn {

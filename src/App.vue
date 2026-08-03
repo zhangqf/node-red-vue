@@ -14,17 +14,25 @@ const activeMenu = ref("home");
 // ---- 自动更新 ----
 const updateReady = ref(false);
 const updateVersion = ref("");
+const updateChecking = ref(false);
 const updateDownloading = ref(false);
+const currentVersion = ref("");
 const updateProgress = ref(0);
 const updateSpeed = ref("");
 const updateError = ref("");
 
-onMounted(() => {
+onMounted(async () => {
   const api = window.electronAPI;
   if (!api) return;
+  api.appVersion?.().then((v: string) => { currentVersion.value = v; });
 
   api.onUpdateStatus?.((status) => {
-    if (status === "downloading") {
+    if (status === "checking") {
+      updateChecking.value = true;
+      updateDownloading.value = false;
+      updateError.value = "";
+    } else if (status === "downloading") {
+      updateChecking.value = false;
       updateDownloading.value = true;
       updateProgress.value = 0;
       updateSpeed.value = "";
@@ -100,15 +108,18 @@ watch(
 
 <template>
   <div class="app-shell">
-    <TopNav :active-menu="activeMenu" @menu-click="onMenuClick" />
+    <TopNav :active-menu="activeMenu" :app-version="currentVersion" @menu-click="onMenuClick" />
     <router-view />
     <GlobalToast />
     <AuthDialog :visible="showDialog" :error-msg="errorMsg" @confirm="onDialogConfirm" @cancel="onDialogCancel" />
 
     <!-- 更新通知条 -->
     <Transition name="update-slide">
-      <div v-if="updateDownloading || updateReady" class="update-bar">
-        <template v-if="updateDownloading">
+      <div v-if="updateChecking || updateDownloading || updateReady" class="update-bar">
+        <template v-if="updateChecking">
+          <span class="update-text">正在检查更新... <span class="update-version-tag">v{{ currentVersion }}</span></span>
+        </template>
+        <template v-else-if="updateDownloading">
           <span class="update-text">
             {{ updateProgress > 0 ? `正在下载更新 ${updateProgress.toFixed(1)}%` : '正在连接更新服务器...' }}
             <span v-if="updateSpeed" class="update-speed">{{ updateSpeed }}</span>
@@ -185,6 +196,16 @@ html body,
   margin-left: 8px;
   color: #5a8fb8;
   font-size: 12px;
+}
+
+.update-version-tag {
+  padding: 1px 6px;
+  background: rgba(90, 146, 208, 0.2);
+  border: 1px solid rgba(90, 146, 208, 0.3);
+  border-radius: 3px;
+  font-size: 11px;
+  color: #5a92d0;
+  font-family: "SF Mono", monospace;
 }
 
 .update-error {

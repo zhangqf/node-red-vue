@@ -86,7 +86,8 @@
             "010538068717c445",
             "bd98acdecbf1659f",
             "ca862f075ce41d0c",
-            "b9fa938bcac61576"
+            "b9fa938bcac61576",
+            "d7ffddd0457bc27a"
         ],
         "x": 74,
         "y": 619,
@@ -3881,7 +3882,7 @@
                 "vt": "str"
             }
         ],
-        "repeat": "0.2",
+        "repeat": "0.1",
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
@@ -3943,7 +3944,8 @@
                 "bd98acdecbf1659f"
             ],
             [
-                "setDeviceTypeHandler"
+                "setDeviceTypeHandler",
+                "d7ffddd0457bc27a"
             ]
         ]
     },
@@ -3953,7 +3955,7 @@
         "z": "e4bbd3713100fe17",
         "g": "9e2d670578adbe41",
         "name": "设置设备类型",
-        "func": "if (msg.payload && msg.payload.deviceType) {\n    flow.set(\"deviceType\", msg.payload.deviceType);\n}\nreturn msg;",
+        "func": "if (msg.deviceType) {\n    flow.set(\"deviceType\", msg.deviceType);\n}\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -5033,7 +5035,7 @@
         "finalize": "",
         "libs": [],
         "x": 510,
-        "y": 880,
+        "y": 900,
         "wires": [
             [
                 "ca862f075ce41d0c",
@@ -5117,7 +5119,7 @@
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
         "name": "开启电源",
-        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst tempArr = new Array(32).fill(0)\n\ntempArr[31] = 1\ntempArr[30] = 1\ntempArr[29] = 0\nconst data = [1,1,1,1,1,1,1,1,]\n\nmsg.sendData = {\n    data:tempArr,\n    type:\"modbusRealData\",\n    unitId: 1,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
+        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst tempArr = new Array(32).fill(0)\n\ntempArr[31] = 1\ntempArr[30] = 1\ntempArr[29] = 1\nconst data = [1,1,1,1,1,1,1,1,]\n\nmsg.sendData = {\n    data:tempArr,\n    type:\"modbusRealData\",\n    unitId: 2,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -5427,5 +5429,23 @@
                 "b1dce3197decb5c8"
             ]
         ]
+    },
+    {
+        "id": "d7ffddd0457bc27a",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "9e2d670578adbe41",
+        "name": "debug 9",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 520,
+        "y": 820,
+        "wires": []
     }
 ]
