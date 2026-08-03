@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
-import { useRouter } from "vue-router";
+import { onMounted, ref, watch, computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import TopNav from "@/components/TopNav.vue";
 import GlobalToast from "@/components/GlobalToast.vue";
 import AuthDialog from "@/components/AuthDialog.vue";
 import { useAuth } from "@/composables/useAuth";
 
+const route = useRoute();
 const router = useRouter();
 const { showDialog, errorMsg, requireAuth, onDialogConfirm, onDialogCancel } = useAuth();
+
+const hideUpdateBar = computed(() => route.name === "work");
 
 const activeMenu = ref("home");
 
@@ -115,7 +118,7 @@ watch(
 
     <!-- 更新通知条 -->
     <Transition name="update-slide">
-      <div v-if="updateChecking || updateDownloading || updateReady" class="update-bar">
+      <div v-if="!hideUpdateBar && (updateChecking || updateDownloading || updateReady)" class="update-bar">
         <template v-if="updateChecking">
           <span class="update-text">正在检查更新... <span class="update-version-tag">v{{ currentVersion }}</span></span>
         </template>

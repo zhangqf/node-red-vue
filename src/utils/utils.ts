@@ -124,7 +124,7 @@ function classifyResistance(val: number): ResistanceState {
 // 10 -15
 
 function classifyResistanceZD6(val: number): ResistanceState {
-  if (val >= 10 && val <= 15) return "NORMAL";
+  if (val >= 8 && val <= 15) return "NORMAL";
   if (val >= 10000) return "OPEN";
   if (val <= 0.5) return "SHORT";
   return "UNKNOWN";
