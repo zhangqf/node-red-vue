@@ -878,7 +878,6 @@ onMounted(async () => {
             <th class="col-combo">组合方式</th>
             <th class="col-config">测试机型</th>
             <th class="col-op">操作类型</th>
-            <th class="col-status">状态</th>
             <th class="col-result">检测结果</th>
             <th class="col-pretest">启动前测试</th>
             <th class="col-time">测试时间</th>
@@ -896,16 +895,6 @@ onMounted(async () => {
             <td class="col-op">
               <span class="op-type-tag" :class="r.op_type.toLowerCase()">
                 {{ opTypeLabels[r.op_type] || r.op_type }}
-              </span>
-            </td>
-            <td class="col-status">
-              <span
-                class="status-tag"
-                :class="r.status === 'success' ? 'success' : 'fail'">
-                <span
-                  class="status-dot"
-                  :class="r.status === 'success' ? 'success' : 'fail'"></span>
-                {{ r.status === "success" ? "成功" : "失败" }}
               </span>
             </td>
             <td class="col-result">
