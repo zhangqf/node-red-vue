@@ -13,16 +13,12 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        os: [windows-latest, ubuntu-latest]
         include:
           - os: windows-latest
             build-script: electron:build:ci:win
             artifact-name: win-package
             artifact-pattern: release/*.exe
-          - os: macos-latest
-            build-script: electron:build:ci:mac
-            artifact-name: mac-package
-            artifact-pattern: release/*.dmg
           - os: ubuntu-latest
             build-script: electron:build:ci:linux
             artifact-name: linux-package
