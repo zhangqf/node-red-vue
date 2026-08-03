@@ -184,9 +184,8 @@ export const startBeforeTestExpress = (
   let configOption = [];
   console.log(arr);
   if (deviceType === "ZD6" || deviceType === "ZD9") {
+    arr = arr.slice(6);
     states = arr.map(classifyResistanceZD6);
-    console.log(states);
-    console.log("states");
     configOption = CHANNEL_CONFIGZD6;
   }
   if (deviceType === "ZYJ7" || deviceType === "ZDJ9") {
