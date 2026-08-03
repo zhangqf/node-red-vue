@@ -367,9 +367,9 @@ const funThreePhaseACCollector = (data) => {
     registerArrA.value = [phaseACurrent.value];
     registerArrB.value = [phaseBCurrent.value];
     registerArrC.value = [phaseCCurrent.value];
-    powerArrA.value = [+(phaseAVoltage.value * phaseACurrent.value).toFixed(1)];
-    powerArrB.value = [+(phaseBVoltage.value * phaseBCurrent.value).toFixed(1)];
-    powerArrC.value = [+(phaseCVoltage.value * phaseCCurrent.value).toFixed(1)];
+    powerArrA.value = [phaseAPower.value];
+    powerArrB.value = [phaseBPower.value];
+    powerArrC.value = [phaseCPower.value];
   }
 };
 
@@ -400,16 +400,16 @@ watch(
 // 线圈计算属性：永远返回缓存的最新线圈数据，不会清空
 const coilArr = computed(() => lastCoilArr.value);
 
-// 三相功率（W = V × I）
-const powerA = computed(
-  () => +(phaseAVoltage.value * phaseACurrent.value).toFixed(1),
-);
-const powerB = computed(
-  () => +(phaseBVoltage.value * phaseBCurrent.value).toFixed(1),
-);
-const powerC = computed(
-  () => +(phaseCVoltage.value * phaseCCurrent.value).toFixed(1),
-);
+// 状态栏描述：跟随启动前测试流程
+const statusDesc = computed(() => {
+  if (!startBeforeTestFinshed.value) return "请先进行启动前测试";
+  return powerStatus.value?.desc || "";
+});
+
+// 三相功率
+const powerA = computed(() => phaseAPower.value);
+const powerB = computed(() => phaseBPower.value);
+const powerC = computed(() => phaseCPower.value);
 const totalPower = computed(
   () => +(powerA.value + powerB.value + powerC.value).toFixed(1),
 );
@@ -1059,7 +1059,7 @@ onMounted(async () => {
         :class="modbusStatus.color"
         >{{ modbusStatus.msg }}</span
       >
-      <span>{{ powerStatus.desc }}</span>
+      <span>{{ statusDesc }}</span>
       <!-- <span v-if="temperature">{{ temperature }}℃</span> -->
     </div>
   </div>
