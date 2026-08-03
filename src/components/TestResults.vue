@@ -74,6 +74,9 @@ function toggleCircuitLoop(idx: number) {
     </div>
 
     <div v-else class="test-list">
+      <template v-if="!powerStatusIsRunning && !startBeforeTestFinshed && !startBeforeLoading">
+        <div class="modbusStatus-content">请先进行启动前测试</div>
+      </template>
       <template v-if="!powerStatusIsRunning && startBeforeTestFinshed">
         <div class="modbusStatus-content">开启动作电源</div>
       </template>
