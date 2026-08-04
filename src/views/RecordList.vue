@@ -402,7 +402,7 @@ const powerChartOpt = computed(() => {
       axisLabel: {
         color: "#5a7288",
         fontSize: 10,
-        formatter: (v: number) => v.toFixed(0) + "W",
+        formatter: (v: number) => v.toFixed(2) + "KW",
       },
     },
     series: [makeLine("功率", pd.phasePower, COLORS_SINGLE, 2)],
