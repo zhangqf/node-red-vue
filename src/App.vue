@@ -40,6 +40,9 @@ onMounted(async () => {
       updateProgress.value = 0;
       updateSpeed.value = "";
       updateError.value = "";
+    } else {
+      updateChecking.value = false;
+      updateDownloading.value = false;
     }
   });
   api.onUpdateProgress?.((info) => {
@@ -118,7 +121,7 @@ watch(
 
     <!-- 更新通知条 -->
     <Transition name="update-slide">
-      <div v-if="!hideUpdateBar && (updateChecking || updateDownloading || updateReady)" class="update-bar">
+      <div v-if="!hideUpdateBar && (updateDownloading || updateReady)" class="update-bar">
         <template v-if="updateChecking">
           <span class="update-text">正在检查更新... <span class="update-version-tag">v{{ currentVersion }}</span></span>
         </template>

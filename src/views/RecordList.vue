@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { HTTP_URL } from "@/config/config";
-import { CHANNEL_CONFIG, type ChannelExpect } from "@/utils/config";
 import { useToast } from "@/composables/useToast";
 
 const { withLoading, showToast } = useToast();
@@ -108,19 +107,7 @@ function preTestLabel(r: RecordItem): string {
   return "不可用";
 }
 
-function getChannelTip(
-  state: string,
-  expect: string,
-  cfg: ChannelExpect,
-  direction: "DC" | "FC" = "DC",
-): string {
-  if (state === "SHORT")
-    return direction === "DC" ? cfg.dcShortTip : cfg.fcShortTip;
-  if (state === "UNKNOWN") return "阻值不在判定区间";
-  if (state === expect) return "正常";
-  if (state === "OPEN") return cfg.openFaultTip;
-  return "阻值正常但应为开路";
-}
+
 
 async function getList() {
   const params = new URLSearchParams();
@@ -203,20 +190,8 @@ async function openDetail(record: RecordItem) {
   detailVisible.value = true;
 }
 
-const COLORS = {
-  parabolic: "#f04b4b",
-  flat: "#4dabf7",
-  square: "#51cf66",
-};
-
-const LEGEND_RECORD = {
-  data: ["启动电流", "工作电流", "摩擦电流"],
-  bottom: 0,
-  left: 55,
-  orient: "horizontal",
-  textStyle: { color: "#8fb4d8", fontSize: 11 },
-  icon: "roundRect",
-} as const;
+const COLORS_SINGLE = "#4dabf7";
+const COLORS_3 = { A: "#f04b4b", B: "#4dabf7", C: "#51cf66" };
 
 function gradient(hex: string, alpha: number) {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -225,176 +200,27 @@ function gradient(hex: string, alpha: number) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-function makeSeries(
-  data: number[],
-  labels: string[],
-  name: string,
-  key: "parabolic" | "flat" | "square",
-  match: (l: string) => boolean,
-) {
-  const result = new Array(data.length).fill(null);
-  let i = 0;
-  while (i < data.length) {
-    if (match(labels[i])) {
-      if (i > 0) result[i - 1] = data[i - 1];
-      while (i < data.length && match(labels[i])) {
-        result[i] = data[i];
-        i++;
-      }
-      if (i < data.length) result[i] = data[i];
-    } else {
-      i++;
-    }
-  }
+function makeLine(name: string, data: number[], color: string, width = 2) {
   return {
     name,
     type: "line",
-    data: result,
+    data,
     smooth: false,
     symbol: "none",
-    color: COLORS[key],
-    itemStyle: { color: COLORS[key] },
-    lineStyle: {
-      color: COLORS[key],
-      width: 2,
-      shadowBlur: 6,
-      shadowColor: gradient(COLORS[key], 0.35),
-    },
+    color,
+    lineStyle: { color, width, shadowBlur: 6, shadowColor: gradient(color, 0.35) },
     areaStyle: {
       color: {
-        type: "linear",
-        x: 0,
-        y: 0,
-        x2: 0,
-        y2: 1,
+        type: "linear", x: 0, y: 0, x2: 0, y2: 1,
         colorStops: [
-          { offset: 0, color: gradient(COLORS[key], 0.18) },
-          { offset: 1, color: gradient(COLORS[key], 0.01) },
+          { offset: 0, color: gradient(color, 0.18) },
+          { offset: 1, color: gradient(color, 0.01) },
         ],
       },
     },
     connectNulls: false,
   };
 }
-
-function classifyPhase(data: number[]): string[] {
-  const HALF_WIN = 12;
-  const rawLabels = data.map((_, i) => {
-    const ws = Math.max(0, i - HALF_WIN);
-    const we = Math.min(data.length - 1, i + HALF_WIN);
-    const win = data.slice(ws, we + 1);
-    if (win.length < 6) return "flat";
-    const wRange = Math.max(...win) - Math.min(...win);
-    let largeJumps = 0,
-      signChanges = 0,
-      lastSign = 0;
-    for (let j = 1; j < win.length; j++) {
-      const d = win[j] - win[j - 1];
-      if (d > 1.0) {
-        largeJumps++;
-        if (lastSign < 0) signChanges++;
-        lastSign = 1;
-      } else if (d < -1.0) {
-        largeJumps++;
-        if (lastSign > 0) signChanges++;
-        lastSign = -1;
-      }
-    }
-    if (largeJumps >= 2 && signChanges >= 1 && signChanges / largeJumps >= 0.4)
-      return "square";
-    if (wRange < 0.2) return "flat";
-    const diffs: number[] = [];
-    for (let j = 1; j < win.length; j++) diffs.push(win[j] - win[j - 1]);
-    const dd: number[] = [];
-    for (let j = 1; j < diffs.length; j++) dd.push(diffs[j] - diffs[j - 1]);
-    const pos = dd.filter((d) => d > 0).length;
-    const neg = dd.filter((d) => d < 0).length;
-    if (Math.max(pos, neg) >= dd.length * 0.45 && wRange > 1)
-      return "parabolic";
-    return "flat";
-  });
-  for (let i = 0; i < rawLabels.length; i++) {
-    if (rawLabels[i] === "parabolic") {
-      const ls = Math.max(0, i - 2),
-        le = Math.min(data.length - 1, i + 2);
-      let md = 0;
-      for (let j = ls; j < le; j++)
-        md = Math.max(md, Math.abs(data[j + 1] - data[j]));
-      if (md < 0.2) rawLabels[i] = "flat";
-    }
-  }
-  return rawLabels.map((_, i) => {
-    const votes: Record<string, number> = { parabolic: 0, flat: 0, square: 0 };
-    for (let j = Math.max(0, i - 2); j <= Math.min(data.length - 1, i + 2); j++)
-      votes[rawLabels[j]]++;
-    return Object.entries(votes).sort((a, b) => b[1] - a[1])[0][0];
-  });
-}
-
-function makePhaseSeries(
-  data: number[],
-  labels: string[],
-  name: string,
-  key: "parabolic" | "flat" | "square",
-  colors: Record<string, string>,
-  lineWidth: number,
-) {
-  return {
-    name,
-    type: "line",
-    data: buildSegments(data, labels, (l: string) => l === key),
-    smooth: false,
-    symbol: "none",
-    color: colors[key],
-    itemStyle: { color: colors[key] },
-    lineStyle: {
-      color: colors[key],
-      width: lineWidth,
-      shadowBlur: lineWidth >= 2 ? 6 : 4,
-      shadowColor: gradient(colors[key], 0.35),
-    },
-    areaStyle: {
-      color: {
-        type: "linear",
-        x: 0,
-        y: 0,
-        x2: 0,
-        y2: 1,
-        colorStops: [
-          { offset: 0, color: gradient(colors[key], 0.18) },
-          { offset: 1, color: gradient(colors[key], 0.01) },
-        ],
-      },
-    },
-    connectNulls: false,
-  };
-}
-
-function buildSegments(
-  data: number[],
-  labels: string[],
-  match: (l: string) => boolean,
-) {
-  const result = new Array(data.length).fill(null);
-  let i = 0;
-  while (i < data.length) {
-    if (match(labels[i])) {
-      if (i > 0) result[i - 1] = data[i - 1];
-      while (i < data.length && match(labels[i])) {
-        result[i] = data[i];
-        i++;
-      }
-      if (i < data.length) result[i] = data[i];
-    } else {
-      i++;
-    }
-  }
-  return result;
-}
-
-const COLORS_3A = { parabolic: "#f04b4b", flat: "#e88b8b", square: "#c0392b" };
-const COLORS_3B = { parabolic: "#4dabf7", flat: "#74c0fc", square: "#1c7ed6" };
-const COLORS_3C = { parabolic: "#51cf66", flat: "#8ce99a", square: "#2f9e44" };
 
 const chartOpt = computed(() => {
   if (isThreePhaseCurve.value) {
@@ -405,49 +231,11 @@ const chartOpt = computed(() => {
     const timeLabels: string[] = raw.time || [];
     const allData = [...dataA, ...dataB, ...dataC];
     const hasData = allData.length > 0;
-
     if (!hasData) return {};
 
     const maxVal = Math.max(...allData, 0.01);
     const minVal = Math.min(...allData, 0);
     const padding = (maxVal - minVal) * 0.15 || 0.5;
-
-    const labelsA = classifyPhase(dataA);
-    const labelsB = classifyPhase(dataB);
-    const labelsC = classifyPhase(dataC);
-
-    const seriesArr = [
-      makePhaseSeries(
-        dataA,
-        labelsA,
-        "A-启动电流",
-        "parabolic",
-        COLORS_3A,
-        1.5,
-      ),
-      makePhaseSeries(dataA, labelsA, "A-工作电流", "flat", COLORS_3A, 1.5),
-      makePhaseSeries(dataA, labelsA, "A-摩擦电流", "square", COLORS_3A, 1.5),
-      makePhaseSeries(
-        dataB,
-        labelsB,
-        "B-启动电流",
-        "parabolic",
-        COLORS_3B,
-        1.5,
-      ),
-      makePhaseSeries(dataB, labelsB, "B-工作电流", "flat", COLORS_3B, 1.5),
-      makePhaseSeries(dataB, labelsB, "B-摩擦电流", "square", COLORS_3B, 1.5),
-      makePhaseSeries(
-        dataC,
-        labelsC,
-        "C-启动电流",
-        "parabolic",
-        COLORS_3C,
-        1.5,
-      ),
-      makePhaseSeries(dataC, labelsC, "C-工作电流", "flat", COLORS_3C, 1.5),
-      makePhaseSeries(dataC, labelsC, "C-摩擦电流", "square", COLORS_3C, 1.5),
-    ];
 
     return {
       animationDuration: 0,
@@ -456,25 +244,17 @@ const chartOpt = computed(() => {
         backgroundColor: "rgba(11,29,51,0.96)",
         borderColor: "#2d5280",
         textStyle: { color: "#e0e8f0", fontSize: 12 },
-        extraCssText:
-          "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
+        extraCssText: "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
       },
       backgroundColor: "transparent",
-      grid: { left: 55, right: 20, top: 12, bottom: 50 },
+      grid: { left: 55, right: 20, top: 12, bottom: 40 },
       xAxis: {
         type: "category",
         data: timeLabels,
         axisLine: { lineStyle: { color: "#1a2d44" } },
         axisTick: { show: false },
-        splitLine: {
-          show: true,
-          lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" },
-        },
-        axisLabel: {
-          color: "#5a7288",
-          fontSize: 10,
-          interval: Math.max(Math.floor((timeLabels.length || 1) / 6), 0),
-        },
+        splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
+        axisLabel: { color: "#5a7288", fontSize: 10, interval: Math.max(Math.floor((timeLabels.length || 1) / 6), 0) },
       },
       yAxis: {
         type: "value",
@@ -483,37 +263,19 @@ const chartOpt = computed(() => {
         splitNumber: 4,
         axisLine: { show: false },
         axisTick: { show: false },
-        splitLine: {
-          show: true,
-          lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" },
-        },
-        axisLabel: {
-          color: "#5a7288",
-          fontSize: 11,
-          formatter: (v: number) => v.toFixed(1),
-        },
+        splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
+        axisLabel: { color: "#5a7288", fontSize: 11, formatter: (v: number) => v.toFixed(1) },
       },
       legend: {
-        data: [
-          "A-启动电流",
-          "A-工作电流",
-          "A-摩擦电流",
-          "B-启动电流",
-          "B-工作电流",
-          "B-摩擦电流",
-          "C-启动电流",
-          "C-工作电流",
-          "C-摩擦电流",
-        ],
-        bottom: 0,
-        left: 55,
-        type: "scroll",
-        textStyle: { color: "#8fb4d8", fontSize: 10 },
-        icon: "roundRect",
-        itemWidth: 14,
-        itemHeight: 8,
+        data: ["A相", "B相", "C相"],
+        bottom: 0, left: 55, textStyle: { color: "#8fb4d8", fontSize: 10 },
+        icon: "roundRect", itemWidth: 14, itemHeight: 8,
       },
-      series: seriesArr,
+      series: [
+        makeLine("A相", dataA, COLORS_3.A, 1.5),
+        makeLine("B相", dataB, COLORS_3.B, 1.5),
+        makeLine("C相", dataC, COLORS_3.C, 1.5),
+      ],
     };
   }
 
@@ -526,17 +288,9 @@ const chartOpt = computed(() => {
   const minVal = hasData ? Math.min(...data, 0) : 0;
   const padding = (maxVal - minVal) * 0.15 || 0.5;
 
-  const labels = hasData && data.length > 10 ? classifyPhase(data) : [];
-
-  const seriesArr = [
-    makeSeries(data, labels, "启动电流", "parabolic", (l) => l === "parabolic"),
-    makeSeries(data, labels, "工作电流", "flat", (l) => l === "flat"),
-    makeSeries(data, labels, "摩擦电流", "square", (l) => l === "square"),
-  ];
-
   const graphic: any[] = [];
   if (hasData && data.length > 1 && chartSize.value.width > 0) {
-    const GRID = { left: 55, right: 20, top: 20, bottom: 50 };
+    const GRID = { left: 55, right: 20, top: 20, bottom: 40 };
     const gw = chartSize.value.width - GRID.left - GRID.right;
     const gh = chartSize.value.height - GRID.top - GRID.bottom;
     const yMin = Math.max(0, minVal - padding);
@@ -549,22 +303,14 @@ const chartOpt = computed(() => {
     const toX = (i: number) => GRID.left + (i / (data.length - 1)) * gw;
     const toY = (v: number) => GRID.top + (1 - (v - yMin) / yRange) * gh;
     [
-      { idx: maxIdx, val: maxV, label: "最大值", color: COLORS.parabolic },
-      { idx: minIdx, val: minV, label: "最小值", color: COLORS.flat },
+      { idx: maxIdx, val: maxV, label: "最大值", color: "#f04b4b" },
+      { idx: minIdx, val: minV, label: "最小值", color: "#34a3d3" },
     ].forEach((m) => {
       graphic.push({
         type: "text",
         left: toX(m.idx) - 24,
         top: toY(m.val) - 22,
-        style: {
-          text: `${m.label} ${m.val.toFixed(1)}A`,
-          fill: "#fff",
-          fontSize: 11,
-          fontWeight: 600,
-          textAlign: "center",
-          textShadowBlur: 4,
-          textShadowColor: "rgba(0,0,0,0.7)",
-        },
+        style: { text: `${m.label} ${m.val.toFixed(1)}A`, fill: "#fff", fontSize: 11, fontWeight: 600, textAlign: "center", textShadowBlur: 4, textShadowColor: "rgba(0,0,0,0.7)" },
         z: 100,
       });
       graphic.push({
@@ -579,38 +325,23 @@ const chartOpt = computed(() => {
   return {
     graphic,
     animationDuration: 0,
-    animationEasing: "cubicOut",
-    tooltip: hasData
-      ? {
-          trigger: "axis",
-          axisPointer: {
-            type: "cross",
-            crossStyle: { color: "#3a5670" },
-            label: { backgroundColor: "#0b1d33", color: "#e0e8f0" },
-          },
-          backgroundColor: "rgba(11,29,51,0.96)",
-          borderColor: "#2d5280",
-          textStyle: { color: "#e0e8f0", fontSize: 12 },
-          extraCssText:
-            "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
-        }
-      : undefined,
+    tooltip: hasData ? {
+      trigger: "axis",
+      axisPointer: { type: "cross", crossStyle: { color: "#3a5670" }, label: { backgroundColor: "#0b1d33", color: "#e0e8f0" } },
+      backgroundColor: "rgba(11,29,51,0.96)",
+      borderColor: "#2d5280",
+      textStyle: { color: "#e0e8f0", fontSize: 12 },
+      extraCssText: "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
+    } : undefined,
     backgroundColor: "transparent",
-    grid: { left: 55, right: 20, top: 20, bottom: 50 },
+    grid: { left: 55, right: 20, top: 20, bottom: 40 },
     xAxis: {
       type: "category",
       data: timeLabels,
       axisLine: { lineStyle: { color: "#1a2d44" } },
       axisTick: { show: false },
-      splitLine: {
-        show: true,
-        lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" },
-      },
-      axisLabel: {
-        color: "#5a7288",
-        fontSize: 10,
-        interval: hasData ? Math.max(Math.floor(data.length / 6), 0) : 0,
-      },
+      splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
+      axisLabel: { color: "#5a7288", fontSize: 10, interval: hasData ? Math.max(Math.floor(data.length / 6), 0) : 0 },
     },
     yAxis: {
       type: "value",
@@ -619,18 +350,10 @@ const chartOpt = computed(() => {
       splitNumber: 4,
       axisLine: { show: false },
       axisTick: { show: false },
-      splitLine: {
-        show: true,
-        lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" },
-      },
-      axisLabel: {
-        color: "#5a7288",
-        fontSize: 11,
-        formatter: (v: number) => v.toFixed(1),
-      },
+      splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
+      axisLabel: { color: "#5a7288", fontSize: 11, formatter: (v: number) => v.toFixed(1) },
     },
-    legend: hasData ? LEGEND_RECORD : undefined,
-    series: seriesArr,
+    series: [makeLine("电流", data, COLORS_SINGLE, 2)],
   };
 });
 
@@ -878,7 +601,6 @@ onMounted(async () => {
             <th class="col-combo">组合方式</th>
             <th class="col-config">测试机型</th>
             <th class="col-op">操作类型</th>
-            <th class="col-result">检测结果</th>
             <th class="col-pretest">启动前测试</th>
             <th class="col-time">测试时间</th>
             <th class="col-action">操作</th>
@@ -896,18 +618,6 @@ onMounted(async () => {
               <span class="op-type-tag" :class="r.op_type.toLowerCase()">
                 {{ opTypeLabels[r.op_type] || r.op_type }}
               </span>
-            </td>
-            <td class="col-result">
-              <div class="result-cell" v-if="r.result">
-                <span
-                  v-for="(item, idx) in JSON.parse(r.result)"
-                  :key="idx"
-                  class="result-tag"
-                  :class="item.status && item.status != 'NT' ? 'pass' : 'fail'">
-                  {{ item.name }}
-                </span>
-              </div>
-              <span v-else class="no-data">-</span>
             </td>
             <td class="col-pretest">
               <span
@@ -1145,32 +855,6 @@ onMounted(async () => {
             </table>
           </div>
 
-          <div
-            class="modal-result"
-            v-if="
-              currentRecord?.result &&
-              JSON.parse(currentRecord.result).length > 0
-            ">
-            <span class="result-section-label">检测项</span>
-            <div class="result-tags">
-              <span
-                v-for="(item, idx) in JSON.parse(currentRecord.result)"
-                :key="idx"
-                class="result-tag"
-                :class="item.status != 'NT' && item.status ? 'pass' : 'fail'">
-                <span class="result-check">{{
-                  item.status != "NT" && item.status ? "✓" : "✗"
-                }}</span>
-                {{ item.name }}
-                <span class="relay-name" v-if="item.relayName?.length">
-                  ({{ item.relayName.join(", ") }})
-                </span>
-              </span>
-            </div>
-          </div>
-          <div v-else class="modal-result">
-            <span class="result-tag fail">未检测</span>
-          </div>
           <div ref="chartContainer" class="modal-chart">
             <v-chart :option="chartOpt" autoresize />
           </div>
@@ -1472,9 +1156,6 @@ onMounted(async () => {
 .col-status {
   width: 90px;
 }
-.col-result {
-  min-width: 160px;
-}
 .col-pretest {
   width: 100px;
 }
@@ -1580,31 +1261,6 @@ onMounted(async () => {
 .status-dot.fail {
   background: #f87171;
   box-shadow: 0 0 4px rgba(248, 113, 113, 0.4);
-}
-
-/* ---- Result tags ---- */
-.result-cell {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-
-.result-tag {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 3px;
-  font-size: 11px;
-  font-weight: 500;
-}
-
-.result-tag.pass {
-  color: #34d399;
-  background: rgba(52, 211, 153, 0.1);
-}
-
-.result-tag.fail {
-  color: #f87171;
-  background: rgba(248, 113, 113, 0.1);
 }
 
 .no-data {
@@ -1813,57 +1469,6 @@ onMounted(async () => {
 
 .stat-value.valley {
   color: #34a3d3;
-}
-
-/* Modal result */
-.modal-result {
-  padding: 0 28px 16px;
-}
-
-.result-section-label {
-  font-size: 11px;
-  color: #5a7288;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  display: block;
-  margin-bottom: 8px;
-}
-
-.result-tags {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.result-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 12px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.result-tag.pass {
-  color: #34d399;
-  background: rgba(52, 211, 153, 0.1);
-}
-
-.result-tag.fail {
-  color: #f87171;
-  background: rgba(248, 113, 113, 0.1);
-}
-
-.result-check {
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.relay-name {
-  color: #5a7288;
-  font-size: 11px;
-  font-weight: 400;
 }
 
 /* ---- Modal pre-test ---- */

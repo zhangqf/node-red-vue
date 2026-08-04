@@ -528,13 +528,18 @@ function initTestResults(direction?: "DC" | "FC") {
 
   testResults.value = relayConfigList
     .filter((item) => relayData[item.field] && relayData[item.field].length > 0)
-    .map((item) => ({
-      type: item.type,
-      name: item.name,
-      status: "NT" as const,
-      realCheck: false,
-      relayName: relayData[item.field],
-    }));
+    .map((item) => {
+      const field = typeToFieldMap[item.type];
+      const resCollect = field ? handleFindCollect(field) : undefined;
+      return {
+        type: item.type,
+        name: item.name,
+        status: "NT" as const,
+        realCheck: false,
+        relayName: relayData[item.field],
+        img: resCollect?.img?.[field] || "",
+      };
+    });
 
   if (testResults.value.length === 0) {
     testResults.value = [
