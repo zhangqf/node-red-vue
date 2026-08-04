@@ -444,8 +444,8 @@ export const collectConfig = {
     2324: {
       "103A4": {
         img: {
-          DW: getImgZD6("A", "DW"),
-          FW: getImgZD6("A", "FW"),
+          DWBS: getImgZD6("A", "DW"),
+          FWBS: getImgZD6("A", "FW"),
           YJCDDWBS: getImgZD6("A", "DWC"),
           YJCDFWBS: getImgZD6("A", "FWC"),
         },
@@ -458,8 +458,8 @@ export const collectConfig = {
       },
       "103B4": {
         img: {
-          DW: getImgZD6("B", "DW"),
-          FW: getImgZD6("B", "FW"),
+          DWBS: getImgZD6("B", "DW"),
+          FWBS: getImgZD6("B", "FW"),
           YJCDDWBS: getImgZD6("B", "DWC"),
           YJCDFWBS: getImgZD6("B", "FWC"),
         },
