@@ -173,7 +173,7 @@ watch(
           axisLabel: {
             color: "#5a7288",
             fontSize: 10,
-            formatter: (v: number) => v.toFixed(0) + "W",
+            formatter: (v: number) => v.toFixed(2) + "KW",
           },
         },
         legend: hasData ? LEGEND_POWER : undefined,
@@ -217,7 +217,7 @@ watch(
               left: toX(maxI, p.data.length) - 18,
               top: toY(maxV) - 16,
               style: {
-                text: `${p.tag}${maxV.toFixed(1)}W`,
+                text: `${p.tag}${maxV.toFixed(2)}KW`,
                 fill: "#fff",
                 fontSize: 9,
                 fontWeight: 600,
@@ -237,7 +237,7 @@ watch(
               left: toX(minI, p.data.length) - 18,
               top: toY(minV) + 4,
               style: {
-                text: `${p.tag}${minV.toFixed(1)}W`,
+                text: `${p.tag}${minV.toFixed(2)}KW`,
                 fill: "#fff",
                 fontSize: 9,
                 fontWeight: 600,
@@ -287,24 +287,21 @@ defineExpose({ resetData, historyA, historyB, historyC, xLabels });
         <div class="phase-power-row">
           <span class="phase-tag a">A相</span>
           <!-- <span class="phase-formula">{{ voltageA?.toFixed(1) }}V × {{ currentA?.toFixed(2) }}A</span> -->
-          <span class="phase-result a">{{ powerA }}W</span>
+          <span class="phase-result a">{{ powerA }}KW</span>
         </div>
         <div class="phase-power-row">
           <span class="phase-tag b">B相</span>
           <!-- <span class="phase-formula">{{ voltageB?.toFixed(1) }}V × {{ currentB?.toFixed(2) }}A</span> -->
-          <span class="phase-result b">{{ powerB }}W</span>
+          <span class="phase-result b">{{ powerB }}KW</span>
         </div>
         <div class="phase-power-row">
           <span class="phase-tag c">C相</span>
           <!-- <span class="phase-formula">{{ voltageC?.toFixed(1) }}V × {{ currentC?.toFixed(2) }}A</span> -->
-          <span class="phase-result c">{{ powerC }}W</span>
+          <span class="phase-result c">{{ powerC }}KW</span>
         </div>
         <div class="total-row">
           <span class="total-label">总功率</span>
-          <span class="total-value">{{ totalPower }}W</span>
-          <span class="total-kw"
-            >({{ ((totalPower ?? 0) / 1000).toFixed(2) }}kW)</span
-          >
+          <span class="total-value">{{ totalPower }}KW</span>
         </div>
       </div>
     </template>

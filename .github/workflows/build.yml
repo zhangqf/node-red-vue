@@ -2,7 +2,7 @@ name: Build Electron App
 
 on:
   push:
-    branches: [release]
+    branches: [LZD0804]
     tags: ["v*"]
   workflow_dispatch:
 
