@@ -56,17 +56,9 @@ const lockStatus = ref<Record<string, boolean>>({
 
 const modbusStatus = ref();
 const temperature = ref(0);
-const phaseAVoltage = ref(0);
-const phaseBVoltage = ref(0);
-const phaseCVoltage = ref(0);
-
 const phaseACurrent = ref(0);
 const phaseBCurrent = ref(0);
 const phaseCCurrent = ref(0);
-
-const phaseAPower = ref(0);
-const phaseBPower = ref(0);
-const phaseCPower = ref(0);
 
 const testResults = ref<TestItem[]>([]);
 
@@ -82,10 +74,8 @@ const registerArrA = ref<number[]>([]);
 const registerArrB = ref<number[]>([]);
 const registerArrC = ref<number[]>([]);
 
-// 三相功率数组
-const powerArrA = ref<number[]>([]);
-const powerArrB = ref<number[]>([]);
-const powerArrC = ref<number[]>([]);
+// 功率数组
+const powerArr = ref<number[]>([]);
 
 const device = ref({
   name: "",
@@ -353,23 +343,16 @@ const funThreePhaseACCollector = (data) => {
   if (deviceType.value !== "ZYJ7" && deviceType.value !== "ZDJ9") return;
   isThreePhase.value = true;
   temperature.value = handleCalculate(data[4], 100);
-  phaseAVoltage.value = handleCalculate(data[5], 100);
-  phaseBVoltage.value = handleCalculate(data[6], 100);
-  phaseCVoltage.value = handleCalculate(data[7], 100);
   phaseACurrent.value = handleCalculate(data[8], 1000);
   phaseBCurrent.value = handleCalculate(data[9], 1000);
   phaseCCurrent.value = handleCalculate(data[10], 1000);
-  phaseAPower.value = handleCalculate(data[12], 10000);
-  phaseBPower.value = handleCalculate(data[13], 10000);
-  phaseCPower.value = handleCalculate(data[14], 10000);
+  phasePower.value = handleCalculate(data[15], 10000);
 
   if (isAction.value) {
     registerArrA.value = [phaseACurrent.value];
     registerArrB.value = [phaseBCurrent.value];
     registerArrC.value = [phaseCCurrent.value];
-    powerArrA.value = [phaseAPower.value];
-    powerArrB.value = [phaseBPower.value];
-    powerArrC.value = [phaseCPower.value];
+    powerArr.value = [phasePower.value];
   }
 };
 
@@ -406,13 +389,7 @@ const statusDesc = computed(() => {
   return powerStatus.value?.desc || "";
 });
 
-// 三相功率
-const powerA = computed(() => phaseAPower.value);
-const powerB = computed(() => phaseBPower.value);
-const powerC = computed(() => phaseCPower.value);
-const totalPower = computed(
-  () => +(powerA.value + powerB.value + powerC.value).toFixed(1),
-);
+const totalPower = computed(() => phasePower.value);
 
 const handleContactDialogSelect = (type: string) => {
   selectedContactType.value = type;
@@ -849,9 +826,7 @@ const buildRecordData = (relay: keyof ActionRelays): Record<string, any> => {
   if (isThreePhase.value) {
     const pw = powerCurveRef.value;
     if (pw) {
-      tempData.power_A = pw.historyA;
-      tempData.power_B = pw.historyB;
-      tempData.power_C = pw.historyC;
+      tempData.phasePower = pw.history;
       tempData.power_time = pw.xLabels;
     }
   }
@@ -939,20 +914,8 @@ onMounted(async () => {
       <PowerCurve
         ref="powerCurveRef"
         v-if="isThreePhase"
-        :three-phase="isThreePhase"
-        :voltage-a="phaseAVoltage"
-        :voltage-b="phaseBVoltage"
-        :voltage-c="phaseCVoltage"
-        :current-a="phaseACurrent"
-        :current-b="phaseBCurrent"
-        :current-c="phaseCCurrent"
-        :power-a="powerA"
-        :power-b="powerB"
-        :power-c="powerC"
         :total-power="totalPower"
-        :power-arr-a="isThreePhase ? powerArrA : undefined"
-        :power-arr-b="isThreePhase ? powerArrB : undefined"
-        :power-arr-c="isThreePhase ? powerArrC : undefined" />
+        :power-arr="isThreePhase ? powerArr : undefined" />
 
       <TestResults
         :tests="testResults"
