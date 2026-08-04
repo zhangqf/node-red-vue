@@ -362,6 +362,7 @@ const funThreePhaseACCollector = (data) => {
   phaseAPower.value = handleCalculate(data[12], 10000);
   phaseBPower.value = handleCalculate(data[13], 10000);
   phaseCPower.value = handleCalculate(data[14], 10000);
+  phasePower.value = handleCalculate(data[15], 10000);
 
   if (isAction.value) {
     registerArrA.value = [phaseACurrent.value];

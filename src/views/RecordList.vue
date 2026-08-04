@@ -38,9 +38,7 @@ const detailVisible = ref(false);
 const currentRecord = ref<RecordItem | null>(null);
 const curveData = ref<{ t: number; v: number }[]>([]);
 const powerCurveData = ref<{
-  power_A: number[];
-  power_B: number[];
-  power_C: number[];
+  phasePower: number[];
   power_time: string[];
 } | null>(null);
 const hasPowerData = computed(() => powerCurveData.value != null);
@@ -173,11 +171,9 @@ async function openDetail(record: RecordItem) {
     const res = await fetch(HTTP_URL + "/" + record.curve_file);
     const json = await res.json();
     curveData.value = json;
-    if (json.power_A && json.power_A.length) {
+    if (json.phasePower && json.phasePower.length) {
       powerCurveData.value = {
-        power_A: json.power_A,
-        power_B: json.power_B,
-        power_C: json.power_C,
+        phasePower: json.phasePower,
         power_time: json.power_time || json.time,
       };
     } else {
@@ -359,57 +355,13 @@ const chartOpt = computed(() => {
 
 const powerChartOpt = computed(() => {
   const pd = powerCurveData.value;
-  if (!pd) return {};
+  if (!pd || !pd.phasePower.length) return {};
 
-  const allData = [...pd.power_A, ...pd.power_B, ...pd.power_C];
-  const hasData = allData.length > 0;
-  if (!hasData) return {};
-
-  const maxVal = Math.max(...allData, 0.01);
-  const minVal = Math.min(...allData, 0);
+  const maxVal = Math.max(...pd.phasePower, 0.01);
+  const minVal = Math.min(...pd.phasePower, 0);
   const padding = (maxVal - minVal) * 0.15 || 10;
 
-  const P_COLORS = { A: "#f04b4b", B: "#4dabf7", C: "#51cf66" };
-
-  function gradient(hex: string, alpha: number) {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r},${g},${b},${alpha})`;
-  }
-
-  function makeLine(name: string, data: number[], color: string) {
-    return {
-      name,
-      type: "line",
-      data,
-      smooth: false,
-      symbol: "none",
-      color,
-      lineStyle: {
-        color,
-        width: 1.5,
-        shadowBlur: 4,
-        shadowColor: gradient(color, 0.35),
-      },
-      areaStyle: {
-        color: {
-          type: "linear",
-          x: 0,
-          y: 0,
-          x2: 0,
-          y2: 1,
-          colorStops: [
-            { offset: 0, color: gradient(color, 0.15) },
-            { offset: 1, color: gradient(color, 0.01) },
-          ],
-        },
-      },
-      connectNulls: false,
-    };
-  }
-
-  const opt: any = {
+  return {
     animationDuration: 0,
     tooltip: {
       trigger: "axis",
@@ -420,7 +372,7 @@ const powerChartOpt = computed(() => {
         "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
     },
     backgroundColor: "transparent",
-    grid: { left: 48, right: 16, top: 10, bottom: 36 },
+    grid: { left: 48, right: 16, top: 10, bottom: 24 },
     xAxis: {
       type: "category",
       data: pd.power_time,
@@ -453,23 +405,8 @@ const powerChartOpt = computed(() => {
         formatter: (v: number) => v.toFixed(0) + "W",
       },
     },
-    legend: {
-      data: ["A相功率", "B相功率", "C相功率"],
-      bottom: 0,
-      left: 48,
-      textStyle: { color: "#8fb4d8", fontSize: 10 },
-      icon: "roundRect",
-      itemWidth: 14,
-      itemHeight: 8,
-    },
-    series: [
-      makeLine("A相功率", pd.power_A, P_COLORS.A),
-      makeLine("B相功率", pd.power_B, P_COLORS.B),
-      makeLine("C相功率", pd.power_C, P_COLORS.C),
-    ],
+    series: [makeLine("功率", pd.phasePower, COLORS_SINGLE, 2)],
   };
-
-  return opt;
 });
 
 async function deleteList(id: string, curve_file: string) {
