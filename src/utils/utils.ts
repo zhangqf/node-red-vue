@@ -120,7 +120,7 @@ export const findRelayIndex = (
  * UNKNOWN：不在以上区间，阻值异常无法判定
  */
 function classifyResistance(val: number): ResistanceState {
-  if (val >= 12 && val <= 17) return "NORMAL";
+  if (val >= 8 && val <= 17) return "NORMAL";
   if (val >= 10000) return "OPEN";
   if (val <= 0.5) return "SHORT";
   return "UNKNOWN";
@@ -129,7 +129,7 @@ function classifyResistance(val: number): ResistanceState {
 // 10 -15
 
 function classifyResistanceZD6(val: number): ResistanceState {
-  if (val >= 8 && val <= 15) return "NORMAL";
+  if (val >= 2 && val <= 15) return "NORMAL";
   if (val >= 10000) return "OPEN";
   if (val <= 0.5) return "SHORT";
   return "UNKNOWN";
