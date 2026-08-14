@@ -19,7 +19,12 @@ import {
   getCircuits,
   mergeResistance,
 } from "@/utils/utils";
-import type { WSSTATUS, ActionRelays, TestItem, RelayTip } from "@/utils/interface";
+import type {
+  WSSTATUS,
+  ActionRelays,
+  TestItem,
+  RelayTip,
+} from "@/utils/interface";
 import {
   relayConfigList,
   StartPowerConfig,
@@ -60,6 +65,7 @@ const temperature = ref(0);
 const phaseACurrent = ref(0);
 const phaseBCurrent = ref(0);
 const phaseCCurrent = ref(0);
+const phasePower = ref(0);
 
 const testResults = ref<TestItem[]>([]);
 
@@ -220,7 +226,11 @@ const handleWsRelayData = (data: number[]) => {
                 return relayTips.push({ name: v, path: "D7→43-44→D3", closed });
               }
               if (item.type === "DCCX") {
-                return relayTips.push({ name: v, path: "D8→23→13-14→44→D3", closed });
+                return relayTips.push({
+                  name: v,
+                  path: "D8→23→13-14→44→D3",
+                  closed,
+                });
               }
               relayTips.push({ name: v, path: resCollect[v], closed });
               break;
@@ -727,10 +737,7 @@ const checkZeroCurrent = () => {
   if (isZero) {
     if (zeroSince === null) {
       zeroSince = performance.now();
-    } else if (
-      currentActionKey &&
-      performance.now() - zeroSince >= 1500
-    ) {
+    } else if (currentActionKey && performance.now() - zeroSince >= 1500) {
       finishAction(currentActionKey);
     }
   } else {
@@ -838,7 +845,9 @@ const handleOpe = (type: string) => {
 const deviceType = ref("");
 
 /* 通道电阻配置（全局，按 deviceType 匹配） */
-const channelConfigs = ref<{ device_type: string; config: ChannelExpect[] }[]>([]);
+const channelConfigs = ref<{ device_type: string; config: ChannelExpect[] }[]>(
+  [],
+);
 const currentChannelConfig = computed<ChannelExpect[] | undefined>(() => {
   return channelConfigs.value.find((c) => c.device_type === deviceType.value)
     ?.config;
