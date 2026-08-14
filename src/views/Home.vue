@@ -15,81 +15,6 @@ function goNormal() {
 <template>
   <div class="home-page">
     <!-- Decorative background illustration -->
-    <svg
-      class="bg-illustration"
-      viewBox="0 0 1200 700"
-      preserveAspectRatio="xMidYMid slice"
-      xmlns="http://www.w3.org/2000/svg">
-      <!-- Large sweeping curve - track line -->
-      <path
-        d="M-100,380 Q200,200 500,340 T1100,280"
-        stroke="#0f2a4a"
-        stroke-width="2"
-        fill="none"
-        opacity="0.6" />
-      <path
-        d="M-100,420 Q200,240 500,380 T1100,320"
-        stroke="#0f2a4a"
-        stroke-width="1.5"
-        fill="none"
-        opacity="0.4" />
-      <path
-        d="M-100,460 Q200,280 500,420 T1100,360"
-        stroke="#0f2a4a"
-        stroke-width="2"
-        fill="none"
-        opacity="0.6" />
-
-      <!-- Cross ties on curves -->
-      <g opacity="0.25">
-        <line x1="80" y1="340" x2="80" y2="460" stroke="#1a3350" stroke-width="2" />
-        <line x1="160" y1="310" x2="160" y2="430" stroke="#1a3350" stroke-width="2" />
-        <line x1="240" y1="280" x2="240" y2="400" stroke="#1a3350" stroke-width="2" />
-        <line x1="320" y1="270" x2="320" y2="390" stroke="#1a3350" stroke-width="2" />
-        <line x1="400" y1="280" x2="400" y2="400" stroke="#1a3350" stroke-width="2" />
-        <line x1="480" y1="300" x2="480" y2="420" stroke="#1a3350" stroke-width="2" />
-        <line x1="560" y1="310" x2="560" y2="430" stroke="#1a3350" stroke-width="2" />
-        <line x1="640" y1="300" x2="640" y2="420" stroke="#1a3350" stroke-width="2" />
-        <line x1="720" y1="290" x2="720" y2="410" stroke="#1a3350" stroke-width="2" />
-        <line x1="800" y1="285" x2="800" y2="405" stroke="#1a3350" stroke-width="2" />
-        <line x1="880" y1="280" x2="880" y2="400" stroke="#1a3350" stroke-width="2" />
-        <line x1="960" y1="280" x2="960" y2="400" stroke="#1a3350" stroke-width="2" />
-        <line x1="1040" y1="280" x2="1040" y2="400" stroke="#1a3350" stroke-width="2" />
-      </g>
-
-      <!-- Decorative dots along the tracks -->
-      <g opacity="0.3">
-        <circle cx="120" cy="375" r="2" fill="#5a92d0" />
-        <circle cx="200" cy="340" r="2" fill="#5a92d0" />
-        <circle cx="280" cy="315" r="2" fill="#5a92d0" />
-        <circle cx="360" cy="305" r="2" fill="#5a92d0" />
-        <circle cx="440" cy="315" r="2" fill="#5a92d0" />
-        <circle cx="520" cy="340" r="2" fill="#5a92d0" />
-        <circle cx="600" cy="370" r="2" fill="#5a92d0" />
-        <circle cx="680" cy="360" r="2" fill="#5a92d0" />
-        <circle cx="760" cy="345" r="2" fill="#5a92d0" />
-        <circle cx="840" cy="335" r="2" fill="#5a92d0" />
-        <circle cx="920" cy="325" r="2" fill="#5a92d0" />
-        <circle cx="1000" cy="320" r="2" fill="#5a92d0" />
-      </g>
-
-      <!-- Scattered tech dots -->
-      <g opacity="0.15">
-        <circle cx="60" cy="120" r="1.5" fill="#5a92d0" />
-        <circle cx="150" cy="80" r="1.5" fill="#5a92d0" />
-        <circle cx="300" cy="150" r="1.5" fill="#5a92d0" />
-        <circle cx="500" cy="100" r="1" fill="#5a92d0" />
-        <circle cx="700" cy="130" r="1.5" fill="#5a92d0" />
-        <circle cx="850" cy="90" r="1" fill="#5a92d0" />
-        <circle cx="1000" cy="140" r="1.5" fill="#5a92d0" />
-        <circle cx="1100" cy="100" r="1" fill="#5a92d0" />
-        <circle cx="100" cy="550" r="1.5" fill="#5a92d0" />
-        <circle cx="350" cy="580" r="1" fill="#5a92d0" />
-        <circle cx="600" cy="560" r="1.5" fill="#5a92d0" />
-        <circle cx="800" cy="590" r="1" fill="#5a92d0" />
-        <circle cx="1050" cy="570" r="1.5" fill="#5a92d0" />
-      </g>
-    </svg>
 
     <!-- Content overlay -->
     <div class="content-overlay">
@@ -104,12 +29,38 @@ function goNormal() {
         <div class="mode-card" @click="goStation">
           <div class="card-glow"></div>
           <div class="card-icon-box">
-            <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg
+              viewBox="0 0 72 72"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg">
               <!-- Track lines -->
-              <line x1="6" y1="38" x2="66" y2="38" stroke="#5a92d0" stroke-width="2.5" stroke-linecap="round" opacity="0.5" />
-              <line x1="6" y1="50" x2="66" y2="50" stroke="#5a92d0" stroke-width="2.5" stroke-linecap="round" opacity="0.3" />
+              <line
+                x1="6"
+                y1="38"
+                x2="66"
+                y2="38"
+                stroke="#5a92d0"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                opacity="0.5" />
+              <line
+                x1="6"
+                y1="50"
+                x2="66"
+                y2="50"
+                stroke="#5a92d0"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                opacity="0.3" />
               <!-- Switch -->
-              <line x1="30" y1="38" x2="45" y2="50" stroke="#5a92d0" stroke-width="2" stroke-linecap="round" />
+              <line
+                x1="30"
+                y1="38"
+                x2="45"
+                y2="50"
+                stroke="#5a92d0"
+                stroke-width="2"
+                stroke-linecap="round" />
               <!-- Active device markers -->
               <circle cx="18" cy="38" r="4" fill="#34d399" opacity="0.9" />
               <circle cx="18" cy="38" r="8" fill="#34d399" opacity="0.15" />
@@ -121,7 +72,9 @@ function goNormal() {
           </div>
           <div class="card-content">
             <h2 class="card-title">站场模式</h2>
-            <p class="card-desc">以站场拓扑视图展示转辙机点位分布，<br />直观查看设备状态与实时数据</p>
+            <p class="card-desc">
+              以站场拓扑视图展示转辙机点位分布，<br />直观查看设备状态与实时数据
+            </p>
           </div>
           <div class="card-footer">
             <span class="card-enter">进入模式</span>
@@ -133,26 +86,119 @@ function goNormal() {
         <div class="mode-card" @click="goNormal">
           <div class="card-glow"></div>
           <div class="card-icon-box">
-            <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg
+              viewBox="0 0 72 72"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg">
               <!-- Grid cards -->
-              <rect x="8" y="10" width="24" height="22" rx="4" stroke="#5a92d0" stroke-width="1.8" fill="rgba(90,146,208,0.06)" />
-              <rect x="40" y="10" width="24" height="22" rx="4" stroke="#5a92d0" stroke-width="1.8" fill="rgba(90,146,208,0.06)" />
-              <rect x="8" y="40" width="24" height="22" rx="4" stroke="#5a92d0" stroke-width="1.8" fill="rgba(90,146,208,0.06)" />
-              <rect x="40" y="40" width="24" height="22" rx="4" stroke="#5a92d0" stroke-width="1.8" fill="rgba(90,146,208,0.06)" />
+              <rect
+                x="8"
+                y="10"
+                width="24"
+                height="22"
+                rx="4"
+                stroke="#5a92d0"
+                stroke-width="1.8"
+                fill="rgba(90,146,208,0.06)" />
+              <rect
+                x="40"
+                y="10"
+                width="24"
+                height="22"
+                rx="4"
+                stroke="#5a92d0"
+                stroke-width="1.8"
+                fill="rgba(90,146,208,0.06)" />
+              <rect
+                x="8"
+                y="40"
+                width="24"
+                height="22"
+                rx="4"
+                stroke="#5a92d0"
+                stroke-width="1.8"
+                fill="rgba(90,146,208,0.06)" />
+              <rect
+                x="40"
+                y="40"
+                width="24"
+                height="22"
+                rx="4"
+                stroke="#5a92d0"
+                stroke-width="1.8"
+                fill="rgba(90,146,208,0.06)" />
               <!-- Text lines in cards -->
-              <rect x="13" y="15" width="14" height="3" rx="1.5" fill="#5a92d0" opacity="0.4" />
-              <rect x="13" y="21" width="9" height="2" rx="1" fill="#5a92d0" opacity="0.25" />
-              <rect x="45" y="15" width="14" height="3" rx="1.5" fill="#5a92d0" opacity="0.4" />
-              <rect x="45" y="21" width="9" height="2" rx="1" fill="#5a92d0" opacity="0.25" />
-              <rect x="13" y="45" width="14" height="3" rx="1.5" fill="#5a92d0" opacity="0.4" />
-              <rect x="13" y="51" width="9" height="2" rx="1" fill="#5a92d0" opacity="0.25" />
-              <rect x="45" y="45" width="14" height="3" rx="1.5" fill="#5a92d0" opacity="0.4" />
-              <rect x="45" y="51" width="9" height="2" rx="1" fill="#5a92d0" opacity="0.25" />
+              <rect
+                x="13"
+                y="15"
+                width="14"
+                height="3"
+                rx="1.5"
+                fill="#5a92d0"
+                opacity="0.4" />
+              <rect
+                x="13"
+                y="21"
+                width="9"
+                height="2"
+                rx="1"
+                fill="#5a92d0"
+                opacity="0.25" />
+              <rect
+                x="45"
+                y="15"
+                width="14"
+                height="3"
+                rx="1.5"
+                fill="#5a92d0"
+                opacity="0.4" />
+              <rect
+                x="45"
+                y="21"
+                width="9"
+                height="2"
+                rx="1"
+                fill="#5a92d0"
+                opacity="0.25" />
+              <rect
+                x="13"
+                y="45"
+                width="14"
+                height="3"
+                rx="1.5"
+                fill="#5a92d0"
+                opacity="0.4" />
+              <rect
+                x="13"
+                y="51"
+                width="9"
+                height="2"
+                rx="1"
+                fill="#5a92d0"
+                opacity="0.25" />
+              <rect
+                x="45"
+                y="45"
+                width="14"
+                height="3"
+                rx="1.5"
+                fill="#5a92d0"
+                opacity="0.4" />
+              <rect
+                x="45"
+                y="51"
+                width="9"
+                height="2"
+                rx="1"
+                fill="#5a92d0"
+                opacity="0.25" />
             </svg>
           </div>
           <div class="card-content">
             <h2 class="card-title">常规模式</h2>
-            <p class="card-desc">列表形式浏览设备清单，按步骤选择<br />组合方式与测试机型进入工作台</p>
+            <p class="card-desc">
+              列表形式浏览设备清单，按步骤选择<br />组合方式与测试机型进入工作台
+            </p>
           </div>
           <div class="card-footer">
             <span class="card-enter">进入模式</span>
@@ -231,7 +277,7 @@ function goNormal() {
 
 .mode-card {
   width: 340px;
-  background: rgba(11, 29, 51, 0.85);
+  background: rgba(40, 93, 157, 0);
   border: 1px solid rgba(26, 45, 68, 0.8);
   border-radius: 16px;
   padding: 32px 28px 24px;
@@ -245,13 +291,17 @@ function goNormal() {
 .card-glow {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 30% 20%, rgba(90, 146, 208, 0.06) 0%, transparent 60%);
+  background: radial-gradient(
+    ellipse at 30% 20%,
+    rgba(117, 161, 212, 0.06) 0%,
+    transparent 60%
+  );
   opacity: 0;
   transition: opacity 0.35s;
 }
 
 .mode-card:hover {
-  border-color: #2d5280;
+  border-color: #386397;
   background: rgba(15, 34, 64, 0.9);
   transform: translateY(-3px);
   box-shadow:
@@ -290,14 +340,14 @@ function goNormal() {
 .card-title {
   font-size: 22px;
   font-weight: 700;
-  color: #e0e8f0;
+  color: #ffffff;
   margin-bottom: 12px;
   letter-spacing: 1px;
 }
 
 .card-desc {
   font-size: 13px;
-  color: #5a7288;
+  color: #ffffff;
   line-height: 1.7;
 }
 
@@ -312,13 +362,13 @@ function goNormal() {
 
 .card-enter {
   font-size: 13px;
-  color: #5a92d0;
+  color: #ffffff;
   transition: color 0.3s;
 }
 
 .card-arrow {
   font-size: 16px;
-  color: #5a92d0;
+  color: #cfd4d9;
   opacity: 0.6;
   transition: all 0.3s;
   transform: translateX(0);
