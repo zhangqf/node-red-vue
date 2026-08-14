@@ -236,15 +236,17 @@ export const startBeforeTestExpress = (
     };
   });
 
-  // 全路12-17Ω → 两种方向均可用
+  // 全部通道均为 NORMAL（导通）→ 判定混线
   const allNormal = states.slice(0, 4).every((s) => s === "NORMAL");
 
-  const dcPassed = allNormal || dcResult.every((r) => r.isNormal);
-  const fcPassed = allNormal || fcResult.every((r) => r.isNormal);
+  const dcPassed = dcResult.every((r) => r.isNormal);
+  const fcPassed = fcResult.every((r) => r.isNormal);
 
   const diagnosis: string[] = [];
 
-  if (!dcPassed && !fcPassed) {
+  if (allNormal) {
+    diagnosis.push("混线：所有通道阻值均为正常区间");
+  } else if (!dcPassed && !fcPassed) {
     dcResult.forEach((r) => {
       if (!r.isNormal)
         diagnosis.push(`定操-${r.channelName}: ${r.tip}(${r.value}Ω)`);
@@ -294,7 +296,8 @@ export function getCircuits(
   if (!series || !model || !cfg) return;
   const ser = ZD6Serial[model];
   const mod = ModelConfig[cfg];
-  return collectConfig[series][ser][mod];
+  const seriesKey = series === "ZD9" ? "ZD6" : series;
+  return collectConfig[seriesKey][ser][mod];
 }
 
 export function mergeResistance(data: number[]) {

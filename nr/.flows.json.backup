@@ -476,7 +476,9 @@
             "8bf1ce1378e4a32f",
             "0dace50e9abecc01",
             "cab95c171cc5909c",
-            "ce15735096e71c15"
+            "ce15735096e71c15",
+            "078c0a98c1f64460",
+            "89c1558278b3aad0"
         ],
         "x": 114,
         "y": 4939,
@@ -4588,7 +4590,7 @@
         "z": "e4bbd3713100fe17",
         "g": "cf823ce89da7f786",
         "name": "查询config",
-        "func": "const config = msg.req.body.config;\n\nif(!config) {\n    return [\n        null,\n        { ...msg, payload: { code: 500, message: \"config 不能为空\" }, statusCode: 500 }\n    ];\n}\n\nmsg.topic = `SELECT * FROM config WHERE name='${config}'`;\nreturn [msg, null];",
+        "func": "const config = msg.req.body.config;\nconst typeName = msg.req.body.typeName || \"\";\nif(!config) {\n    return [\n        null,\n        { ...msg, payload: { code: 500, message: \"config 不能为空\" }, statusCode: 500 }\n    ];\n}\n\nconst safeType = typeName.replace(/'/g, \"''\");\nmsg.topic = `SELECT cfg.* FROM config cfg\nJOIN combination_config_bindings ccb ON ccb.config_id = cfg.id\nJOIN combination comb ON ccb.binding_id LIKE '%' || comb.id\nWHERE cfg.name='${config}' AND comb.deviceType='${safeType}'`;\nreturn [msg, null];",
         "outputs": 2,
         "timeout": 0,
         "noerr": 0,
@@ -4629,7 +4631,7 @@
         "z": "e4bbd3713100fe17",
         "g": "cf823ce89da7f786",
         "name": "查询combination",
-        "func": " msg.config = msg.payload[0]\nconst combination = msg.req.body.combination;\n\nif(!combination) throw Error(\"config 不能为空\")\n\nmsg.topic=`\nSELECT * FROM combination WHERE name='${combination}'\n`\nreturn msg;",
+        "func": "msg.config = msg.payload[0]\nconst combination = msg.req.body.combination;\n\nif(!combination) throw Error(\"config 不能为空\")\n\nconst typeName = (msg.req.body.typeName || \"\").replace(/'/g, \"''\");\nmsg.topic = `SELECT * FROM combination WHERE name='${combination}' AND deviceType='${typeName}'`\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -5072,7 +5074,7 @@
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
         "name": "表示",
-        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst data = [1,1,0,0,0,0,0,0,1,1,1,0,0,1,1,1]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 3,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
+        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst data = [1,1,1,0,0,0,0,0,1,1,1,0,0,1,1,1]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 3,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -5091,7 +5093,6 @@
         "id": "a20ffea59d710210",
         "type": "inject",
         "z": "e4bbd3713100fe17",
-        "d": true,
         "g": "264be9ece447ca9d",
         "name": "",
         "props": [
@@ -5920,6 +5921,40 @@
         "statusType": "auto",
         "x": 260,
         "y": 5140,
+        "wires": []
+    },
+    {
+        "id": "078c0a98c1f64460",
+        "type": "catch",
+        "z": "e4bbd3713100fe17",
+        "g": "cf823ce89da7f786",
+        "name": "",
+        "scope": null,
+        "uncaught": false,
+        "x": 420,
+        "y": 5320,
+        "wires": [
+            [
+                "89c1558278b3aad0"
+            ]
+        ]
+    },
+    {
+        "id": "89c1558278b3aad0",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "cf823ce89da7f786",
+        "name": "debug 14",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 620,
+        "y": 5320,
         "wires": []
     }
 ]
