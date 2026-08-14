@@ -31,8 +31,9 @@ import {
   StartBeforeTestConfig,
   contact24Closed,
   contact13Closed,
+  DEFAULT_THRESHOLD,
 } from "@/utils/config";
-import type { ChannelExpect } from "@/utils/config";
+import type { ChannelExpect, ResistanceThreshold } from "@/utils/config";
 
 import { speak } from "@/utils/speech";
 
@@ -173,6 +174,15 @@ const reverseTrue = computed(() => {
 // 定操/反操视角与按钮显示控制（交叉映射）：定位表示 → 显示反操，反位表示 → 显示定操
 const showDCGroup = computed(() => !positioningTrue.value);
 const showFCGroup = computed(() => !reverseTrue.value);
+
+// 诊断提示按当前视角过滤：定操视角只显示定操项，反操视角只显示反操项，混线等通用提示始终显示
+const displayDiagnosisMessages = computed(() => {
+  return diagnosisMessages.value.filter((msg) => {
+    if (msg.startsWith("定操-")) return showDCGroup.value;
+    if (msg.startsWith("反操-")) return showFCGroup.value;
+    return true;
+  });
+});
 
 // 按定位/反位状态过滤后的表示项
 const displayedTestResults = computed(() => {
@@ -319,6 +329,7 @@ const handleStartBeforeTestExpress = (data) => {
     r,
     deviceType.value,
     currentChannelConfig.value,
+    currentThreshold.value,
   );
   // 解析电路图 URL
   const resolveImg = (field: string) => {
@@ -509,6 +520,10 @@ const resetToStartBeforeTest = () => {
     clearTimeout(actionTimerId);
     actionTimerId = null;
   }
+  if (finalizeTimerId) {
+    clearTimeout(finalizeTimerId);
+    finalizeTimerId = null;
+  }
   zeroSince = null;
   currentActionKey = null;
   if (timerId) {
@@ -657,6 +672,14 @@ const persistCloseType = async (type: string) => {
 const handleContactConfigClick = (type: string) => {
   resetAllLock();
   selectedContactType.value = type;
+  // 切换闭合方式后，原启动前测试结果失效，需重新测试
+  startBeforeLoading.value = false;
+  startBeforeTestFinshed.value = false;
+  availableDirections.value = { DC: false, FC: false };
+  diagnosisMessages.value = [];
+  startBeforeTestTips.value = null;
+  completedDirections.value = new Set();
+  pendingSaveData.value = null;
   switch (type) {
     case "contact13Closed":
       handleContact13Closed();
@@ -688,9 +711,10 @@ const powerCurveRef = ref<InstanceType<typeof PowerCurve>>();
 let actionTimerId: number | null = null;
 let zeroSince: number | null = null;
 let currentActionKey: keyof ActionRelays | null = null;
+let finalizeTimerId: number | null = null;
 
-/* 结束本次动作：复位继电器、停止记录、保存数据、终止倒计时 */
-const finishAction = async (key: keyof ActionRelays) => {
+/* 结束本次动作：立即关闭继电器；超时结束时继续采集 1s 电流尾段后再停止记录并保存 */
+const finishAction = (key: keyof ActionRelays, collectTail = false) => {
   if (actionTimerId) {
     clearTimeout(actionTimerId);
     actionTimerId = null;
@@ -698,9 +722,30 @@ const finishAction = async (key: keyof ActionRelays) => {
   zeroSince = null;
   currentActionKey = null;
 
+  // 先停倒计时，避免尾段采集期间被倒计时解锁
+  if (timerId) {
+    clearInterval(timerId);
+    timerId = null;
+  }
+  nextDoTime.value = 15;
+
   const relay = configActionRelays.value![key];
   batchUpdateTerminal(relay, 0);
   handleDo();
+
+  if (collectTail) {
+    // 超时：关闭继电器后继续采集 1s 电流尾段，再停止记录并保存
+    finalizeTimerId = window.setTimeout(() => {
+      finalizeAction(key);
+    }, 1000);
+  } else {
+    // 正常归零：立即停止记录并保存
+    finalizeAction(key);
+  }
+};
+
+const finalizeAction = async (key: keyof ActionRelays) => {
+  finalizeTimerId = null;
   stopRecord();
 
   const bothAvailable =
@@ -721,11 +766,6 @@ const finishAction = async (key: keyof ActionRelays) => {
   }
 
   // 操动结束
-  if (timerId) {
-    clearInterval(timerId);
-    timerId = null;
-  }
-  nextDoTime.value = 15;
   butItemIsDisable.value = false;
   const finishedDir = butItemStatus.value;
   butItemStatus.value = "";
@@ -772,7 +812,7 @@ const handleRelayAction = (key: keyof ActionRelays) => {
   zeroSince = null;
   currentActionKey = key;
   actionTimerId = setTimeout(() => {
-    finishAction(key);
+    finishAction(key, true);
   }, 15000);
 };
 
@@ -871,17 +911,48 @@ const currentChannelConfig = computed<ChannelExpect[] | undefined>(() => {
     ?.config;
 });
 
+/* 阻值判定阈值（全局，按 deviceType 匹配） */
+const resistanceThresholds = ref<
+  {
+    device_type: string;
+    normal_min: number;
+    normal_max: number;
+    open_min: number;
+    short_max: number;
+  }[]
+>([]);
+const currentThreshold = computed<ResistanceThreshold>(() => {
+  const t = resistanceThresholds.value.find(
+    (c) => c.device_type === deviceType.value,
+  );
+  return t
+    ? {
+        normalMin: t.normal_min,
+        normalMax: t.normal_max,
+        openMin: t.open_min,
+        shortMax: t.short_max,
+      }
+    : DEFAULT_THRESHOLD;
+});
+
 /* 获取列表数据 */
 async function getList() {
   try {
-    const [itemRes, deviceRes, comboRes, configRes, channelConfigRes] =
-      await Promise.all([
-        fetch(HTTP_URL + "/getConfig/" + deviceId + "/" + combinationId.value),
-        fetch(HTTP_URL + "/getDevice/" + deviceId),
-        fetch(HTTP_URL + "/getCombination/" + combinationId.value),
-        fetch(HTTP_URL + "/getConfigList/" + configId.value),
-        fetch(HTTP_URL + "/getChannelConfigs"),
-      ]);
+    const [
+      itemRes,
+      deviceRes,
+      comboRes,
+      configRes,
+      channelConfigRes,
+      thresholdRes,
+    ] = await Promise.all([
+      fetch(HTTP_URL + "/getConfig/" + deviceId + "/" + combinationId.value),
+      fetch(HTTP_URL + "/getDevice/" + deviceId),
+      fetch(HTTP_URL + "/getCombination/" + combinationId.value),
+      fetch(HTTP_URL + "/getConfigList/" + configId.value),
+      fetch(HTTP_URL + "/getChannelConfigs"),
+      fetch(HTTP_URL + "/getResistanceThresholds"),
+    ]);
 
     itemConfig.value = await itemRes.json();
 
@@ -905,6 +976,7 @@ async function getList() {
     configName.value = configData.name || "";
 
     channelConfigs.value = await channelConfigRes.json();
+    resistanceThresholds.value = await thresholdRes.json();
   } catch (e) {
     console.error("加载数据失败:", e);
     throw e;
@@ -914,11 +986,13 @@ async function getList() {
 /* 获取代码设备列表 */
 async function getCodeDeviceList() {
   try {
-    const [comboRes, configRes, channelConfigRes] = await Promise.all([
-      fetch(HTTP_URL + "/getCombination/" + combinationId.value),
-      fetch(HTTP_URL + "/getConfigList/" + configId.value),
-      fetch(HTTP_URL + "/getChannelConfigs"),
-    ]);
+    const [comboRes, configRes, channelConfigRes, thresholdRes] =
+      await Promise.all([
+        fetch(HTTP_URL + "/getCombination/" + combinationId.value),
+        fetch(HTTP_URL + "/getConfigList/" + configId.value),
+        fetch(HTTP_URL + "/getChannelConfigs"),
+        fetch(HTTP_URL + "/getResistanceThresholds"),
+      ]);
 
     active.value = configId.value;
     device.value.name = codeName;
@@ -935,6 +1009,7 @@ async function getCodeDeviceList() {
     configName.value = configData.name || "";
 
     channelConfigs.value = await channelConfigRes.json();
+    resistanceThresholds.value = await thresholdRes.json();
 
     if (
       routeCloseType === "contact13Closed" ||
@@ -1141,7 +1216,7 @@ onMounted(async () => {
         :test-result="startBeforeTestTips"
         :start-before-loading="startBeforeLoading"
         :available-directions="availableDirections"
-        :diagnosis-messages="diagnosisMessages"
+        :diagnosis-messages="displayDiagnosisMessages"
         :start-before-test-finshed="startBeforeTestFinshed"
         :show-d-c="showDCGroup"
         :show-f-c="showFCGroup"

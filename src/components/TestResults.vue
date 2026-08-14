@@ -347,13 +347,22 @@ const groupedRows = computed<GroupRow[]>(() => {
                 class="circuit-loop-row">
                 <span
                   class="circuit-port-badge"
-                  :class="{ 'port-ok': tip.closed && !row.test.status }"
+                  :class="{
+                    'port-ok': tip.closed && !row.test.status,
+                    'port-ng': !tip.closed && !row.test.status,
+                  }"
                   >{{ tip.name }}</span
                 >
                 <span
                   class="circuit-path-text"
-                  :class="{ 'path-ok': tip.closed && !row.test.status }"
-                  >{{ tip.path }}</span
+                  :class="{
+                    'path-ok': tip.closed && !row.test.status,
+                    'path-ng': !tip.closed && !row.test.status,
+                  }"
+                  >{{ tip.path
+                  }}<span v-if="!row.test.status" class="circuit-tip-status">{{
+                    tip.closed ? "成功" : "失败"
+                  }}</span></span
                 >
               </div>
             </div>
@@ -915,6 +924,21 @@ const groupedRows = computed<GroupRow[]>(() => {
 
 .circuit-path-text.path-ok {
   color: #34d399;
+}
+
+.circuit-port-badge.port-ng {
+  background: rgba(248, 113, 113, 0.15);
+  border-color: rgba(248, 113, 113, 0.35);
+  color: #f87171;
+}
+
+.circuit-path-text.path-ng {
+  color: #f87171;
+}
+
+.circuit-tip-status {
+  margin-left: 6px;
+  font-weight: 700;
 }
 
 /* ---- 查看电路图按钮行 ---- */

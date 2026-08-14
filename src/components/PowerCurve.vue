@@ -147,9 +147,7 @@ watch(
             formatter: (v: number) => v.toFixed(2) + "KW",
           },
         },
-        series: hasData
-          ? [makeLine("功率", history.value, COLOR)]
-          : [],
+        series: hasData ? [makeLine("功率", history.value, COLOR)] : [],
         graphic: [],
       };
 
@@ -237,7 +235,7 @@ defineExpose({ resetData, history, xLabels });
     <div ref="container" class="chart-container">
       <v-chart :option="chartOpt" autoresize />
     </div>
-    <div class="power-readings">
+    <!-- <div class="power-readings">
       <div class="total-row">
         <span class="total-label">总功率</span>
         <span class="total-value">{{ totalPower }}W</span>
@@ -245,7 +243,7 @@ defineExpose({ resetData, history, xLabels });
           >({{ ((totalPower ?? 0) / 1000).toFixed(2) }}KW)</span
         >
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 

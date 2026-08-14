@@ -199,6 +199,25 @@ export interface StartBeforeTestReturn {
 // ===== 启动前测试：4路阻值方向判定 =====
 export type ResistanceState = "NORMAL" | "OPEN" | "SHORT" | "UNKNOWN";
 
+// ===== 阻值判定阈值（可按机型配置） =====
+// normalMin：判定为正常(导通)的下限阻值(Ω)
+// normalMax：判定为正常(导通)的上限阻值(Ω)
+// openMin：判定为开路(断线)的下限阻值(Ω)
+// shortMax：判定为混线(短路)的上限阻值(Ω)
+export interface ResistanceThreshold {
+  normalMin: number;
+  normalMax: number;
+  openMin: number;
+  shortMax: number;
+}
+
+export const DEFAULT_THRESHOLD: ResistanceThreshold = {
+  normalMin: 1,
+  normalMax: 40,
+  openMin: 10000,
+  shortMax: 0.5,
+};
+
 /* 
 
 单：1
@@ -241,6 +260,7 @@ export const ModelConfig = {
   二动B机: "203B4",
   二动J机: "203B4",
   单动单机: "1314",
+  "ZD6-D": "1314",
   单动A机: "13A4",
   单动B机: "13B4",
   一动单机: "10314",

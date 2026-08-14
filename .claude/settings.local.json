@@ -31,7 +31,10 @@
       "Bash(curl -s -w \"\\\\nHTTP %{http_code}\\\\n\" -X POST http://127.0.0.1:1880/saveChannelConfig -H \"Content-Type: application/json\" -d '{\"device_type\":\"__VERIFY__\",\"config\":[{\"name\":\"t\",\"dcExpect\":\"NORMAL\",\"fcExpect\":\"OPEN\",\"dcShortTip\":\"\",\"fcShortTip\":\"\",\"openFaultTip\":\"\",\"circuitField\":\"\"}]}')",
       "Bash(curl -s -o /dev/null -w \"delete HTTP %{http_code}\\\\n\" -X DELETE http://127.0.0.1:1880/deleteChannelConfig/__VERIFY__)",
       "Bash(npm run *)",
-      "Bash(echo \"EXIT: $?\")"
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(git -C /Users/zhangfeng/project/node-red-vue/switch-machine diff --stat nr/flows.json)",
+      "Bash(git -C /Users/zhangfeng/project/node-red-vue/switch-machine diff nr/flows.json)",
+      "Bash(grep *)"
     ]
   }
 }
