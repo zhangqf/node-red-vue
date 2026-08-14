@@ -475,7 +475,8 @@
             "c0007bc92a7f5b32",
             "8bf1ce1378e4a32f",
             "0dace50e9abecc01",
-            "cab95c171cc5909c"
+            "cab95c171cc5909c",
+            "ce15735096e71c15"
         ],
         "x": 114,
         "y": 4939,
@@ -4469,7 +4470,8 @@
         "y": 5060,
         "wires": [
             [
-                "0a0e4905bb8c08c1"
+                "0a0e4905bb8c08c1",
+                "ce15735096e71c15"
             ]
         ]
     },
@@ -4511,7 +4513,7 @@
         "z": "e4bbd3713100fe17",
         "g": "cf823ce89da7f786",
         "name": "handleAdd",
-        "func": "\nconst config = msg.config\nconst combination = msg.combination\nconst data = msg.req.body\n\nmsg.params = {\n    $id: msg.uuid,\n    $name: data.name,\n    $typeName: data.typeName,\n    $location: data.location,\n    $configId:config.id,\n    $combinationId:combination.id\n}\n\n\nreturn msg;",
+        "func": "\nconst config = msg.config\nconst combination = msg.combination\nconst data = msg.req.body\n\nmsg.params = {\n    $id: msg.uuid,\n    $name: data.name,\n    $typeName: data.typeName,\n    $location: data.location,\n    $configId:config.id,\n    $combinationId:combination.id,\n    $closeType: data.closeType || \"\"\n}\n\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -4533,7 +4535,7 @@
         "g": "cf823ce89da7f786",
         "mydb": "a074385e545da94b",
         "sqlquery": "prepared",
-        "sql": "INSERT OR REPLACE INTO code_device (id, name,typeName, location,configId,combinationId) VALUES ($id, $name, $typeName,$location, $configId,$combinationId)\n\n",
+        "sql": "INSERT OR REPLACE INTO code_device (id, name,typeName, location,configId,combinationId,closeType) VALUES ($id, $name, $typeName,$location, $configId,$combinationId,$closeType)\n\n",
         "name": "deviceDB",
         "x": 1320,
         "y": 5040,
@@ -4572,7 +4574,7 @@
         "g": "cf823ce89da7f786",
         "mydb": "a074385e545da94b",
         "sqlquery": "fixed",
-        "sql": "\n\nCREATE TABLE IF NOT EXISTS code_device (\n    id TEXT PRIMARY KEY NOT NULL,\n    name TEXT NOT NULL,\n    typeName TEXT NOT NULL,\n    combinationId TEXT NOT NULL,\n    configId TEXT NOT NULL,\n    location TEXT,\n    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);\n\n--   CREATE TABLE device_combination_bindings (\n--     device_id      TEXT NOT NULL,\n--     combination_id TEXT NOT NULL,\n--     PRIMARY KEY (device_id, combination_id),\n--     FOREIGN KEY (device_id)      REFERENCES device(id) ON DELETE CASCADE,\n--     FOREIGN KEY (combination_id) REFERENCES combinations(id)  ON DELETE CASCADE\n--   );\n",
+        "sql": "\n\nCREATE TABLE IF NOT EXISTS code_device (\n    id TEXT PRIMARY KEY NOT NULL,\n    name TEXT NOT NULL,\n    typeName TEXT NOT NULL,\n    combinationId TEXT NOT NULL,\n    configId TEXT NOT NULL,\n    location TEXT,\n    closeType TEXT,\n    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);\n\n--   CREATE TABLE device_combination_bindings (\n--     device_id      TEXT NOT NULL,\n--     combination_id TEXT NOT NULL,\n--     PRIMARY KEY (device_id, combination_id),\n--     FOREIGN KEY (device_id)      REFERENCES device(id) ON DELETE CASCADE,\n--     FOREIGN KEY (combination_id) REFERENCES combinations(id)  ON DELETE CASCADE\n--   );\n",
         "name": "deviceDB",
         "x": 1220,
         "y": 5360,
@@ -5089,6 +5091,7 @@
         "id": "a20ffea59d710210",
         "type": "inject",
         "z": "e4bbd3713100fe17",
+        "d": true,
         "g": "264be9ece447ca9d",
         "name": "",
         "props": [
@@ -5477,6 +5480,7 @@
         "id": "069b66a93b3c85a9",
         "type": "inject",
         "z": "e4bbd3713100fe17",
+        "d": true,
         "g": "264be9ece447ca9d",
         "name": "",
         "props": [
@@ -5803,6 +5807,119 @@
         },
         "x": 1460,
         "y": 4960,
+        "wires": []
+    },
+    {
+        "id": "cd00000000000001",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "cf823ce89da7f786",
+        "name": "updateCodeDeviceCloseType",
+        "url": "/updateCodeDeviceCloseType",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 220,
+        "y": 5540,
+        "wires": [
+            [
+                "cd00000000000002"
+            ]
+        ]
+    },
+    {
+        "id": "cd00000000000002",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "cf823ce89da7f786",
+        "name": "构建closeType参数",
+        "func": "const data = msg.req.body || {};\nif (!data.id || !data.closeType) {\n    msg.statusCode = 400;\n    msg.payload = { code: 400, message: 'id 或 closeType 不能为空' };\n    return [null, msg];\n}\nmsg.params = {\n    $id: data.id,\n    $closeType: data.closeType\n};\nreturn [msg, null];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 5540,
+        "wires": [
+            [
+                "cd00000000000003"
+            ],
+            [
+                "cd00000000000005"
+            ]
+        ]
+    },
+    {
+        "id": "cd00000000000003",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "cf823ce89da7f786",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "prepared",
+        "sql": "UPDATE code_device SET closeType = $closeType WHERE id = $id",
+        "name": "更新closeType",
+        "x": 760,
+        "y": 5540,
+        "wires": [
+            [
+                "cd00000000000004"
+            ]
+        ]
+    },
+    {
+        "id": "cd00000000000004",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "cf823ce89da7f786",
+        "name": "更新成功响应",
+        "func": "msg.payload = { code: 200, message: '操作成功' };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1010,
+        "y": 5540,
+        "wires": [
+            [
+                "cd00000000000005"
+            ]
+        ]
+    },
+    {
+        "id": "cd00000000000005",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "cf823ce89da7f786",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 1240,
+        "y": 5540,
+        "wires": []
+    },
+    {
+        "id": "ce15735096e71c15",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "cf823ce89da7f786",
+        "name": "debug 13",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 260,
+        "y": 5140,
         "wires": []
     }
 ]

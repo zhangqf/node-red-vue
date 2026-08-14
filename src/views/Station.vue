@@ -18,6 +18,7 @@ interface Device {
   config?: string;
   combinationId?: string;
   configId?: string;
+  closeType?: string;
 }
 
 const devices = ref<Device[]>([]);
@@ -44,11 +45,17 @@ function deviceModel(name: string): string {
   return "";
 }
 
+function mapCloseType(v: string): string {
+  if (v.includes("1、3") || v === "contact13Closed") return "contact13Closed";
+  if (v.includes("2、4") || v === "contact24Closed") return "contact24Closed";
+  return "";
+}
+
 const groupedDevices = computed(() => {
   const groups: Record<string, Device[]> = {};
   for (const d of devices.value) {
-    const zone =
-      extractZone(d.location) || getStrContent(d.location) || "未分区";
+    // const zone = extractZone(d.location) || getStrContent(d.location);
+    const zone = d.location || "未分区";
     if (!groups[zone]) groups[zone] = [];
     groups[zone].push(d);
   }
@@ -66,6 +73,7 @@ function onDeviceClick(device: Device) {
     query: {
       opeModel: "code",
       name: device.name,
+      closeType: device.closeType || "",
     },
   });
 }
@@ -147,6 +155,7 @@ async function downloadExcelTemplate() {
     { header: "type", key: "type", width: 12 },
     { header: "combination", key: "combination", width: 20 },
     { header: "config", key: "config", width: 20 },
+    { header: "闭合方式", key: "closeType", width: 15 },
     { header: "location", key: "location", width: 15 },
   ];
 
@@ -156,6 +165,7 @@ async function downloadExcelTemplate() {
       type: "ZD6",
       combination: "单动单机",
       config: "ZD6-D",
+      closeType: "1、3闭合",
       location: "站场 A 区",
     },
   ]);
@@ -201,6 +211,15 @@ async function downloadExcelTemplate() {
       type: "list",
       allowBlank: true,
       formulae: ["'配置选项'!$A$2:$A$100"],
+    };
+  }
+
+  // Data validation: 闭合方式 (column E)
+  for (let r = 2; r <= 100; r++) {
+    ws.getCell(`E${r}`).dataValidation = {
+      type: "list",
+      allowBlank: true,
+      formulae: ['"1、3闭合,2、4闭合"'],
     };
   }
 
@@ -253,6 +272,9 @@ function parseRows(rows: Record<string, string>[]): Device[] {
       ),
       config: String(
         row["config"] || row["Config"] || row["配置"] || row["设备配置"] || "",
+      ),
+      closeType: mapCloseType(
+        String(row["闭合方式"] || row["closeType"] || "").trim(),
       ),
     });
   }
@@ -351,6 +373,7 @@ async function handleFileImport(event: Event) {
             location: device.location || "",
             combination: device.combination || "",
             config: device.config || "",
+            closeType: device.closeType || "",
           }),
         });
         const data = await res.json().catch(() => ({}));
