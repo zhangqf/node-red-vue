@@ -32,11 +32,17 @@ export interface ActionRelaysZYJ7 {
   FCCX: string[];
 }
 
+export interface RelayTip {
+  name: string;
+  path: string;
+  closed: boolean;
+}
+
 export interface TestItem {
   name: string;
   type: string;
-  status: boolean | number | string;
+  status: boolean | "NT";
   realCheck: boolean;
   relayName: string[];
-  realyTips?: Record<string, string>[];
+  relayTips?: RelayTip[];
 }

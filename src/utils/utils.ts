@@ -70,10 +70,11 @@ export const parseWsData = <T = any>(raw: string | null): T | null => {
  * @param expectedData 需要校验的继电器名称数组
  * @param realData 继电器实时状态数值数组，1=吸合，0=未吸合，下标与排序后采样表一一对应
  * @param sampleData 继电器采样配置数组，包含继电器名称、排序序号sort_order
- * @returns { matchIndexes: number[], allClosed: boolean, expectedData: string[] }
+ * @returns { matchIndexes: number[], allClosed: boolean, expectedData: string[], relayStates: Record<string, boolean> }
  * matchIndexes：匹配到的继电器在排序后realData中的下标集合；
  * allClosed：所有匹配继电器状态是否全部为1（全部吸合）；
- * expectedData：入参原始继电器名称数组
+ * expectedData：入参原始继电器名称数组；
+ * relayStates：继电器名称到吸合状态的映射（true=吸合，false=未吸合）
  */
 
 export const findRelayIndex = (
@@ -88,12 +89,16 @@ export const findRelayIndex = (
   sortedSample.forEach((item, idx) => nameToIndex.set(item.relay_name, idx));
 
   const matchIndexes: number[] = [];
+  const relayStates: Record<string, boolean> = {};
   for (const name of expectedData) {
     const idx = nameToIndex.get(name);
-    if (idx !== undefined) matchIndexes.push(idx);
+    if (idx !== undefined) {
+      matchIndexes.push(idx);
+      relayStates[name] = realData[idx] === 1;
+    }
   }
   if (matchIndexes.length === 0) {
-    return { matchIndexes: [], allClosed: false };
+    return { matchIndexes: [], allClosed: false, relayStates };
   }
   let allClosed = true;
   for (const idx of matchIndexes) {
@@ -102,7 +107,7 @@ export const findRelayIndex = (
       break;
     }
   }
-  return { matchIndexes, allClosed, expectedData };
+  return { matchIndexes, allClosed, expectedData, relayStates };
 };
 
 /**
@@ -115,7 +120,7 @@ export const findRelayIndex = (
  * UNKNOWN：不在以上区间，阻值异常无法判定
  */
 function classifyResistance(val: number): ResistanceState {
-  if (val >= 12 && val <= 17) return "NORMAL";
+  if (val >= 8 && val <= 17) return "NORMAL";
   if (val >= 10000) return "OPEN";
   if (val <= 0.5) return "SHORT";
   return "UNKNOWN";
@@ -124,7 +129,7 @@ function classifyResistance(val: number): ResistanceState {
 // 10 -15
 
 function classifyResistanceZD6(val: number): ResistanceState {
-  if (val >= 8 && val <= 15) return "NORMAL";
+  if (val >= 2 && val <= 15) return "NORMAL";
   if (val >= 10000) return "OPEN";
   if (val <= 0.5) return "SHORT";
   return "UNKNOWN";
@@ -178,22 +183,23 @@ function getDirectionTip(
 export const startBeforeTestExpress = (
   arr: number[],
   deviceType: string,
+  channelConfig?: ChannelExpect[],
 ): StartBeforeTestReturn => {
   let states = [];
 
-  let configOption = [];
+  let configOption: ChannelExpect[] = [];
   console.log(arr);
   if (deviceType === "ZD6" || deviceType === "ZD9") {
     arr = arr.slice(6, 8);
     states = arr.map(classifyResistanceZD6);
-    configOption = CHANNEL_CONFIGZD6;
+    configOption = channelConfig ?? CHANNEL_CONFIGZD6;
   }
   if (deviceType === "ZYJ7" || deviceType === "ZDJ9") {
     console.log(arr);
     arr = arr.slice(2);
     states = arr.map(classifyResistance);
     console.log(states);
-    configOption = CHANNEL_CONFIG;
+    configOption = channelConfig ?? CHANNEL_CONFIG;
   }
 
   const dcResult: ChannelResult[] = configOption.map((cfg, i) => {

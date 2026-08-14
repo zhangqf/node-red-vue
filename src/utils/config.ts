@@ -163,7 +163,7 @@ export const CHANNEL_CONFIGZD6: ChannelExpect[] = [
     circuitField: "DWBS",
   },
   {
-    name: "第8路",
+    name: "第8路IE",
     dcExpect: "OPEN",
     fcExpect: "NORMAL",
     dcShortTip: "D1D2混线",

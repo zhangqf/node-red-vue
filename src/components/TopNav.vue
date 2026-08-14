@@ -23,6 +23,7 @@ const menuItems = [
       { key: "combination-manager", label: "组合方式管理" },
       { key: "config-manager", label: "测试机型管理" },
       { key: "binding-manager", label: "绑定配置" },
+      { key: "channel-config-manager", label: "通道配置" },
     ],
   },
   { key: "history", label: "历史记录" },
