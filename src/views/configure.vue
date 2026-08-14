@@ -40,7 +40,7 @@ async function getCombinations(id: string) {
 }
 
 async function selectCombination(combo: any) {
-  // 通用模式：找到双动双机组合 + 一动J机(103B4)配置，直接进 work
+  // 通用模式：进入 work 后由 work 内选择四线制/六线制
   if (combo.id === UNIVERSAL_ID) {
     await handleUniversalMode();
     return;
@@ -65,44 +65,58 @@ async function selectCombination(combo: any) {
   }
 }
 
-async function handleUniversalMode() {
-  const zd6Combo = combinations.value.find(
-    (c) => c.name === "双动双机" && c.id !== UNIVERSAL_ID,
+// 按组合方式名 + 配置名定位，返回 { comboId, configId }，找不到返回 null
+async function resolveWire(
+  comboName: string,
+  configBaseName: string,
+): Promise<{ comboId: string; configId: string } | null> {
+  const targetCombo = combinations.value.find(
+    (c) => c.name === comboName && c.id !== UNIVERSAL_ID,
   );
-  if (!zd6Combo) {
-    error.value = "未找到双动双机组合方式";
-    return;
-  }
+  if (!targetCombo) return null;
   try {
     const res = await fetch(
       HTTP_URL +
         "/getConfigsByBinding/" +
         route.params.deviceId +
         "/" +
-        zd6Combo.id,
+        targetCombo.id,
     );
     const configList = await res.json();
-    // 匹配一动J机：cfg 为 103B4
     const targetConfig = configList.find((c: any) => {
       const cfg = (c.name || "").replace(/(【.+?】)$/, "");
-      return cfg === "一动J机";
+      return cfg === configBaseName;
     });
-    if (!targetConfig) {
-      error.value = "未找到一动J机(103B4)配置";
-      return;
-    }
-    router.push({
-      name: "work",
-      params: {
-        deviceId: route.params.deviceId,
-        combinationId: zd6Combo.id,
-        configId: targetConfig.id,
-      },
-      query: { universal: "true" },
-    });
+    if (!targetConfig) return null;
+    return { comboId: targetCombo.id, configId: targetConfig.id };
   } catch {
-    error.value = "通用模式加载失败";
+    return null;
   }
+}
+
+// 通用模式：解析六线制（双动双机 + 一动J机）与四线制（单动单机 + ZD6-D），
+// 进入 work，由 work 内弹窗选择接线方式
+async function handleUniversalMode() {
+  const sixWire = await resolveWire("双动双机", "一动J机");
+  if (!sixWire) {
+    error.value = "未找到六线制配置（双动双机 + 一动J机）";
+    return;
+  }
+  const fourWire = await resolveWire("单动单机", "ZD6-D");
+
+  router.push({
+    name: "work",
+    params: {
+      deviceId: route.params.deviceId,
+      combinationId: sixWire.comboId,
+      configId: sixWire.configId,
+    },
+    query: {
+      universal: "true",
+      fourCombo: fourWire?.comboId || "",
+      fourConfig: fourWire?.configId || "",
+    },
+  });
 }
 const selectedConfig = ref<any>(null);
 

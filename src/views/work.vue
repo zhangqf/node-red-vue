@@ -90,7 +90,10 @@ const device = ref({
 const combinationName = ref("");
 const configName = ref("");
 
-const showContactDialog = ref(true);
+const showContactDialog = ref(
+  route.query.opeModel !== "code" && route.query.universal !== "true",
+);
+const showWireDialog = ref(route.query.universal === "true");
 const selectedContactType = ref("");
 
 const currentData = ref({
@@ -120,12 +123,13 @@ const wsSendData = ref<number[] | null>(null);
 const active = ref<string>("");
 
 const deviceId = route.params.deviceId as string;
-const combinationId = route.params.combinationId as string;
-const configId = route.params.configId as string;
+const combinationId = ref(route.params.combinationId as string);
+const configId = ref(route.params.configId as string);
 
 const opeModel = route.query.opeModel as string;
 const codeName = route.query.name as string;
 const isUniversalMode = route.query.universal === "true";
+const routeCloseType = route.query.closeType as string;
 const indicationRelay = ref<any[]>([]);
 
 const startBeforeTestFinshed = ref(false);
@@ -637,6 +641,19 @@ const handleContact24Closed = () => {
   initTestResults();
 };
 
+const persistCloseType = async (type: string) => {
+  if (opeModel !== "code") return;
+  try {
+    await fetch(HTTP_URL + "/updateCodeDeviceCloseType", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: deviceId, closeType: type }),
+    });
+  } catch (e) {
+    console.error("保存闭合方式失败:", e);
+  }
+};
+
 const handleContactConfigClick = (type: string) => {
   resetAllLock();
   selectedContactType.value = type;
@@ -648,6 +665,7 @@ const handleContactConfigClick = (type: string) => {
       handleContact24Closed();
       break;
   }
+  persistCloseType(type);
 };
 
 const isAction = ref(false);
@@ -858,17 +876,19 @@ async function getList() {
   try {
     const [itemRes, deviceRes, comboRes, configRes, channelConfigRes] =
       await Promise.all([
-        fetch(HTTP_URL + "/getConfig/" + deviceId + "/" + combinationId),
+        fetch(HTTP_URL + "/getConfig/" + deviceId + "/" + combinationId.value),
         fetch(HTTP_URL + "/getDevice/" + deviceId),
-        fetch(HTTP_URL + "/getCombination/" + combinationId),
-        fetch(HTTP_URL + "/getConfigList/" + configId),
+        fetch(HTTP_URL + "/getCombination/" + combinationId.value),
+        fetch(HTTP_URL + "/getConfigList/" + configId.value),
         fetch(HTTP_URL + "/getChannelConfigs"),
       ]);
 
     itemConfig.value = await itemRes.json();
 
     if (itemConfig.value.length > 0) {
-      active.value = itemConfig.value.filter((v) => v.id === configId)[0].id;
+      active.value = itemConfig.value.filter(
+        (v) => v.id === configId.value,
+      )[0].id;
     }
 
     const deviceData = await deviceRes.json();
@@ -895,12 +915,12 @@ async function getList() {
 async function getCodeDeviceList() {
   try {
     const [comboRes, configRes, channelConfigRes] = await Promise.all([
-      fetch(HTTP_URL + "/getCombination/" + combinationId),
-      fetch(HTTP_URL + "/getConfigList/" + configId),
+      fetch(HTTP_URL + "/getCombination/" + combinationId.value),
+      fetch(HTTP_URL + "/getConfigList/" + configId.value),
       fetch(HTTP_URL + "/getChannelConfigs"),
     ]);
 
-    active.value = configId;
+    active.value = configId.value;
     device.value.name = codeName;
     const comboData = await comboRes.json();
 
@@ -915,6 +935,13 @@ async function getCodeDeviceList() {
     configName.value = configData.name || "";
 
     channelConfigs.value = await channelConfigRes.json();
+
+    if (
+      routeCloseType === "contact13Closed" ||
+      routeCloseType === "contact24Closed"
+    ) {
+      handleContactConfigClick(routeCloseType);
+    }
   } catch (e) {
     console.error("加载数据失败:", e);
     throw e;
@@ -1003,7 +1030,35 @@ const saveRecord = async (relay: keyof ActionRelays) => {
   await postRecord(tempData);
 };
 
+// 通用模式：加载数据后弹出闭合方式选择
+async function loadUniversalData() {
+  await withLoading(async () => {
+    await getList();
+  }, "数据加载成功");
+  showContactDialog.value = true;
+}
+
+// 六线制：沿用进入时携带的双动双机 + 一动J机
+function selectSixWire() {
+  showWireDialog.value = false;
+  loadUniversalData();
+}
+
+// 四线制：单动单机 + ZD6-D
+function selectFourWire() {
+  combinationId.value =
+    (route.query.fourCombo as string) || combinationId.value;
+  configId.value = (route.query.fourConfig as string) || configId.value;
+  showWireDialog.value = false;
+  loadUniversalData();
+}
+
 onMounted(async () => {
+  if (isUniversalMode) {
+    // 通用模式：先选择四线制/六线制，再加载数据
+    showWireDialog.value = true;
+    return;
+  }
   await withLoading(async () => {
     switch (opeModel) {
       case "code":
@@ -1019,6 +1074,17 @@ onMounted(async () => {
 </script>
 
 <template>
+  <!-- 通用模式：四线制/六线制选择弹框 -->
+  <div v-if="showWireDialog" class="wire-overlay">
+    <div class="wire-dialog">
+      <div class="wire-dialog-title">请选择接线方式</div>
+      <div class="wire-dialog-buttons">
+        <button class="wire-dialog-btn" @click="selectSixWire">六线制</button>
+        <button class="wire-dialog-btn" @click="selectFourWire">四线制</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 触点选择弹框 -->
   <div v-if="showContactDialog" class="contact-overlay">
     <div class="contact-dialog">
@@ -1490,6 +1556,55 @@ onMounted(async () => {
 }
 
 .contact-dialog-btn:hover {
+  background: rgba(90, 146, 208, 0.25);
+  border-color: #5a92d0;
+  color: #fff;
+}
+
+.wire-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.wire-dialog {
+  background: #0b1d33;
+  border: 1px solid #1a2d44;
+  border-radius: 12px;
+  padding: 40px 48px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.wire-dialog-title {
+  font-size: 20px;
+  color: #e0e8f0;
+  margin-bottom: 32px;
+}
+
+.wire-dialog-buttons {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+}
+
+.wire-dialog-btn {
+  background: rgba(90, 146, 208, 0.1);
+  border: 1px solid #2a4a68;
+  color: #c0d0e0;
+  font-size: 18px;
+  padding: 12px 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.wire-dialog-btn:hover {
   background: rgba(90, 146, 208, 0.25);
   border-color: #5a92d0;
   color: #fff;
