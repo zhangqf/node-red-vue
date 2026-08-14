@@ -9,11 +9,12 @@ import ConfigManager from "@/views/ConfigManager.vue";
 import CombinationManager from "@/views/CombinationManager.vue";
 import BindingManager from "@/views/BindingManager.vue";
 import ChannelConfigManager from "@/views/ChannelConfigManager.vue";
+import ThresholdConfigManager from "@/views/ThresholdConfigManager.vue";
 import RecordList from "@/views/RecordList.vue";
 import Settings from "@/views/Settings.vue";
 import { useAuth } from "@/composables/useAuth";
 
-const assetRouteNames = ["device-manager", "combination-manager", "config-manager", "binding-manager", "channel-config-manager"];
+const assetRouteNames = ["device-manager", "combination-manager", "config-manager", "binding-manager", "channel-config-manager", "threshold-config-manager"];
 
 const isElectron = !!(window as any).electronAPI;
 const router = createRouter({
@@ -31,6 +32,7 @@ const router = createRouter({
     },
     { path: "/bindings", name: "binding-manager", component: BindingManager },
     { path: "/channel-configs", name: "channel-config-manager", component: ChannelConfigManager },
+    { path: "/threshold-configs", name: "threshold-config-manager", component: ThresholdConfigManager },
     { path: "/configure/:deviceId", name: "configure", component: Configure },
     { path: "/work/:deviceId/:combinationId/:configId", name: "work", component: Work },
     { path: "/records", name: "history", component: RecordList },

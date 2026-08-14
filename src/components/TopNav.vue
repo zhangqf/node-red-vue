@@ -24,6 +24,7 @@ const menuItems = [
       { key: "config-manager", label: "测试机型管理" },
       { key: "binding-manager", label: "绑定配置" },
       { key: "channel-config-manager", label: "通道配置" },
+      { key: "threshold-config-manager", label: "阻值阈值" },
     ],
   },
   { key: "history", label: "历史记录" },

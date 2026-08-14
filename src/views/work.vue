@@ -31,8 +31,9 @@ import {
   StartBeforeTestConfig,
   contact24Closed,
   contact13Closed,
+  DEFAULT_THRESHOLD,
 } from "@/utils/config";
-import type { ChannelExpect } from "@/utils/config";
+import type { ChannelExpect, ResistanceThreshold } from "@/utils/config";
 
 import { speak } from "@/utils/speech";
 
@@ -328,6 +329,7 @@ const handleStartBeforeTestExpress = (data) => {
     r,
     deviceType.value,
     currentChannelConfig.value,
+    currentThreshold.value,
   );
   // 解析电路图 URL
   const resolveImg = (field: string) => {
@@ -909,17 +911,48 @@ const currentChannelConfig = computed<ChannelExpect[] | undefined>(() => {
     ?.config;
 });
 
+/* 阻值判定阈值（全局，按 deviceType 匹配） */
+const resistanceThresholds = ref<
+  {
+    device_type: string;
+    normal_min: number;
+    normal_max: number;
+    open_min: number;
+    short_max: number;
+  }[]
+>([]);
+const currentThreshold = computed<ResistanceThreshold>(() => {
+  const t = resistanceThresholds.value.find(
+    (c) => c.device_type === deviceType.value,
+  );
+  return t
+    ? {
+        normalMin: t.normal_min,
+        normalMax: t.normal_max,
+        openMin: t.open_min,
+        shortMax: t.short_max,
+      }
+    : DEFAULT_THRESHOLD;
+});
+
 /* 获取列表数据 */
 async function getList() {
   try {
-    const [itemRes, deviceRes, comboRes, configRes, channelConfigRes] =
-      await Promise.all([
-        fetch(HTTP_URL + "/getConfig/" + deviceId + "/" + combinationId.value),
-        fetch(HTTP_URL + "/getDevice/" + deviceId),
-        fetch(HTTP_URL + "/getCombination/" + combinationId.value),
-        fetch(HTTP_URL + "/getConfigList/" + configId.value),
-        fetch(HTTP_URL + "/getChannelConfigs"),
-      ]);
+    const [
+      itemRes,
+      deviceRes,
+      comboRes,
+      configRes,
+      channelConfigRes,
+      thresholdRes,
+    ] = await Promise.all([
+      fetch(HTTP_URL + "/getConfig/" + deviceId + "/" + combinationId.value),
+      fetch(HTTP_URL + "/getDevice/" + deviceId),
+      fetch(HTTP_URL + "/getCombination/" + combinationId.value),
+      fetch(HTTP_URL + "/getConfigList/" + configId.value),
+      fetch(HTTP_URL + "/getChannelConfigs"),
+      fetch(HTTP_URL + "/getResistanceThresholds"),
+    ]);
 
     itemConfig.value = await itemRes.json();
 
@@ -943,6 +976,7 @@ async function getList() {
     configName.value = configData.name || "";
 
     channelConfigs.value = await channelConfigRes.json();
+    resistanceThresholds.value = await thresholdRes.json();
   } catch (e) {
     console.error("加载数据失败:", e);
     throw e;
@@ -952,11 +986,13 @@ async function getList() {
 /* 获取代码设备列表 */
 async function getCodeDeviceList() {
   try {
-    const [comboRes, configRes, channelConfigRes] = await Promise.all([
-      fetch(HTTP_URL + "/getCombination/" + combinationId.value),
-      fetch(HTTP_URL + "/getConfigList/" + configId.value),
-      fetch(HTTP_URL + "/getChannelConfigs"),
-    ]);
+    const [comboRes, configRes, channelConfigRes, thresholdRes] =
+      await Promise.all([
+        fetch(HTTP_URL + "/getCombination/" + combinationId.value),
+        fetch(HTTP_URL + "/getConfigList/" + configId.value),
+        fetch(HTTP_URL + "/getChannelConfigs"),
+        fetch(HTTP_URL + "/getResistanceThresholds"),
+      ]);
 
     active.value = configId.value;
     device.value.name = codeName;
@@ -973,6 +1009,7 @@ async function getCodeDeviceList() {
     configName.value = configData.name || "";
 
     channelConfigs.value = await channelConfigRes.json();
+    resistanceThresholds.value = await thresholdRes.json();
 
     if (
       routeCloseType === "contact13Closed" ||

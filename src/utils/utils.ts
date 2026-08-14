@@ -5,12 +5,14 @@ import {
   ZD6Serial,
   ModelConfig,
   collectConfig,
+  DEFAULT_THRESHOLD,
 } from "./config";
 import type {
   ChannelExpect,
   ResistanceState,
   StartBeforeTestReturn,
   ChannelResult,
+  ResistanceThreshold,
 } from "./config";
 
 /**
@@ -119,19 +121,23 @@ export const findRelayIndex = (
  * SHORT：≤0.5Ω 混线短路
  * UNKNOWN：不在以上区间，阻值异常无法判定
  */
-function classifyResistance(val: number): ResistanceState {
-  if (val >= 0 && val <= 40) return "NORMAL";
-  if (val >= 10000) return "OPEN";
-  if (val <= 0.5) return "SHORT";
+function classifyResistance(
+  val: number,
+  t: ResistanceThreshold = DEFAULT_THRESHOLD,
+): ResistanceState {
+  if (val <= t.shortMax) return "SHORT";
+  if (val >= t.openMin) return "OPEN";
+  if (val >= t.normalMin && val <= t.normalMax) return "NORMAL";
   return "UNKNOWN";
 }
 
-// 10 -15
-
-function classifyResistanceZD6(val: number): ResistanceState {
-  if (val >= 0 && val <= 40) return "NORMAL";
-  if (val >= 10000) return "OPEN";
-  if (val <= 0.5) return "SHORT";
+function classifyResistanceZD6(
+  val: number,
+  t: ResistanceThreshold = DEFAULT_THRESHOLD,
+): ResistanceState {
+  if (val <= t.shortMax) return "SHORT";
+  if (val >= t.openMin) return "OPEN";
+  if (val >= t.normalMin && val <= t.normalMax) return "NORMAL";
   return "UNKNOWN";
 }
 
@@ -184,20 +190,22 @@ export const startBeforeTestExpress = (
   arr: number[],
   deviceType: string,
   channelConfig?: ChannelExpect[],
+  threshold?: ResistanceThreshold,
 ): StartBeforeTestReturn => {
   let states = [];
+  const th = threshold ?? DEFAULT_THRESHOLD;
 
   let configOption: ChannelExpect[] = [];
   console.log(arr);
   if (deviceType === "ZD6" || deviceType === "ZD9") {
     arr = arr.slice(6, 8);
-    states = arr.map(classifyResistanceZD6);
+    states = arr.map((v) => classifyResistanceZD6(v, th));
     configOption = channelConfig ?? CHANNEL_CONFIGZD6;
   }
   if (deviceType === "ZYJ7" || deviceType === "ZDJ9") {
     console.log(arr);
     arr = arr.slice(2);
-    states = arr.map(classifyResistance);
+    states = arr.map((v) => classifyResistance(v, th));
     console.log(states);
     configOption = channelConfig ?? CHANNEL_CONFIG;
   }

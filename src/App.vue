@@ -75,6 +75,7 @@ const assetRoutes = [
   "config-manager",
   "binding-manager",
   "channel-config-manager",
+  "threshold-config-manager",
 ];
 
 async function onMenuClick(menu: string) {
@@ -100,6 +101,9 @@ async function onMenuClick(menu: string) {
       break;
     case "channel-config-manager":
       router.push({ name: "channel-config-manager" });
+      break;
+    case "threshold-config-manager":
+      router.push({ name: "threshold-config-manager" });
       break;
     case "history":
       router.push({ name: "history" });
