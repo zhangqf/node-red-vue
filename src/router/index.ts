@@ -8,11 +8,12 @@ import DeviceManager from "@/views/DeviceManager.vue";
 import ConfigManager from "@/views/ConfigManager.vue";
 import CombinationManager from "@/views/CombinationManager.vue";
 import BindingManager from "@/views/BindingManager.vue";
+import ChannelConfigManager from "@/views/ChannelConfigManager.vue";
 import RecordList from "@/views/RecordList.vue";
 import Settings from "@/views/Settings.vue";
 import { useAuth } from "@/composables/useAuth";
 
-const assetRouteNames = ["device-manager", "combination-manager", "config-manager", "binding-manager"];
+const assetRouteNames = ["device-manager", "combination-manager", "config-manager", "binding-manager", "channel-config-manager"];
 
 const isElectron = !!(window as any).electronAPI;
 const router = createRouter({
@@ -29,6 +30,7 @@ const router = createRouter({
       component: CombinationManager,
     },
     { path: "/bindings", name: "binding-manager", component: BindingManager },
+    { path: "/channel-configs", name: "channel-config-manager", component: ChannelConfigManager },
     { path: "/configure/:deviceId", name: "configure", component: Configure },
     { path: "/work/:deviceId/:combinationId/:configId", name: "work", component: Work },
     { path: "/records", name: "history", component: RecordList },

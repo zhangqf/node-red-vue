@@ -74,6 +74,7 @@ const assetRoutes = [
   "combination-manager",
   "config-manager",
   "binding-manager",
+  "channel-config-manager",
 ];
 
 async function onMenuClick(menu: string) {
@@ -96,6 +97,9 @@ async function onMenuClick(menu: string) {
       break;
     case "binding-manager":
       router.push({ name: "binding-manager" });
+      break;
+    case "channel-config-manager":
+      router.push({ name: "channel-config-manager" });
       break;
     case "history":
       router.push({ name: "history" });

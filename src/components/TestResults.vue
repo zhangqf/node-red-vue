@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 
 export interface TestItem {
   name: string;
@@ -7,40 +7,53 @@ export interface TestItem {
   status: boolean | "NT";
   realCheck: boolean;
   relayName: string[];
-  relayTips?: Record<string, string>[];
+  relayTips?: { name: string; path: string; closed: boolean }[];
+  img?: string;
 }
 
-defineProps<{
-  tests?: TestItem[];
-  modbusStatus?: {
-    connected: boolean;
-    msg?: string;
-    color?: string;
-  };
-  isAction: boolean;
-  powerStatusIsRunning: boolean;
-  /** 启动前测试结果，非 null 时展示测试详情 */
-  testResult?: {
-    dcResult: {
-      channelName: string;
-      value: number;
-      tip: string;
-      isNormal: boolean;
-    }[];
-    fcResult: {
-      channelName: string;
-      value: number;
-      tip: string;
-      isNormal: boolean;
-    }[];
-    allTrue: boolean;
-    direction: { DC: boolean; FC: boolean; diagnosis: string[] };
-  } | null;
-  availableDirections: { DC: boolean; FC: boolean };
-  diagnosisMessages: string[];
-  startBeforeLoading: boolean;
-  startBeforeTestFinshed: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    tests?: TestItem[];
+    modbusStatus?: {
+      connected: boolean;
+      msg?: string;
+      color?: string;
+    };
+    isAction: boolean;
+    powerStatusIsRunning: boolean;
+    /** 启动前测试结果，非 null 时展示测试详情 */
+    testResult?: {
+      dcResult: {
+        channelName: string;
+        value: number;
+        tip: string;
+        isNormal: boolean;
+      }[];
+      fcResult: {
+        channelName: string;
+        value: number;
+        tip: string;
+        isNormal: boolean;
+      }[];
+      allTrue: boolean;
+      direction: { DC: boolean; FC: boolean; diagnosis: string[] };
+    } | null;
+    availableDirections: { DC: boolean; FC: boolean };
+    diagnosisMessages: string[];
+    startBeforeLoading: boolean;
+    startBeforeTestFinshed: boolean;
+    /** 是否显示定操视角（电阻模块） */
+    showDC?: boolean;
+    /** 是否显示反操视角（电阻模块） */
+    showFC?: boolean;
+    /** 设备机型，用于区分第二分组标题（ZD6/ZD9=传动表示，ZYJ7/ZDJ9=续操表示） */
+    deviceType?: string;
+  }>(),
+  {
+    showDC: true,
+    showFC: true,
+  },
+);
 
 const perviewImg = ref("");
 
@@ -51,11 +64,59 @@ function handleView(url: string) {
   perviewImg.value = url;
 }
 
-const circuitLoopExpanded = ref<Record<number, boolean>>({});
+const circuitLoopExpanded = ref<Record<string, boolean>>({});
 
-function toggleCircuitLoop(idx: number) {
-  circuitLoopExpanded.value[idx] = !circuitLoopExpanded.value[idx];
+function toggleCircuitLoop(key: string) {
+  circuitLoopExpanded.value[key] = !circuitLoopExpanded.value[key];
 }
+
+// 表示项分组：第一组固定为「表示」（定位表示/反位表示），其余按机型归入第二组
+const indicationTests = computed(() =>
+  (props.tests || []).filter(
+    (t) => t.type === "GreenLight" || t.type === "YellowLight",
+  ),
+);
+const secondaryTests = computed(() =>
+  (props.tests || []).filter(
+    (t) => t.type !== "GreenLight" && t.type !== "YellowLight",
+  ),
+);
+const secondaryGroupLabel = computed(() =>
+  props.deviceType === "ZD6" || props.deviceType === "ZD9"
+    ? "传动表示"
+    : "续操表示",
+);
+
+type GroupRow =
+  | { key: string; isGroup: true; label: string }
+  | { key: string; isGroup: false; test: TestItem };
+
+const groupedRows = computed<GroupRow[]>(() => {
+  const tests = props.tests || [];
+  const rows: GroupRow[] = [];
+  if (tests.length === 0) return rows;
+  if (tests[0].type === "empty") {
+    tests.forEach((t) => rows.push({ key: t.type, isGroup: false, test: t }));
+    return rows;
+  }
+  if (indicationTests.value.length > 0) {
+    rows.push({ key: "group-indication", isGroup: true, label: "表示" });
+    indicationTests.value.forEach((t) =>
+      rows.push({ key: t.type, isGroup: false, test: t }),
+    );
+  }
+  if (secondaryTests.value.length > 0) {
+    rows.push({
+      key: "group-secondary",
+      isGroup: true,
+      label: secondaryGroupLabel.value,
+    });
+    secondaryTests.value.forEach((t) =>
+      rows.push({ key: t.type, isGroup: false, test: t }),
+    );
+  }
+  return rows;
+});
 </script>
 
 <template>
@@ -65,7 +126,7 @@ function toggleCircuitLoop(idx: number) {
         modbusStatus && modbusStatus.connected ? "测试结果" : "通讯异常"
       }}</span>
     </div>
-    
+
     <!-- 通讯异常 -->
     <div
       class="modbusStatus-content"
@@ -74,7 +135,12 @@ function toggleCircuitLoop(idx: number) {
     </div>
 
     <div v-else class="test-list">
-      <template v-if="!powerStatusIsRunning && !startBeforeTestFinshed && !startBeforeLoading">
+      <template
+        v-if="
+          !powerStatusIsRunning &&
+          !startBeforeTestFinshed &&
+          !startBeforeLoading
+        ">
         <div class="modbusStatus-content">请先进行启动前测试</div>
       </template>
       <template v-if="!powerStatusIsRunning && startBeforeTestFinshed">
@@ -83,7 +149,7 @@ function toggleCircuitLoop(idx: number) {
       <template v-if="startBeforeLoading"> 启动前测试，等待结果中... </template>
       <!-- 启动前测试结果（始终显示，不隐藏） -->
       <template v-if="testResult">
-        <div class="direction-banner">
+        <!-- <div class="direction-banner">
           <div class="direction-row">
             <span class="direction-label">定操</span>
             <span
@@ -98,10 +164,8 @@ function toggleCircuitLoop(idx: number) {
               :class="availableDirections.FC ? 'ok' : 'ng'">
               {{ availableDirections.FC ? "可用" : "不可用" }}
             </span>
-            <!-- <span class="circuit-link" @click="handleView">查看电路图</span> -->
-            <!-- 查看电路图按钮 -->
           </div>
-        </div>
+        </div> -->
 
         <div v-if="diagnosisMessages.length > 0" class="diagnosis-box">
           <div
@@ -112,127 +176,146 @@ function toggleCircuitLoop(idx: number) {
           </div>
         </div>
 
-        <div class="section-label">
-          定操视角
-          <span v-if="availableDirections.DC" class="section-badge ok"
-            >通过</span
-          >
-          <span v-else class="section-badge ng">未通过</span>
-        </div>
-        <div
-          v-for="(test, idx) in testResult.dcResult"
-          :key="'dc-' + idx"
-          class="test-item">
-          <div class="test-header">
-            <span class="test-dot" :class="test.isNormal ? 'ok' : 'ng'"></span>
-            <span class="test-name">{{ test.channelName }}</span>
-            <span class="test-value">{{ test.value }}Ω</span>
+        <template v-if="showDC">
+          <div class="section-label">
+            定操视角
+            <span v-if="availableDirections.DC" class="section-badge ok"
+              >通过</span
+            >
+            <span v-else class="section-badge ng">未通过</span>
           </div>
-          <div class="test-result" :class="test.isNormal ? 'ok' : 'ng'">
-            {{ test.tip }}
-            <button
-              v-if="!test.isNormal && test.circuitImg"
-              class="circuit-view-btn"
-              style="margin-left:8px"
-              @click="handleView(test.circuitImg!)">
-              查看电路图
-            </button>
+          <div
+            v-for="(test, idx) in testResult.dcResult"
+            :key="'dc-' + idx"
+            class="test-item">
+            <div class="test-header">
+              <span
+                class="test-dot"
+                :class="test.isNormal ? 'ok' : 'ng'"></span>
+              <span class="test-name">{{ test.channelName }}</span>
+              <span class="test-value">{{ test.value }}Ω</span>
+            </div>
+            <div class="test-result" :class="test.isNormal ? 'ok' : 'ng'">
+              {{ test.tip }}
+              <button
+                v-if="!test.isNormal && test.circuitImg"
+                class="circuit-view-btn"
+                style="margin-left: 8px"
+                @click="handleView(test.circuitImg!)">
+                查看电路图
+              </button>
+            </div>
           </div>
-        </div>
+        </template>
 
-        <div class="section-label section-divider">
-          反操视角
-          <span v-if="availableDirections.FC" class="section-badge ok"
-            >通过</span
-          >
-          <span v-else class="section-badge ng">未通过</span>
-        </div>
-        <div
-          v-for="(test, idx) in testResult.fcResult"
-          :key="'fc-' + idx"
-          class="test-item">
-          <div class="test-header">
-            <span class="test-dot" :class="test.isNormal ? 'ok' : 'ng'"></span>
-            <span class="test-name">{{ test.channelName }}</span>
-            <span class="test-value">{{ test.value }}Ω</span>
+        <template v-if="showFC">
+          <div class="section-label section-divider">
+            反操视角
+            <span v-if="availableDirections.FC" class="section-badge ok"
+              >通过</span
+            >
+            <span v-else class="section-badge ng">未通过</span>
           </div>
-          <div class="test-result" :class="test.isNormal ? 'ok' : 'ng'">
-            {{ test.tip }}
-            <button
-              v-if="!test.isNormal && test.circuitImg"
-              class="circuit-view-btn"
-              style="margin-left:8px"
-              @click="handleView(test.circuitImg!)">
-              查看电路图
-            </button>
+          <div
+            v-for="(test, idx) in testResult.fcResult"
+            :key="'fc-' + idx"
+            class="test-item">
+            <div class="test-header">
+              <span
+                class="test-dot"
+                :class="test.isNormal ? 'ok' : 'ng'"></span>
+              <span class="test-name">{{ test.channelName }}</span>
+              <span class="test-value">{{ test.value }}Ω</span>
+            </div>
+            <div class="test-result" :class="test.isNormal ? 'ok' : 'ng'">
+              {{ test.tip }}
+              <button
+                v-if="!test.isNormal && test.circuitImg"
+                class="circuit-view-btn"
+                style="margin-left: 8px"
+                @click="handleView(test.circuitImg!)">
+                查看电路图
+              </button>
+            </div>
           </div>
-        </div>
+        </template>
 
         <div class="section-divider"></div>
       </template>
       <!-- 常规表示继电器结果 -->
       <h4
-        v-if="powerStatusIsRunning && tests && tests?.length > 0 && tests[0].type === 'empty'"
+        v-if="
+          powerStatusIsRunning &&
+          tests &&
+          tests?.length > 0 &&
+          tests[0].type === 'empty'
+        "
         style="color: #c18232">
         暂无表示继电器配置，跳过该组状态校验
       </h4>
-     
-        <div class="relay-results">
-          <div
-            v-for="(test, idx) in tests?.length ? tests : []"
-            :key="idx"
-            class="test-item">
+
+      <div class="relay-results">
+        <template v-for="row in groupedRows" :key="row.key">
+          <div v-if="row.isGroup" class="relay-group-label">
+            {{ row.label }}
+          </div>
+          <div v-else class="test-item">
             <div class="test-item-main">
               <div class="test-header">
                 <span
                   class="test-dot"
                   :class="
-                    test.status == 'NT' ? '' : test.status ? 'ok' : 'ng'
+                    row.test.status == 'NT' ? '' : row.test.status ? 'ok' : 'ng'
                   "></span>
-                <span class="test-name">{{ test.name }}</span>
+                <span class="test-name">{{ row.test.name }}</span>
               </div>
               <div
                 class="test-result"
                 v-if="
-                  test?.type === 'GreenLight' || test?.type === 'YellowLight'
+                  row.test?.type === 'GreenLight' ||
+                  row.test?.type === 'YellowLight'
                 ">
                 <span class="action-light">
                   <span
                     class="light"
                     :class="{
                       green:
-                        test.type === 'GreenLight' &&
-                        test.status !== 'NT' &&
-                        test.status,
+                        row.test.type === 'GreenLight' &&
+                        row.test.status !== 'NT' &&
+                        row.test.status,
                       yellow:
-                        test.type === 'YellowLight' &&
-                        test.status !== 'NT' &&
-                        test.status,
+                        row.test.type === 'YellowLight' &&
+                        row.test.status !== 'NT' &&
+                        row.test.status,
                     }"></span>
                 </span>
               </div>
               <div
                 v-else
                 class="test-result"
-                :class="test.status == 'NT' ? '' : test.status ? 'ok' : 'ng'">
-                {{ test.status == "NT" ? "--" : test.status ? "OK" : "NG" }}
-              </div>
-              <div
-                style="display: flex"
-               
+                :class="
+                  row.test.status == 'NT' ? '' : row.test.status ? 'ok' : 'ng'
                 ">
+                {{
+                  row.test.status == "NT" ? "--" : row.test.status ? "OK" : "NG"
+                }}
+              </div>
+              <div style="display: flex">
                 <button
                   style="margin-right: 14px"
                   class="circuit-view-btn"
-                  @click="toggleCircuitLoop(idx)">
+                  @click="toggleCircuitLoop(row.key)">
                   <span
                     class="circuit-toggle-icon"
-                    :class="{ expanded: !circuitLoopExpanded[idx] }"
+                    :class="{ expanded: !circuitLoopExpanded[row.key] }"
                     >&#9654;</span
                   >
                   电路环路
                 </button>
-                <button v-if="test.img" class="circuit-view-btn" @click="handleView(test.img)">
+                <button
+                  v-if="row.test.img"
+                  class="circuit-view-btn"
+                  @click="handleView(row.test.img)">
                   <svg
                     width="14"
                     height="14"
@@ -253,24 +336,30 @@ function toggleCircuitLoop(idx: number) {
             <!-- 电路环路详情 -->
             <div
               v-if="
-                test.relayTips &&
-                test.relayTips.length > 0 &&
-                !circuitLoopExpanded[idx] 
-                
+                row.test.relayTips &&
+                row.test.relayTips.length > 0 &&
+                !circuitLoopExpanded[row.key]
               "
               class="circuit-loop-panel">
               <div
-                v-for="(tip, tipIdx) in test.relayTips"
+                v-for="(tip, tipIdx) in row.test.relayTips"
                 :key="tipIdx"
                 class="circuit-loop-row">
-                <template v-for="(path, port) in tip" :key="port">
-                  <span class="circuit-port-badge">{{ port }}</span>
-                  <span class="circuit-path-text">{{ path }}</span>
-                </template>
+                <span
+                  class="circuit-port-badge"
+                  :class="{ 'port-ok': tip.closed && !row.test.status }"
+                  >{{ tip.name }}</span
+                >
+                <span
+                  class="circuit-path-text"
+                  :class="{ 'path-ok': tip.closed && !row.test.status }"
+                  >{{ tip.path }}</span
+                >
               </div>
             </div>
           </div>
-        </div>
+        </template>
+      </div>
     </div>
     <Teleport to="body">
       <div
@@ -703,6 +792,15 @@ function toggleCircuitLoop(idx: number) {
   padding: 20px 28px;
 }
 
+/* ---- 表示项分组标题 ---- */
+.relay-group-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8fb4d8;
+  padding: 10px 10px 4px;
+  border-bottom: 1px solid #1a2d44;
+}
+
 /* ---- 电路环路（仅作用于常规继电器结果区域） ---- */
 .relay-results .test-item {
   flex-direction: column;
@@ -807,6 +905,16 @@ function toggleCircuitLoop(idx: number) {
   word-break: break-all;
   line-height: 1.5;
   letter-spacing: 0.2px;
+}
+
+.circuit-port-badge.port-ok {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: rgba(52, 211, 153, 0.35);
+  color: #34d399;
+}
+
+.circuit-path-text.path-ok {
+  color: #34d399;
 }
 
 /* ---- 查看电路图按钮行 ---- */

@@ -19,7 +19,7 @@ import {
   getCircuits,
   mergeResistance,
 } from "@/utils/utils";
-import type { WSSTATUS, ActionRelays, TestItem } from "@/utils/interface";
+import type { WSSTATUS, ActionRelays, TestItem, RelayTip } from "@/utils/interface";
 import {
   relayConfigList,
   StartPowerConfig,
@@ -27,6 +27,7 @@ import {
   contact24Closed,
   contact13Closed,
 } from "@/utils/config";
+import type { ChannelExpect } from "@/utils/config";
 
 import { speak } from "@/utils/speech";
 
@@ -135,6 +136,44 @@ relayConfigList.forEach((item) => {
   typeToFieldMap[item.type] = item.field;
 });
 
+// 定操/反操相关表示项分组（定位表示/反位表示始终显示）
+const DC_GROUP_TYPES = new Set([
+  "SecondaryTransmissionPositioning",
+  "PrimaryTransmissionPositioning",
+  "DCBX",
+  "DCCX",
+]);
+const FC_GROUP_TYPES = new Set([
+  "SecondaryTransmissionInReversePosition",
+  "PrimaryTransmissionInReversePosition",
+  "FCBX",
+  "FCCX",
+]);
+
+// 定位表示 / 反位表示 实时状态
+const positioningTrue = computed(() => {
+  const item = testResults.value.find((t) => t.type === "GreenLight");
+  return item?.status === true;
+});
+const reverseTrue = computed(() => {
+  const item = testResults.value.find((t) => t.type === "YellowLight");
+  return item?.status === true;
+});
+
+// 定操/反操视角与按钮显示控制（交叉映射）：定位表示 → 显示反操，反位表示 → 显示定操
+const showDCGroup = computed(() => !positioningTrue.value);
+const showFCGroup = computed(() => !reverseTrue.value);
+
+// 按定位/反位状态过滤后的表示项
+const displayedTestResults = computed(() => {
+  return testResults.value.filter((item) => {
+    if (item.type === "GreenLight" || item.type === "YellowLight") return true;
+    if (DC_GROUP_TYPES.has(item.type)) return positioningTrue.value;
+    if (FC_GROUP_TYPES.has(item.type)) return reverseTrue.value;
+    return true;
+  });
+});
+
 // 重置锁定
 const resetAllLock = () => {
   testResults.value = [];
@@ -167,31 +206,32 @@ const handleWsRelayData = (data: number[]) => {
     const targetArr = relayData[field];
     if (targetArr.length < 1) return item;
     const resCollect = handleFindCollect(field);
-    const relayTips = [];
+    const res = findRelayIndex(targetArr, realData, sampleData);
+    const relayTips: RelayTip[] = [];
 
     if (item.relayName.length > 0) {
       item.relayName.forEach((v) => {
+        const closed = res.relayStates[v] === true;
         if (deviceType.value === "ZYJ7") {
           const cfg = configName.value.replace(/(【.+?】)$/, "");
           switch (cfg) {
             case "SH6":
               if (item.type === "DCBX") {
-                return relayTips.push({ [v]: "D7→43-44→D3" });
+                return relayTips.push({ name: v, path: "D7→43-44→D3", closed });
               }
               if (item.type === "DCCX") {
-                return relayTips.push({ [v]: "D8→23→13-14→44→D3" });
+                return relayTips.push({ name: v, path: "D8→23→13-14→44→D3", closed });
               }
-              relayTips.push({ [v]: resCollect[v] });
+              relayTips.push({ name: v, path: resCollect[v], closed });
               break;
             default:
-              relayTips.push({ [v]: resCollect[v] });
+              relayTips.push({ name: v, path: resCollect[v], closed });
           }
         } else {
-          relayTips.push({ [v]: resCollect?.[v] || "" });
+          relayTips.push({ name: v, path: resCollect?.[v] || "", closed });
         }
       });
     }
-    const res = findRelayIndex(targetArr, realData, sampleData);
     const img = resCollect?.img?.[field] || "";
     return {
       ...item,
@@ -250,6 +290,7 @@ const handleCollectDCCurve = (data) => {
     tempDate.forEach((element) => {
       lastRegisterArr.value = element;
     });
+    checkZeroCurrent();
   }
 };
 
@@ -260,7 +301,11 @@ const handleStartBeforeTestExpress = (data) => {
   console.log(startBeforeLoading.value);
   if (!startBeforeLoading.value) return;
   const r = mergeResistance(data.data);
-  const result = startBeforeTestExpress(r, deviceType.value);
+  const result = startBeforeTestExpress(
+    r,
+    deviceType.value,
+    currentChannelConfig.value,
+  );
   // 解析电路图 URL
   const resolveImg = (field: string) => {
     const circuits = handleFindCollect(field);
@@ -353,6 +398,7 @@ const funThreePhaseACCollector = (data) => {
     registerArrB.value = [phaseBCurrent.value];
     registerArrC.value = [phaseCCurrent.value];
     powerArr.value = [phasePower.value];
+    checkZeroCurrent();
   }
 };
 
@@ -441,6 +487,40 @@ watch(powerStatus?.isRunning, (newKey) => {
   }
 });
 
+/* 回到启动前测试初始状态 */
+const resetToStartBeforeTest = () => {
+  // 停止记录与定时器
+  stopRecord();
+  if (actionTimerId) {
+    clearTimeout(actionTimerId);
+    actionTimerId = null;
+  }
+  zeroSince = null;
+  currentActionKey = null;
+  if (timerId) {
+    clearInterval(timerId);
+    timerId = null;
+  }
+  nextDoTime.value = 15;
+  butItemIsDisable.value = false;
+  butItemStatus.value = "";
+
+  // 复位启动前测试相关状态
+  startBeforeLoading.value = false;
+  startBeforeTestFinshed.value = false;
+  availableDirections.value = { DC: false, FC: false };
+  diagnosisMessages.value = [];
+  startBeforeTestTips.value = null;
+  completedDirections.value = new Set();
+  pendingSaveData.value = null;
+
+  // 清空曲线，重置锁定状态并重建测试项
+  currentCurveRef.value?.resetData();
+  powerCurveRef.value?.resetData();
+  resetAllLock();
+  initTestResults();
+};
+
 /* 开启动作电源 / 紧急停止 */
 const handleStart = () => {
   if (powerStatus.value?.isRunning) {
@@ -448,6 +528,9 @@ const handleStart = () => {
     const result = terminals.value.map(() => 0);
     wsSendData.value = gen32BitArray(result, []);
     sendCmd(wsSendData.value, "relays", deviceType.value);
+
+    // 回到启动前测试初始状态
+    resetToStartBeforeTest();
   } else {
     handleDo();
   }
@@ -573,55 +656,98 @@ const stopRecord = () => {
 const currentCurveRef = ref<InstanceType<typeof CurrentCurve>>();
 const powerCurveRef = ref<InstanceType<typeof PowerCurve>>();
 
+/* 动作定时器与电流归零计时 */
+let actionTimerId: number | null = null;
+let zeroSince: number | null = null;
+let currentActionKey: keyof ActionRelays | null = null;
+
+/* 结束本次动作：复位继电器、停止记录、保存数据、终止倒计时 */
+const finishAction = async (key: keyof ActionRelays) => {
+  if (actionTimerId) {
+    clearTimeout(actionTimerId);
+    actionTimerId = null;
+  }
+  zeroSince = null;
+  currentActionKey = null;
+
+  const relay = configActionRelays.value![key];
+  batchUpdateTerminal(relay, 0);
+  handleDo();
+  stopRecord();
+
+  const bothAvailable =
+    availableDirections.value.DC && availableDirections.value.FC;
+  if (bothAvailable) {
+    const currentData = buildRecordData(key);
+    if (!pendingSaveData.value) {
+      // 第一个方向完成，暂存数据，不提交
+      pendingSaveData.value = currentData;
+    } else {
+      // 第二个方向完成，一起提交
+      await postRecord(pendingSaveData.value);
+      await postRecord(currentData);
+      pendingSaveData.value = null;
+    }
+  } else {
+    saveRecord(key);
+  }
+
+  // 操动结束
+  if (timerId) {
+    clearInterval(timerId);
+    timerId = null;
+  }
+  nextDoTime.value = 15;
+  butItemIsDisable.value = false;
+  const finishedDir = butItemStatus.value;
+  butItemStatus.value = "";
+  completedDirections.value.add(finishedDir);
+
+  if (
+    bothAvailable &&
+    completedDirections.value.has("DC") &&
+    completedDirections.value.has("FC")
+  ) {
+    startBeforeTestFinshed.value = false;
+    completedDirections.value = new Set();
+  } else if (!bothAvailable) {
+    startBeforeTestFinshed.value = false;
+  }
+};
+
+/* 电流归零检测：1.5s 内持续为 0 则立即结束动作 */
+const checkZeroCurrent = () => {
+  if (!isAction.value) return;
+  const isZero = isThreePhase.value
+    ? phaseACurrent.value === 0 &&
+      phaseBCurrent.value === 0 &&
+      phaseCCurrent.value === 0
+    : (lastRegisterArr.value[0] ?? 0) === 0;
+
+  if (isZero) {
+    if (zeroSince === null) {
+      zeroSince = performance.now();
+    } else if (
+      currentActionKey &&
+      performance.now() - zeroSince >= 1500
+    ) {
+      finishAction(currentActionKey);
+    }
+  } else {
+    zeroSince = null;
+  }
+};
+
 /* 处理继电器动作 */
 const handleRelayAction = (key: keyof ActionRelays) => {
   const relay = configActionRelays.value![key];
   batchUpdateTerminal(relay, 1);
   handleDo();
   startRecord();
-  setTimeout(async () => {
-    batchUpdateTerminal(relay, 0);
-    handleDo();
-    stopRecord();
-
-    const bothAvailable =
-      availableDirections.value.DC && availableDirections.value.FC;
-    if (bothAvailable) {
-      const currentData = buildRecordData(key);
-      if (!pendingSaveData.value) {
-        // 第一个方向完成，暂存数据，不提交
-        pendingSaveData.value = currentData;
-      } else {
-        // 第二个方向完成，一起提交
-        await postRecord(pendingSaveData.value);
-        await postRecord(currentData);
-        pendingSaveData.value = null;
-      }
-    } else {
-      saveRecord(key);
-    }
-
-    // 操动结束
-    if (timerId) {
-      clearInterval(timerId);
-      timerId = null;
-    }
-    nextDoTime.value = 15;
-    butItemIsDisable.value = false;
-    const finishedDir = butItemStatus.value;
-    butItemStatus.value = "";
-    completedDirections.value.add(finishedDir);
-
-    if (
-      bothAvailable &&
-      completedDirections.value.has("DC") &&
-      completedDirections.value.has("FC")
-    ) {
-      startBeforeTestFinshed.value = false;
-      completedDirections.value = new Set();
-    } else if (!bothAvailable) {
-      startBeforeTestFinshed.value = false;
-    }
+  zeroSince = null;
+  currentActionKey = key;
+  actionTimerId = setTimeout(() => {
+    finishAction(key);
   }, 15000);
 };
 
@@ -675,6 +801,7 @@ const handleOpe = (type: string) => {
 
   const exposed = currentCurveRef.value;
   exposed?.resetData();
+  powerCurveRef.value?.resetData();
   initTestResults(type as "DC" | "FC");
   butItemStatus.value = type;
   butItemIsDisable.value = true;
@@ -710,15 +837,24 @@ const handleOpe = (type: string) => {
 /* 设备类型 */
 const deviceType = ref("");
 
+/* 通道电阻配置（全局，按 deviceType 匹配） */
+const channelConfigs = ref<{ device_type: string; config: ChannelExpect[] }[]>([]);
+const currentChannelConfig = computed<ChannelExpect[] | undefined>(() => {
+  return channelConfigs.value.find((c) => c.device_type === deviceType.value)
+    ?.config;
+});
+
 /* 获取列表数据 */
 async function getList() {
   try {
-    const [itemRes, deviceRes, comboRes, configRes] = await Promise.all([
-      fetch(HTTP_URL + "/getConfig/" + deviceId + "/" + combinationId),
-      fetch(HTTP_URL + "/getDevice/" + deviceId),
-      fetch(HTTP_URL + "/getCombination/" + combinationId),
-      fetch(HTTP_URL + "/getConfigList/" + configId),
-    ]);
+    const [itemRes, deviceRes, comboRes, configRes, channelConfigRes] =
+      await Promise.all([
+        fetch(HTTP_URL + "/getConfig/" + deviceId + "/" + combinationId),
+        fetch(HTTP_URL + "/getDevice/" + deviceId),
+        fetch(HTTP_URL + "/getCombination/" + combinationId),
+        fetch(HTTP_URL + "/getConfigList/" + configId),
+        fetch(HTTP_URL + "/getChannelConfigs"),
+      ]);
 
     itemConfig.value = await itemRes.json();
 
@@ -738,6 +874,8 @@ async function getList() {
     contact13Closed.value = configData.contact13Closed || {};
     contact24Closed.value = configData.contact24Closed || {};
     configName.value = configData.name || "";
+
+    channelConfigs.value = await channelConfigRes.json();
   } catch (e) {
     console.error("加载数据失败:", e);
     throw e;
@@ -747,9 +885,10 @@ async function getList() {
 /* 获取代码设备列表 */
 async function getCodeDeviceList() {
   try {
-    const [comboRes, configRes] = await Promise.all([
+    const [comboRes, configRes, channelConfigRes] = await Promise.all([
       fetch(HTTP_URL + "/getCombination/" + combinationId),
       fetch(HTTP_URL + "/getConfigList/" + configId),
+      fetch(HTTP_URL + "/getChannelConfigs"),
     ]);
 
     active.value = configId;
@@ -765,6 +904,8 @@ async function getCodeDeviceList() {
     contact13Closed.value = configData.contact13Closed || {};
     contact24Closed.value = configData.contact24Closed || {};
     configName.value = configData.name || "";
+
+    channelConfigs.value = await channelConfigRes.json();
   } catch (e) {
     console.error("加载数据失败:", e);
     throw e;
@@ -918,7 +1059,7 @@ onMounted(async () => {
         :power-arr="isThreePhase ? powerArr : undefined" />
 
       <TestResults
-        :tests="testResults"
+        :tests="displayedTestResults"
         :modbus-status="modbusStatus"
         :powerStatusIsRunning="powerStatus?.isRunning"
         :isAction="isAction"
@@ -926,7 +1067,10 @@ onMounted(async () => {
         :start-before-loading="startBeforeLoading"
         :available-directions="availableDirections"
         :diagnosis-messages="diagnosisMessages"
-        :start-before-test-finshed="startBeforeTestFinshed" />
+        :start-before-test-finshed="startBeforeTestFinshed"
+        :show-d-c="showDCGroup"
+        :show-f-c="showFCGroup"
+        :device-type="deviceType" />
     </div>
 
     <div class="button-rows">
@@ -976,7 +1120,7 @@ onMounted(async () => {
           <span v-if="butItemStatus === 'FC'" class="light light-yellow"></span>
         </span> -->
         <button
-          v-if="availableDirections.DC"
+          v-if="availableDirections.DC && showDCGroup"
           class="action-btn dc-btn"
           :disabled="butItemIsDisable"
           :class="butItemStatus === 'DC' ? 'active' : ''"
@@ -984,7 +1128,7 @@ onMounted(async () => {
           定操
         </button>
         <button
-          v-if="availableDirections.FC"
+          v-if="availableDirections.FC && showFCGroup"
           class="action-btn fc-btn"
           :disabled="butItemIsDisable"
           :class="butItemStatus === 'FC' ? 'active' : ''"
