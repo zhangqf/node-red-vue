@@ -4980,14 +4980,14 @@
                 "vt": "str"
             }
         ],
-        "repeat": "",
+        "repeat": "1",
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1270,
+        "x": 1280,
         "y": 820,
         "wires": [
             [
@@ -5001,7 +5001,7 @@
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
         "name": "电阻模块表示",
-        "func": "\n// const data =[\n//    0.2,0.2,14,15\n//   ]\n\nconst data = [0,900,0,900,0,1200,0,1200,0,1700,0,1700,0,1700,0,1700,0,1700]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 6,\n\tfc: 3,\n\taddress:0,\n\tquantity:16,\n}\n\nreturn msg",
+        "func": "\n// const data =[\n//    0.2,0.2,14,15\n//   ]\n\nconst data = [0,900,0,900,0,129999900,0,1200,0,1700,0,1799999900,0,1700,0,1700,0,1700]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 6,\n\tfc: 3,\n\taddress:0,\n\tquantity:16,\n}\n\nreturn msg",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -5808,6 +5808,290 @@
         },
         "x": 1460,
         "y": 4960,
+        "wires": []
+    },
+    {
+        "id": "rt00000000000001",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "name": "getResistanceThresholds",
+        "url": "/getResistanceThresholds",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 160,
+        "y": 5080,
+        "wires": [
+            [
+                "rt00000000000002"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000002",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "fixed",
+        "sql": "SELECT * FROM resistance_threshold ORDER BY device_type",
+        "name": "获取resistanceThreshold",
+        "x": 430,
+        "y": 5080,
+        "wires": [
+            [
+                "rt00000000000003"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000003",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "name": "处理数据",
+        "func": "const rows = Array.isArray(msg.payload) ? msg.payload : [];\nmsg.payload = rows.map((r) => ({\n  device_type: r.device_type,\n  normal_min: Number(r.normal_min),\n  normal_max: Number(r.normal_max),\n  open_min: Number(r.open_min),\n  short_max: Number(r.short_max),\n}));\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 760,
+        "y": 5080,
+        "wires": [
+            [
+                "rt00000000000004"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000004",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 1060,
+        "y": 5080,
+        "wires": []
+    },
+    {
+        "id": "rt00000000000005",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "name": "saveResistanceThreshold",
+        "url": "/saveResistanceThreshold",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 160,
+        "y": 5200,
+        "wires": [
+            [
+                "rt00000000000006"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000006",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "name": "构建保存SQL",
+        "func": "const data = msg.req.body || {};\nconst deviceType = (data.device_type ?? \"\").replace(/'/g, \"''\");\nconst normalMin = Number(data.normal_min ?? 1);\nconst normalMax = Number(data.normal_max ?? 40);\nconst openMin = Number(data.open_min ?? 10000);\nconst shortMax = Number(data.short_max ?? 0.5);\nmsg.topic = `INSERT OR REPLACE INTO resistance_threshold (device_type, normal_min, normal_max, open_min, short_max) VALUES ('${deviceType}', ${normalMin}, ${normalMax}, ${openMin}, ${shortMax})`;\nmsg.payloadOut = { code: 200, message: \"保存成功\" };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 5200,
+        "wires": [
+            [
+                "rt00000000000007"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000007",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "保存resistanceThreshold",
+        "x": 880,
+        "y": 5200,
+        "wires": [
+            [
+                "rt00000000000008"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000008",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "name": "处理响应",
+        "func": "msg.payload = msg.payloadOut || { code: 200, message: \"操作成功\" };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1180,
+        "y": 5200,
+        "wires": [
+            [
+                "rt00000000000009"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000009",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 1460,
+        "y": 5200,
+        "wires": []
+    },
+    {
+        "id": "rt00000000000010",
+        "type": "inject",
+        "z": "e4bbd3713100fe17",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 160,
+        "y": 5320,
+        "wires": [
+            [
+                "rt00000000000011"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000011",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "fixed",
+        "sql": "CREATE TABLE IF NOT EXISTS resistance_threshold (\n    device_type TEXT PRIMARY KEY,\n    normal_min REAL DEFAULT 1,\n    normal_max REAL DEFAULT 40,\n    open_min REAL DEFAULT 10000,\n    short_max REAL DEFAULT 0.5,\n    updated_at TEXT DEFAULT (datetime('now', 'localtime'))\n)",
+        "name": "CreateResistanceThresholdDB",
+        "x": 430,
+        "y": 5320,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "rt00000000000012",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "name": "deleteResistanceThreshold",
+        "url": "/deleteResistanceThreshold/:deviceType",
+        "method": "delete",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 160,
+        "y": 5440,
+        "wires": [
+            [
+                "rt00000000000013"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000013",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "name": "构建删除SQL",
+        "func": "const deviceType = (msg.req.params.deviceType ?? '').replace(/'/g, \"''\");\nmsg.topic = \"DELETE FROM resistance_threshold WHERE device_type = '\" + deviceType + \"'\";\nmsg.payloadOut = { code: 200, message: '删除成功' };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 5440,
+        "wires": [
+            [
+                "rt00000000000014"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000014",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "删除resistanceThreshold",
+        "x": 880,
+        "y": 5440,
+        "wires": [
+            [
+                "rt00000000000015"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000015",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "name": "处理响应",
+        "func": "msg.payload = msg.payloadOut || { code: 200, message: '操作成功' };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1180,
+        "y": 5440,
+        "wires": [
+            [
+                "rt00000000000016"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000016",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 1460,
+        "y": 5440,
         "wires": []
     },
     {

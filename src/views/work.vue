@@ -268,7 +268,9 @@ const handleWsRelayData = (data: number[]) => {
 };
 
 /* 电源状态 */
-const powerStatus = ref({});
+const powerStatus = ref({
+  isRunning: false,
+});
 
 /* 动作继电器 */
 const handleActionRelays = (data: Record<string, any>) => {
@@ -322,7 +324,6 @@ const handleCollectDCCurve = (data) => {
   启动前测试表示
   */
 const handleStartBeforeTestExpress = (data) => {
-  console.log(startBeforeLoading.value);
   if (!startBeforeLoading.value) return;
   const r = mergeResistance(data.data);
   const result = startBeforeTestExpress(
