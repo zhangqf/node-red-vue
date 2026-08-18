@@ -166,9 +166,9 @@ const FC_GROUP_TYPES = new Set([
   "FCCX",
 ]);
 
-// 记录判定范围：反操(FC)检查定位表示+反操项，定操(DC)检查反位表示+定操项
-const FC_RECORD_TYPES = new Set<string>(["GreenLight", ...FC_GROUP_TYPES]);
-const DC_RECORD_TYPES = new Set<string>(["YellowLight", ...DC_GROUP_TYPES]);
+// 记录判定范围：反操(FC)检查定位表示+定操项，定操(DC)检查反位表示+反操项
+const FC_RECORD_TYPES = new Set<string>(["GreenLight", ...DC_GROUP_TYPES]);
+const DC_RECORD_TYPES = new Set<string>(["YellowLight", ...FC_GROUP_TYPES]);
 
 // 定位表示 / 反位表示 实时状态
 const positioningTrue = computed(() => {
@@ -1065,14 +1065,19 @@ async function getList() {
 /* 获取代码设备列表 */
 async function getCodeDeviceList() {
   try {
-    const [comboRes, configRes, channelConfigRes, thresholdRes, curveThresholdRes] =
-      await Promise.all([
-        fetch(HTTP_URL + "/getCombination/" + combinationId.value),
-        fetch(HTTP_URL + "/getConfigList/" + configId.value),
-        fetch(HTTP_URL + "/getChannelConfigs"),
-        fetch(HTTP_URL + "/getResistanceThresholds"),
-        fetch(HTTP_URL + "/getCurveThresholds"),
-      ]);
+    const [
+      comboRes,
+      configRes,
+      channelConfigRes,
+      thresholdRes,
+      curveThresholdRes,
+    ] = await Promise.all([
+      fetch(HTTP_URL + "/getCombination/" + combinationId.value),
+      fetch(HTTP_URL + "/getConfigList/" + configId.value),
+      fetch(HTTP_URL + "/getChannelConfigs"),
+      fetch(HTTP_URL + "/getResistanceThresholds"),
+      fetch(HTTP_URL + "/getCurveThresholds"),
+    ]);
 
     active.value = configId.value;
     device.value.name = codeName;
@@ -1199,8 +1204,7 @@ const buildRecordData = (relay: keyof ActionRelays): Record<string, any> => {
     powerJudge = judgePowerCurve(pw.history, th);
   }
   const powerOk = powerJudge ? powerJudge.ok : true;
-  const status =
-    resultPass && currentJudge.ok && powerOk ? "success" : "error";
+  const status = resultPass && currentJudge.ok && powerOk ? "success" : "error";
 
   // 失败原因（仅失败时记录，供历史记录展示）
   const reasons: string[] = [];
