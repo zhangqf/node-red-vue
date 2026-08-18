@@ -182,8 +182,7 @@ function getDirectionTip(
  * 1. 批量将四路阻值转为电阻状态 NORMAL/OPEN/SHORT/UNKNOWN
  * 2. 分别计算【定操DC】、【反操FC】两套判定结果
  * 3. 满足全部通道NORMAL，或单套方向全部合格，则该方向判定通过
- * 4. 定操、反操均不合格时，汇总所有异常通道诊断文案
- * 5. allTrue：定操/反操任意一个方向合格即为整机检测通过
+ * 4. 任一方判定未通过时，汇总该方向的异常通道诊断文案
  */
 
 export const startBeforeTestExpress = (
@@ -253,21 +252,24 @@ export const startBeforeTestExpress = (
 
   if (allNormal) {
     diagnosis.push("混线：所有通道阻值均为正常区间");
-  } else if (!dcPassed && !fcPassed) {
-    dcResult.forEach((r) => {
-      if (!r.isNormal)
-        diagnosis.push(`定操-${r.channelName}: ${r.tip}(${r.value}Ω)`);
-    });
-    fcResult.forEach((r) => {
-      if (!r.isNormal)
-        diagnosis.push(`反操-${r.channelName}: ${r.tip}(${r.value}Ω)`);
-    });
+  } else {
+    if (!dcPassed) {
+      dcResult.forEach((r) => {
+        if (!r.isNormal)
+          diagnosis.push(`定操-${r.channelName}: ${r.tip}(${r.value}Ω)`);
+      });
+    }
+    if (!fcPassed) {
+      fcResult.forEach((r) => {
+        if (!r.isNormal)
+          diagnosis.push(`反操-${r.channelName}: ${r.tip}(${r.value}Ω)`);
+      });
+    }
   }
 
   return {
     dcResult,
     fcResult,
-    allTrue: dcPassed || fcPassed,
     direction: { DC: dcPassed, FC: fcPassed, diagnosis },
   };
 };

@@ -25,6 +25,36 @@ const devices = ref<Device[]>([]);
 const showImportMenu = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
 
+const latestStatus = ref<Record<string, { DC?: string; FC?: string }>>({});
+
+async function fetchLatestStatus() {
+  try {
+    const response = await fetch(HTTP_URL + "/latestOperationRecords", {
+      method: "get",
+      headers: { "Content-Type": "application/json" },
+    });
+    const rows = await response.json();
+    const map: Record<string, { DC?: string; FC?: string }> = {};
+    if (Array.isArray(rows)) {
+      for (const r of rows) {
+        const name = r.device_name;
+        if (!name) continue;
+        if (!map[name]) map[name] = {};
+        if (r.op_type === "DC") map[name].DC = r.status;
+        else if (r.op_type === "FC") map[name].FC = r.status;
+      }
+    }
+    latestStatus.value = map;
+  } catch {
+    latestStatus.value = {};
+  }
+}
+
+function isDeviceSuccess(name: string): boolean {
+  const s = latestStatus.value[name];
+  return !!s && s.DC === "success" && s.FC === "success";
+}
+
 // function extractZone(location?: string): string {
 //   if (!location) return "";
 //   const match = location.match(/[A-C]区?/);
@@ -418,6 +448,7 @@ onMounted(async () => {
   await withLoading(async () => {
     await fetchDevices();
     await fetchTemplateData();
+    await fetchLatestStatus();
   }, "站场数据加载成功");
 });
 </script>
@@ -606,6 +637,13 @@ onMounted(async () => {
               <span class="status-dot online"></span>
               <span class="status-text">在线</span>
             </div> -->
+            <div
+              v-if="isDeviceSuccess(device.name)"
+              class="success-badge"
+              title="最近一次定操、反操均成功">
+              <span class="success-dot"></span>
+              定反操成功
+            </div>
             <div class="card-arrow">→</div>
           </div>
         </div>
@@ -987,6 +1025,28 @@ onMounted(async () => {
   transform: translateX(-6px);
   transition: all 0.3s;
   flex-shrink: 0;
+}
+
+.success-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  color: #34d399;
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.success-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.6);
 }
 
 .empty-state {

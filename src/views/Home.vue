@@ -73,7 +73,7 @@ function goNormal() {
           <div class="card-content">
             <h2 class="card-title">站场模式</h2>
             <p class="card-desc">
-              以站场拓扑视图展示转辙机点位分布，<br />直观查看设备状态与实时数据
+              以站场视图展示转辙机列表及总数，<br />选择设备后直接进入工作台
             </p>
           </div>
           <div class="card-footer">
@@ -197,7 +197,7 @@ function goNormal() {
           <div class="card-content">
             <h2 class="card-title">常规模式</h2>
             <p class="card-desc">
-              列表形式浏览设备清单，按步骤选择<br />组合方式与测试机型进入工作台
+              列表形式浏览转辙机清单，按步骤选择<br />组合方式与测试机型进入工作台
             </p>
           </div>
           <div class="card-footer">

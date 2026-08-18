@@ -192,7 +192,6 @@ export interface DirectionResult {
 export interface StartBeforeTestReturn {
   dcResult: ChannelResult[];
   fcResult: ChannelResult[];
-  allTrue: boolean;
   direction: DirectionResult;
 }
 
@@ -216,6 +215,32 @@ export const DEFAULT_THRESHOLD: ResistanceThreshold = {
   normalMax: 40,
   openMin: 10000,
   shortMax: 0.5,
+};
+
+// ===== 曲线判定阈值（可按机型配置） =====
+// currentPeakMin/Max：电流峰值正常区间（A）
+// currentZeroMax：动作结束末段电流归零上限（A），超过判定未到位
+// minPoints：最少采样点数，少于该值判定未完成动作
+// powerPeakMin/Max：功率峰值正常区间（KW，仅三相机型）
+// powerZeroMax：动作结束末段功率归零上限（KW，仅三相机型）
+export interface CurveThreshold {
+  currentPeakMin: number;
+  currentPeakMax: number;
+  currentZeroMax: number;
+  minPoints: number;
+  powerPeakMin: number;
+  powerPeakMax: number;
+  powerZeroMax: number;
+}
+
+export const DEFAULT_CURVE_THRESHOLD: CurveThreshold = {
+  currentPeakMin: 0.5,
+  currentPeakMax: 20,
+  currentZeroMax: 0.3,
+  minPoints: 10,
+  powerPeakMin: 0.05,
+  powerPeakMax: 50,
+  powerZeroMax: 0.5,
 };
 
 /* 

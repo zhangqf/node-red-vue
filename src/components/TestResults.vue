@@ -37,7 +37,6 @@ const props = withDefaults(
         tip: string;
         isNormal: boolean;
       }[];
-      allTrue: boolean;
       direction: { DC: boolean; FC: boolean; diagnosis: string[] };
     } | null;
     availableDirections: { DC: boolean; FC: boolean };
@@ -88,6 +87,13 @@ const secondaryGroupLabel = computed(() =>
     ? "传动表示"
     : "续操表示",
 );
+
+// 混线：定位表示与反位表示同时正常
+const isMixLine = computed(() => {
+  const g = indicationTests.value.find((t) => t.type === "GreenLight");
+  const y = indicationTests.value.find((t) => t.type === "YellowLight");
+  return g?.status === true && y?.status === true;
+});
 
 type GroupRow =
   | { key: string; isGroup: true; label: string }
@@ -256,6 +262,7 @@ const groupedRows = computed<GroupRow[]>(() => {
         暂无表示继电器配置，跳过该组状态校验
       </h4>
       <div class="relay-results">
+        <div v-if="isMixLine" class="mixline-warning">混线</div>
         <template v-for="row in groupedRows" :key="row.key">
           <div v-if="row.isGroup" class="relay-group-label">
             {{ row.label }}
@@ -800,6 +807,21 @@ const groupedRows = computed<GroupRow[]>(() => {
   display: flex;
   gap: 12px;
   padding: 20px 28px;
+}
+
+/* ---- 混线警告 ---- */
+.mixline-warning {
+  margin: 4px 0;
+  padding: 8px 14px;
+  background: rgba(248, 113, 113, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  border-radius: 4px;
+  color: #f87171;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-align: center;
+  animation: pulse 1s ease-in-out infinite;
 }
 
 /* ---- 表示项分组标题 ---- */
