@@ -192,21 +192,20 @@ export const startBeforeTestExpress = (
   channelConfig?: ChannelExpect[],
   threshold?: ResistanceThreshold,
 ): StartBeforeTestReturn => {
-  let states = [];
+  let states: Array<any> = [];
   const th = threshold ?? DEFAULT_THRESHOLD;
 
   let configOption: ChannelExpect[] = [];
-  console.log(arr);
+  // console.log(arr);
   if (deviceType === "ZD6" || deviceType === "ZD9") {
     arr = arr.slice(6, 8);
     states = arr.map((v) => classifyResistanceZD6(v, th));
     configOption = channelConfig ?? CHANNEL_CONFIGZD6;
   }
   if (deviceType === "ZYJ7" || deviceType === "ZDJ9") {
-    console.log(arr);
+    // console.log(arr);
     arr = arr.slice(2);
     states = arr.map((v) => classifyResistance(v, th));
-    console.log(states);
     configOption = channelConfig ?? CHANNEL_CONFIG;
   }
 
@@ -219,7 +218,7 @@ export const startBeforeTestExpress = (
     );
     return {
       channelName: cfg.name,
-      value: arr[i],
+      value: arr[i] ?? 0,
       state: states[i] ?? "UNKNOWN",
       tip,
       isNormal,
@@ -236,7 +235,7 @@ export const startBeforeTestExpress = (
     );
     return {
       channelName: cfg.name,
-      value: arr[i],
+      value: arr[i] ?? 0,
       state: states[i] ?? "UNKNOWN",
       tip,
       isNormal,
@@ -302,20 +301,29 @@ export function getCircuits(
   field: string,
 ) {
   if (!series || !model || !cfg) return;
-  const ser = ZD6Serial[model];
-  const mod = ModelConfig[cfg];
-  const seriesKey = series === "ZD9" ? "ZD6" : series;
-  return collectConfig[seriesKey][ser][mod];
+  const ser = ZD6Serial[model as keyof typeof ZD6Serial];
+  const mod = ModelConfig[cfg as keyof typeof ModelConfig];
+  const seriesKey = (
+    series === "ZD9" ? "ZD6" : series
+  ) as keyof typeof collectConfig;
+
+  const seriesConfig = collectConfig[seriesKey];
+  if (!seriesConfig) return;
+
+  const serialConfig = ser !== undefined ? seriesConfig[ser] : undefined;
+  if (!serialConfig) return;
+
+  const modelConfig = mod !== undefined ? serialConfig[mod] : undefined;
+  return modelConfig;
 }
 
 export function mergeResistance(data: number[]) {
   let mergeData: number[] = [];
-  console.log(data);
   if (Array.isArray(data)) {
-    data.reduce((prev, curr, idx) => {
+    data.reduce((prev: number, curr: number, idx) => {
       if (idx % 2 === 1) mergeData.push(Number(prev * 65535 + curr) / 100);
       return curr;
-    }, null);
+    }, 0);
   }
   return mergeData;
 }

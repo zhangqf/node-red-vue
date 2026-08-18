@@ -28,7 +28,7 @@ watch(
     const now = performance.now();
     if (!startTime.value) startTime.value = now;
     const elapsed = ((now - startTime.value) / 1000).toFixed(1);
-    history.value = [...history.value.slice(-MAX_POINTS + 1), arr[0]];
+    history.value = [...history.value.slice(-MAX_POINTS + 1), arr[0] ?? 0];
     xLabels.value = [...xLabels.value.slice(-MAX_POINTS + 1), elapsed];
   },
 );

@@ -25,17 +25,17 @@ const devices = ref<Device[]>([]);
 const showImportMenu = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
 
-function extractZone(location?: string): string {
-  if (!location) return "";
-  const match = location.match(/[A-C]区?/);
-  return match ? match[0].replace("区", "") + " 区" : "";
-}
+// function extractZone(location?: string): string {
+//   if (!location) return "";
+//   const match = location.match(/[A-C]区?/);
+//   return match ? match[0].replace("区", "") + " 区" : "";
+// }
 
-function getStrContent(str?: string): string {
-  if (!str) return "";
-  const match = str.match(/\/(.+)/);
-  return match ? match[1] : "";
-}
+// function getStrContent(str?: string): string {
+//   if (!str) return "";
+//   const match = str.match(/\/(.+)/);
+//   return match ? match[1] : "";
+// }
 
 function deviceModel(name: string): string {
   if (name.includes("ZD6")) return "ZD6";

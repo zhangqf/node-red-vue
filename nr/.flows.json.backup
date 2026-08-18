@@ -5001,7 +5001,7 @@
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
         "name": "电阻模块表示",
-        "func": "\n// const data =[\n//    0.2,0.2,14,15\n//   ]\n\nconst data = [0,900,0,900,0,129999900,0,1200,0,1700,0,1799999900,0,1700,0,1700,0,1700]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 6,\n\tfc: 3,\n\taddress:0,\n\tquantity:16,\n}\n\nreturn msg",
+        "func": "\n// const data =[\n//    0.2,0.2,14,15\n//   ]\n\nconst data = [0,900,0,900,0,129999900,0,1200,0,1700,0,1700,0,1700,0,1700,0,1700]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 6,\n\tfc: 3,\n\taddress:0,\n\tquantity:16,\n}\n\nreturn msg",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,

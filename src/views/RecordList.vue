@@ -105,8 +105,6 @@ function preTestLabel(r: RecordItem): string {
   return "不可用";
 }
 
-
-
 async function getList() {
   const params = new URLSearchParams();
   params.set("page", String(currentPage.value));
@@ -204,10 +202,19 @@ function makeLine(name: string, data: number[], color: string, width = 2) {
     smooth: false,
     symbol: "none",
     color,
-    lineStyle: { color, width, shadowBlur: 6, shadowColor: gradient(color, 0.35) },
+    lineStyle: {
+      color,
+      width,
+      shadowBlur: 6,
+      shadowColor: gradient(color, 0.35),
+    },
     areaStyle: {
       color: {
-        type: "linear", x: 0, y: 0, x2: 0, y2: 1,
+        type: "linear",
+        x: 0,
+        y: 0,
+        x2: 0,
+        y2: 1,
         colorStops: [
           { offset: 0, color: gradient(color, 0.18) },
           { offset: 1, color: gradient(color, 0.01) },
@@ -240,7 +247,8 @@ const chartOpt = computed(() => {
         backgroundColor: "rgba(11,29,51,0.96)",
         borderColor: "#2d5280",
         textStyle: { color: "#e0e8f0", fontSize: 12 },
-        extraCssText: "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
+        extraCssText:
+          "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
       },
       backgroundColor: "transparent",
       grid: { left: 55, right: 20, top: 12, bottom: 40 },
@@ -249,8 +257,15 @@ const chartOpt = computed(() => {
         data: timeLabels,
         axisLine: { lineStyle: { color: "#1a2d44" } },
         axisTick: { show: false },
-        splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
-        axisLabel: { color: "#5a7288", fontSize: 10, interval: Math.max(Math.floor((timeLabels.length || 1) / 6), 0) },
+        splitLine: {
+          show: true,
+          lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" },
+        },
+        axisLabel: {
+          color: "#5a7288",
+          fontSize: 10,
+          interval: Math.max(Math.floor((timeLabels.length || 1) / 6), 0),
+        },
       },
       yAxis: {
         type: "value",
@@ -259,13 +274,24 @@ const chartOpt = computed(() => {
         splitNumber: 4,
         axisLine: { show: false },
         axisTick: { show: false },
-        splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
-        axisLabel: { color: "#5a7288", fontSize: 11, formatter: (v: number) => v.toFixed(1) },
+        splitLine: {
+          show: true,
+          lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" },
+        },
+        axisLabel: {
+          color: "#5a7288",
+          fontSize: 11,
+          formatter: (v: number) => v.toFixed(1),
+        },
       },
       legend: {
         data: ["A相", "B相", "C相"],
-        bottom: 0, left: 55, textStyle: { color: "#8fb4d8", fontSize: 10 },
-        icon: "roundRect", itemWidth: 14, itemHeight: 8,
+        bottom: 0,
+        left: 55,
+        textStyle: { color: "#8fb4d8", fontSize: 10 },
+        icon: "roundRect",
+        itemWidth: 14,
+        itemHeight: 8,
       },
       series: [
         makeLine("A相", dataA, COLORS_3.A, 1.5),
@@ -306,7 +332,15 @@ const chartOpt = computed(() => {
         type: "text",
         left: toX(m.idx) - 24,
         top: toY(m.val) - 22,
-        style: { text: `${m.label} ${m.val.toFixed(1)}A`, fill: "#fff", fontSize: 11, fontWeight: 600, textAlign: "center", textShadowBlur: 4, textShadowColor: "rgba(0,0,0,0.7)" },
+        style: {
+          text: `${m.label} ${m.val.toFixed(1)}A`,
+          fill: "#fff",
+          fontSize: 11,
+          fontWeight: 600,
+          textAlign: "center",
+          textShadowBlur: 4,
+          textShadowColor: "rgba(0,0,0,0.7)",
+        },
         z: 100,
       });
       graphic.push({
@@ -321,14 +355,21 @@ const chartOpt = computed(() => {
   return {
     graphic,
     animationDuration: 0,
-    tooltip: hasData ? {
-      trigger: "axis",
-      axisPointer: { type: "cross", crossStyle: { color: "#3a5670" }, label: { backgroundColor: "#0b1d33", color: "#e0e8f0" } },
-      backgroundColor: "rgba(11,29,51,0.96)",
-      borderColor: "#2d5280",
-      textStyle: { color: "#e0e8f0", fontSize: 12 },
-      extraCssText: "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
-    } : undefined,
+    tooltip: hasData
+      ? {
+          trigger: "axis",
+          axisPointer: {
+            type: "cross",
+            crossStyle: { color: "#3a5670" },
+            label: { backgroundColor: "#0b1d33", color: "#e0e8f0" },
+          },
+          backgroundColor: "rgba(11,29,51,0.96)",
+          borderColor: "#2d5280",
+          textStyle: { color: "#e0e8f0", fontSize: 12 },
+          extraCssText:
+            "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
+        }
+      : undefined,
     backgroundColor: "transparent",
     grid: { left: 55, right: 20, top: 20, bottom: 40 },
     xAxis: {
@@ -336,8 +377,15 @@ const chartOpt = computed(() => {
       data: timeLabels,
       axisLine: { lineStyle: { color: "#1a2d44" } },
       axisTick: { show: false },
-      splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
-      axisLabel: { color: "#5a7288", fontSize: 10, interval: hasData ? Math.max(Math.floor(data.length / 6), 0) : 0 },
+      splitLine: {
+        show: true,
+        lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" },
+      },
+      axisLabel: {
+        color: "#5a7288",
+        fontSize: 10,
+        interval: hasData ? Math.max(Math.floor(data.length / 6), 0) : 0,
+      },
     },
     yAxis: {
       type: "value",
@@ -346,8 +394,15 @@ const chartOpt = computed(() => {
       splitNumber: 4,
       axisLine: { show: false },
       axisTick: { show: false },
-      splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
-      axisLabel: { color: "#5a7288", fontSize: 11, formatter: (v: number) => v.toFixed(1) },
+      splitLine: {
+        show: true,
+        lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" },
+      },
+      axisLabel: {
+        color: "#5a7288",
+        fontSize: 11,
+        formatter: (v: number) => v.toFixed(1),
+      },
     },
     series: [makeLine("电流", data, COLORS_SINGLE, 2)],
   };
@@ -432,12 +487,14 @@ async function handleDelete(item: RecordItem) {
   const id = item.id;
   const curve_file = item.curve_file;
 
-  const delAction = withLoading(async () => {
-    const res = await deleteList(String(id), curve_file);
-    records.value = records.value.filter((c) => c.id !== id);
-    total.value--;
-    return res;
-  }, "正在删除...");
+  const delAction = async () => {
+    return await withLoading(async () => {
+      const res = await deleteList(String(id), curve_file);
+      records.value = records.value.filter((c) => c.id !== id);
+      total.value--;
+      return res;
+    }, "正在删除...");
+  };
   try {
     await delAction();
     if (records.value.length === 0 && currentPage.value > 1) {

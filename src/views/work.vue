@@ -72,7 +72,7 @@ const testResults = ref<TestItem[]>([]);
 
 const startBeforeLoading = ref(false);
 
-let tempDate = [];
+let tempDate: number[][] = [];
 
 // 寄存器计算属性：永远返回缓存的最新寄存器数据，不会清空
 const registerArr = computed(() => lastRegisterArr.value);
@@ -270,6 +270,7 @@ const handleWsRelayData = (data: number[]) => {
 /* 电源状态 */
 const powerStatus = ref({
   isRunning: false,
+  desc: "",
 });
 
 /* 动作继电器 */
@@ -304,8 +305,8 @@ const handleExpressRelays = (data: Record<string, any>) => {
 };
 
 /* 采集直流曲线 */
-const handleCollectDCCurve = (data) => {
-  const rawReg = Array.isArray(data.data) ? data.data : [];
+const handleCollectDCCurve = (data: Record<string, any>) => {
+  const rawReg: number[] = Array.isArray(data.data) ? data.data : [];
   tempDate.unshift(rawReg);
 
   // 限制最大20条，超出截断
@@ -323,7 +324,7 @@ const handleCollectDCCurve = (data) => {
 /*
   启动前测试表示
   */
-const handleStartBeforeTestExpress = (data) => {
+const handleStartBeforeTestExpress = (data: Record<string, any>) => {
   if (!startBeforeLoading.value) return;
   const r = mergeResistance(data.data);
   const result = startBeforeTestExpress(
@@ -361,7 +362,7 @@ const handleStartBeforeTestExpress = (data) => {
   }
 };
 
-const funWsRealData = (data) => {
+const funWsRealData = (data: Record<string, string | number>) => {
   let unitId = data.unitId;
   switch (unitId) {
     // case 1:
@@ -394,7 +395,7 @@ const funWsRealData = (data) => {
 
 const speakDelayTime = ref(0);
 
-const funWsStatus = (data) => {
+const funWsStatus = (data: Record<string, string>) => {
   if (!data.connected) {
     lastCoilArr.value = [];
     isThreePhase.value = false;
@@ -410,14 +411,15 @@ const funWsStatus = (data) => {
 };
 
 /* 三相采集模块初级处理 */
-const funThreePhaseACCollector = (data) => {
+const funThreePhaseACCollector = (data: number[] | undefined) => {
+  if (!data) return;
   if (deviceType.value !== "ZYJ7" && deviceType.value !== "ZDJ9") return;
   isThreePhase.value = true;
-  temperature.value = handleCalculate(data[4], 100);
-  phaseACurrent.value = handleCalculate(data[8], 1000);
-  phaseBCurrent.value = handleCalculate(data[9], 1000);
-  phaseCCurrent.value = handleCalculate(data[10], 1000);
-  phasePower.value = handleCalculate(data[15], 10000);
+  temperature.value = handleCalculate(data[4] ?? 0, 100);
+  phaseACurrent.value = handleCalculate(data[8] ?? 0, 1000);
+  phaseBCurrent.value = handleCalculate(data[9] ?? 0, 1000);
+  phaseCCurrent.value = handleCalculate(data[10] ?? 0, 1000);
+  phasePower.value = handleCalculate(data[15] ?? 0, 10000);
 
   if (isAction.value) {
     registerArrA.value = [phaseACurrent.value];
@@ -501,17 +503,20 @@ watch(active, (newkey) => {
   getConfig(newkey);
 });
 
-watch(powerStatus?.isRunning, (newKey) => {
-  if (newKey) {
-    initTestResults();
-  } else {
-    startBeforeLoading.value = false;
-    startBeforeTestFinshed.value = false;
-    availableDirections.value = { DC: false, FC: false };
-    diagnosisMessages.value = [];
-    startBeforeTestTips.value = null;
-  }
-});
+watch(
+  () => powerStatus.value.isRunning,
+  (newKey) => {
+    if (newKey) {
+      initTestResults();
+    } else {
+      startBeforeLoading.value = false;
+      startBeforeTestFinshed.value = false;
+      availableDirections.value = { DC: false, FC: false };
+      diagnosisMessages.value = [];
+      startBeforeTestTips.value = null;
+    }
+  },
+);
 
 /* 回到启动前测试初始状态 */
 const resetToStartBeforeTest = () => {
@@ -619,8 +624,16 @@ function initTestResults(direction?: "DC" | "FC") {
   testResults.value = relayConfigList
     .filter((item) => relayData[item.field] && relayData[item.field].length > 0)
     .map((item) => {
-      const field = typeToFieldMap[item.type];
+      let field = typeToFieldMap[item.type];
+      // console.log("闭合方式", selectedContactType.value, field);
+      // if (selectedContactType.value === "contact24Closed") {
+      //   if (field === "DWBS" || field === "FWBS") {
+      //     field = field === "DWBS" ? "FWBS" : "DWBS";
+      //   }
+      // }
+      console.log(field);
       const resCollect = field ? handleFindCollect(field) : undefined;
+      console.log(resCollect?.img?.[field]);
       return {
         type: item.type,
         name: item.name,
@@ -709,7 +722,7 @@ const currentCurveRef = ref<InstanceType<typeof CurrentCurve>>();
 const powerCurveRef = ref<InstanceType<typeof PowerCurve>>();
 
 /* 动作定时器与电流归零计时 */
-let actionTimerId: number | null = null;
+let actionTimerId: ReturnType<typeof setTimeout> | null = null;
 let zeroSince: number | null = null;
 let currentActionKey: keyof ActionRelays | null = null;
 let finalizeTimerId: number | null = null;
@@ -846,12 +859,16 @@ const handleDo = () => {
 
 /* 发送命令 */
 function sendCmd(data: number[] | null, type: string, deviceType?: string) {
+  console.log("发送命令", type, data, deviceType);
+  if (type === "startBeforeTestRelays" || type === "relays") {
+    console.log("发送继电器命令", type, data, deviceType);
+  }
   ws.send({ type: type, value: data, deviceType: deviceType });
 }
 
-const updateConfigData = () => {
-  wsSendData.value = result;
-};
+// const updateConfigData = () => {
+//   wsSendData.value = result;
+// };
 
 const butItemIsDisable = ref(false);
 

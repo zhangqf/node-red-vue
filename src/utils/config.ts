@@ -301,7 +301,13 @@ const generaZDJ9config = () => {
   };
 };
 
-export const collectConfig = {
+export const collectConfig: Record<
+  string,
+  Record<
+    string,
+    Record<string, Record<string, string | Record<string, string>>>
+  >
+> = {
   ZYJ7: {
     ZYJ7SH6SJ: {
       ZYJ7: {

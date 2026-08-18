@@ -24,12 +24,14 @@ const props = withDefaults(
     /** 启动前测试结果，非 null 时展示测试详情 */
     testResult?: {
       dcResult: {
+        circuitImg: string | null;
         channelName: string;
         value: number;
         tip: string;
         isNormal: boolean;
       }[];
       fcResult: {
+        circuitImg: string | null;
         channelName: string;
         value: number;
         tip: string;
@@ -95,7 +97,7 @@ const groupedRows = computed<GroupRow[]>(() => {
   const tests = props.tests || [];
   const rows: GroupRow[] = [];
   if (tests.length === 0) return rows;
-  if (tests[0].type === "empty") {
+  if (tests[0]?.type === "empty") {
     tests.forEach((t) => rows.push({ key: t.type, isGroup: false, test: t }));
     return rows;
   }
@@ -248,12 +250,11 @@ const groupedRows = computed<GroupRow[]>(() => {
           powerStatusIsRunning &&
           tests &&
           tests?.length > 0 &&
-          tests[0].type === 'empty'
+          tests[0]?.type === 'empty'
         "
         style="color: #c18232">
         暂无表示继电器配置，跳过该组状态校验
       </h4>
-
       <div class="relay-results">
         <template v-for="row in groupedRows" :key="row.key">
           <div v-if="row.isGroup" class="relay-group-label">

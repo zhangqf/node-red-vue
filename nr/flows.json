@@ -77,7 +77,6 @@
             "b23876d9dc0184f1",
             "5f829c6a2cbec815",
             "54cf7476d7f4cf15",
-            "11836aace9c6d856",
             "8e5bb841558f7674",
             "ad803c27d1464a2e",
             "6c73b535266f1f23",
@@ -86,13 +85,12 @@
             "010538068717c445",
             "bd98acdecbf1659f",
             "ca862f075ce41d0c",
-            "b9fa938bcac61576",
-            "d7ffddd0457bc27a"
+            "b9fa938bcac61576"
         ],
         "x": 74,
-        "y": 619,
-        "w": 992,
-        "h": 362
+        "y": 599,
+        "w": 1112,
+        "h": 282
     },
     {
         "id": "a78c98a47184b2fa",
@@ -430,7 +428,7 @@
             "069b66a93b3c85a9",
             "2be3e27f199091c5"
         ],
-        "x": 1154,
+        "x": 1194,
         "y": 619,
         "w": 912,
         "h": 322
@@ -915,7 +913,6 @@
         "y": 720,
         "wires": [
             [
-                "11836aace9c6d856",
                 "f6e9d7e097e60402"
             ]
         ]
@@ -957,7 +954,7 @@
         "z": "e4bbd3713100fe17",
         "g": "9e2d670578adbe41",
         "name": "function 1",
-        "func": "// 取出前端传来的线圈数组\nconst coilArr = msg.value || [];\n// 初始化32个0的数组\nconst rawData = new Array(32).fill(0);\n// 从下标0开始，覆盖对应长度，剩余保持0\nrawData.splice(0, coilArr.length, ...coilArr);\n\nconst unitId = msg.deviceType === 'ZD6' ? 1 : 2\n\n// msg.payload = {\n//   \"fc\":1,\n//     \"unitid\":2,\n//     \"address\":0,\n//     \"quantity\":32,\n//     \"name\":\"继电器状态\",\n//   \"value\": msg.value\n// };\n\n \n\n  msg.payload = {\n    \"fc\":15,\n    \"unitid\":unitId,\n    \"address\":0,\n    \"quantity\":32,\n    \"value\": rawData\n  };\nreturn msg;",
+        "func": "// 取出前端传来的线圈数组\nconst coilArr = msg.value || [];\n// 初始化32个0的数组\nconst rawData = new Array(32).fill(0);\n// 从下标0开始，覆盖对应长度，剩余保持0\nrawData.splice(0, coilArr.length, ...coilArr);\n\nconst unitId = msg.deviceType === 'ZD6' || msg.deviceType === 'ZD9' ? 1 : 2\n\n// msg.payload = {\n//   \"fc\":1,\n//     \"unitid\":2,\n//     \"address\":0,\n//     \"quantity\":32,\n//     \"name\":\"继电器状态\",\n//   \"value\": msg.value\n// };\n\n \n\n  msg.payload = {\n    \"fc\":15,\n    \"unitid\":unitId,\n    \"address\":0,\n    \"quantity\":32,\n    \"value\": rawData\n  };\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -965,7 +962,7 @@
         "finalize": "",
         "libs": [],
         "x": 500,
-        "y": 720,
+        "y": 680,
         "wires": [
             [
                 "54cf7476d7f4cf15",
@@ -1218,26 +1215,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 720,
-        "y": 780,
-        "wires": []
-    },
-    {
-        "id": "11836aace9c6d856",
-        "type": "debug",
-        "z": "e4bbd3713100fe17",
-        "g": "9e2d670578adbe41",
-        "name": "debug 11",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 280,
-        "y": 840,
+        "x": 680,
+        "y": 640,
         "wires": []
     },
     {
@@ -1254,7 +1233,7 @@
         "keepMsgProperties": true,
         "delayOnStart": false,
         "startDelayTime": "",
-        "x": 750,
+        "x": 890,
         "y": 700,
         "wires": [
             [
@@ -2369,8 +2348,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 960,
-        "y": 720,
+        "x": 1080,
+        "y": 700,
         "wires": []
     },
     {
@@ -3950,8 +3929,7 @@
                 "bd98acdecbf1659f"
             ],
             [
-                "setDeviceTypeHandler",
-                "d7ffddd0457bc27a"
+                "setDeviceTypeHandler"
             ]
         ]
     },
@@ -3968,7 +3946,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 530,
+        "x": 500,
         "y": 860,
         "wires": [
             []
@@ -3987,8 +3965,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 530,
-        "y": 780,
+        "x": 510,
+        "y": 720,
         "wires": [
             [
                 "010538068717c445"
@@ -4009,8 +3987,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 740,
-        "y": 840,
+        "x": 660,
+        "y": 720,
         "wires": []
     },
     {
@@ -4069,7 +4047,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1730,
+        "x": 1770,
         "y": 900,
         "wires": [
             [
@@ -4091,7 +4069,7 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1960,
+        "x": 2000,
         "y": 880,
         "wires": []
     },
@@ -4103,7 +4081,7 @@
         "name": "三相交流采集器",
         "server": "4b736505764b58bb",
         "client": "",
-        "x": 1940,
+        "x": 1980,
         "y": 800,
         "wires": []
     },
@@ -4987,7 +4965,7 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1280,
+        "x": 1320,
         "y": 820,
         "wires": [
             [
@@ -5008,7 +4986,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1540,
+        "x": 1580,
         "y": 820,
         "wires": [
             [
@@ -5041,8 +5019,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 510,
-        "y": 900,
+        "x": 670,
+        "y": 800,
         "wires": [
             [
                 "ca862f075ce41d0c",
@@ -5064,8 +5042,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 780,
-        "y": 940,
+        "x": 860,
+        "y": 840,
         "wires": []
     },
     {
@@ -5081,7 +5059,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1510,
+        "x": 1550,
         "y": 720,
         "wires": [
             [
@@ -5111,7 +5089,7 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1280,
+        "x": 1320,
         "y": 720,
         "wires": [
             [
@@ -5132,7 +5110,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1520,
+        "x": 1560,
         "y": 760,
         "wires": [
             [
@@ -5162,7 +5140,7 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1250,
+        "x": 1290,
         "y": 760,
         "wires": [
             [
@@ -5345,8 +5323,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 470,
-        "y": 660,
+        "x": 480,
+        "y": 640,
         "wires": []
     },
     {
@@ -5398,7 +5376,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1490,
+        "x": 1530,
         "y": 880,
         "wires": [
             [
@@ -5429,31 +5407,13 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1280,
+        "x": 1320,
         "y": 880,
         "wires": [
             [
                 "b1dce3197decb5c8"
             ]
         ]
-    },
-    {
-        "id": "d7ffddd0457bc27a",
-        "type": "debug",
-        "z": "e4bbd3713100fe17",
-        "g": "9e2d670578adbe41",
-        "name": "debug 9",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 520,
-        "y": 820,
-        "wires": []
     },
     {
         "id": "ceab28bdc14f368c",
@@ -5468,7 +5428,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1490,
+        "x": 1530,
         "y": 680,
         "wires": [
             [
@@ -5500,7 +5460,7 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1280,
+        "x": 1320,
         "y": 680,
         "wires": [
             [
@@ -5522,7 +5482,7 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1670,
+        "x": 1710,
         "y": 660,
         "wires": []
     },
