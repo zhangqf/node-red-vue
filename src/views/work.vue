@@ -223,7 +223,13 @@ const resetAllLock = () => {
 
 const handleFindCollect = (field: string) => {
   const cfg = configName.value.replace(/(【.+?】)$/, "");
-  return getCircuits(deviceType.value, combinationName.value, cfg, field);
+  return getCircuits(
+    selectedContactType.value,
+    deviceType.value,
+    combinationName.value,
+    cfg,
+    field,
+  );
 };
 
 /* 表示数据处理 */
@@ -498,7 +504,6 @@ const handleContactDialogSelect = (type: string) => {
   handleContactConfigClick(type);
   showContactDialog.value = false;
 };
-
 const handleBack = () => {
   const result = terminals.value.map(() => 0);
   wsSendData.value = gen32BitArray(result, []);

@@ -205,13 +205,13 @@ const groupedRows = computed<GroupRow[]>(() => {
             </div>
             <div class="test-result" :class="test.isNormal ? 'ok' : 'ng'">
               {{ test.tip }}
-              <button
+              <!-- <button
                 v-if="!test.isNormal && test.circuitImg"
                 class="circuit-view-btn"
                 style="margin-left: 8px"
                 @click="handleView(test.circuitImg!)">
                 查看电路图
-              </button>
+              </button> -->
             </div>
           </div>
         </template>

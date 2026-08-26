@@ -304,13 +304,26 @@ function getImgZD6(model: string, type: "DW" | "FW" | "DWC" | "FWC") {
   const prefix = model.includes("A") ? "ZD6E-A" : "ZD6J-B";
   return `./img/${prefix}-${type}.png`;
 }
+function getImgZD624(model: string, type: "DW" | "FW" | "DWC" | "FWC") {
+  const prefix = model.includes("A") ? "ZD6E-A" : "ZD6J-B";
+  return `./img24/${prefix}-${type}.png`;
+}
 function getImgZDJ9(type: "DW" | "FW") {
   const prefix = "ZDJ9";
   return `./img/${prefix}-${type}.png`;
 }
+function getImgZDJ924(type: "DW" | "FW") {
+  const prefix = "ZDJ9";
+  return `./img24/${prefix}-${type}.png`;
+}
 function getImgZYJ7(type: "DW" | "FW" | "FCB" | "FCC" | "DCB" | "DCC") {
   const prefix = "ZYJ7";
   return `./img/${prefix}-${type}.png`;
+}
+
+function getImgZYJ724(type: "DW" | "FW" | "FCB" | "FCC" | "DCB" | "DCC") {
+  const prefix = "ZYJ7";
+  return `./img24/${prefix}-${type}.png`;
 }
 
 const generaZDJ9config = () => {
@@ -318,6 +331,19 @@ const generaZDJ9config = () => {
     img: {
       DWBS: getImgZDJ9("DW"),
       FWBS: getImgZDJ9("FW"),
+    },
+    C9: "D2→33-34→15-16→D7",
+    C10: "D4→11-12→绕组3→绕组2→35-36→D12",
+    C11: "D3→23-24→45-46→D8",
+    C12: "D5→41-42→绕组3→绕组2→25-26→D11",
+  };
+};
+
+const generaZDJ9config24 = () => {
+  return {
+    img: {
+      DWBS: getImgZDJ924("DW"),
+      FWBS: getImgZDJ924("FW"),
     },
     C9: "D2→33-34→15-16→D7",
     C10: "D4→11-12→绕组3→绕组2→35-36→D12",
@@ -901,6 +927,591 @@ export const collectConfig: Record<
         img: {
           DWBS: getImgZD6("C", "DW"),
           FWBS: getImgZD6("C", "FW"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+      },
+    },
+  },
+};
+
+export const collectConfig24: Record<
+  string,
+  Record<
+    string,
+    Record<string, Record<string, string | Record<string, string>>>
+  >
+> = {
+  ZYJ7: {
+    ZYJ7SH6SJ: {
+      ZYJ7: {
+        img: {
+          DWBS: getImgZYJ724("DW"),
+          FWBS: getImgZYJ724("FW"),
+          FCB: getImgZYJ724("FCB"),
+          FCC: getImgZYJ724("FCC"),
+          DCB: getImgZYJ724("DCB"),
+          DCC: getImgZYJ724("DCC"),
+        },
+        C9: "D2→43→33-34→15-16→D7",
+        C10: "D4→21→11-12→42→绕组3→绕组2→35-36→D12",
+        C11: "D3→23-24→45-46→D8",
+        C12: "D5→41-42→绕组3→绕组2→35→25-26→D11",
+        C13: "D4→21-22→D9",
+        C14: "D5→41→31-32→D10",
+        C15: "D6→12→42→绕组3",
+        C16: "D13→44→14→K1-K2→25→35→绕组2",
+      },
+      SH6: {
+        img: {
+          DWBS: getImgZYJ724("DW"),
+          FWBS: getImgZYJ724("FW"),
+          FCB: getImgZYJ724("FCB"),
+          FCC: getImgZYJ724("FCC"),
+          DCB: getImgZYJ724("DCB"),
+          DCC: getImgZYJ724("DCC"),
+        },
+        C9: "D7→43→33-34→15-16→25→D2",
+        C10: "D12→36-35→46→D1",
+        C11: "D8→23-24→45-46→D1",
+        C12: "D11→26-25→D2",
+        C13: "D9→21→11-12→42→D6",
+        C14: "D10→41-42→D6",
+      },
+    },
+    ZYJ7DJ: {
+      ZYJ7: {
+        img: {
+          DWBS: getImgZYJ724("DW"),
+          FWBS: getImgZYJ724("FW"),
+          FCB: getImgZYJ724("FCB"),
+          FCC: getImgZYJ724("FCC"),
+          DCB: getImgZYJ724("DCB"),
+          DCC: getImgZYJ724("DCC"),
+        },
+        C9: "D2→43→33-34→15-16→D7",
+        C10: "D4→21→11-12→42→绕组3→绕组2→35-36→D12",
+        C11: "D3→23-24→45-46→D8",
+        C12: "D5→41-42→绕组3→绕组2→35→25-26→D11",
+        C13: "D4→21-22→D9",
+        C14: "D5→41→31-32→D10",
+        C15: "D6→12→42→绕组3",
+        C16: "D13→44→14→K1-K2→25→35→绕组2",
+      },
+      SH6: {
+        img: {
+          DWBS: getImgZYJ724("DW"),
+          FWBS: getImgZYJ724("FW"),
+          FCB: getImgZYJ724("FCB"),
+          FCC: getImgZYJ724("FCC"),
+          DCB: getImgZYJ724("DCB"),
+          DCC: getImgZYJ724("DCC"),
+        },
+        C9: "D7→43→33-34→15-16→25→D2",
+        C10: "D12→36-35→46→D1",
+        C11: "D8→23-24→45-46→D1",
+        C12: "D11→26-25→D2",
+        C13: "D9→21→11-12→42→D6",
+        C14: "D10→41-42→D6",
+      },
+    },
+    ZYJ7QZJ: {
+      ZYJ7: {
+        img: {
+          DWBS: getImgZYJ724("DW"),
+          FWBS: getImgZYJ724("FW"),
+          FCB: getImgZYJ724("FCB"),
+          FCC: getImgZYJ724("FCC"),
+          DCB: getImgZYJ724("DCB"),
+          DCC: getImgZYJ724("DCC"),
+        },
+        C9: "D2→43→33-34→15-16→D7",
+        C10: "D4→21→11-12→42→绕组3→绕组2→35-36→D12",
+        C11: "D3→23-24→45-46→D8",
+        C12: "D5→41-42→绕组3→绕组2→35→25-26→D11",
+        C13: "D4→21-22→D9",
+        C14: "D5→41→31-32→D10",
+        C15: "D6→12→42→绕组3",
+        C16: "D13→44→14→K1-K2→25→35→绕组2",
+      },
+      SH6: {
+        img: {
+          DWBS: getImgZYJ724("DW"),
+          FWBS: getImgZYJ724("FW"),
+          FCB: getImgZYJ724("FCB"),
+          FCC: getImgZYJ724("FCC"),
+          DCB: getImgZYJ724("DCB"),
+          DCC: getImgZYJ724("DCC"),
+        },
+        C9: "D7→43→33-34→15-16→25→D2",
+        C10: "D12→36-35→46→D1",
+        C11: "D8→23-24→45-46→D1",
+        C12: "D11→26-25→D2",
+        C13: "D9→21→11-12→42→D6",
+        C14: "D10→41-42→D6",
+      },
+    },
+    ZYJ7SH6WJ: {
+      ZYJ7: {
+        img: {
+          DWBS: getImgZYJ724("DW"),
+          FWBS: getImgZYJ724("FW"),
+          FCB: getImgZYJ724("FCB"),
+          FCC: getImgZYJ724("FCC"),
+          DCB: getImgZYJ724("DCB"),
+          DCC: getImgZYJ724("DCC"),
+        },
+        C9: "D2→43→33-34→15-16→D7",
+        C10: "D4→21→11-12→42→绕组3→绕组2→35-36→D12",
+        C11: "D3→23-24→45-46→D8",
+        C12: "D5→41-42→绕组3→绕组2→35→25-26→D11",
+        C13: "D4→21-22→D9",
+        C14: "D5→41→31-32→D10",
+        C15: "D6→12→42→绕组3",
+        C16: "D13→44→14→K1-K2→25→35→绕组2",
+      },
+      SH6: {
+        img: {
+          DWBS: getImgZYJ724("DW"),
+          FWBS: getImgZYJ724("FW"),
+          FCB: getImgZYJ724("FCB"),
+          FCC: getImgZYJ724("FCC"),
+          DCB: getImgZYJ724("DCB"),
+          DCC: getImgZYJ724("DCC"),
+        },
+        C9: "D7→43→33-34→15-16→25→D2",
+        C10: "D12→36-35→46→D1",
+        C11: "D8→23-24→45-46→D1",
+        C12: "D11→26-25→D2",
+        C13: "D9→21→11-12→42→D6",
+        C14: "D10→41-42→D6",
+      },
+    },
+  },
+  ZDJ9: {
+    ZDJ9SJ: {
+      ZDJ9: generaZDJ9config24(),
+    },
+    ZDJ9QJ: {
+      ZDJ9: generaZDJ9config24(),
+    },
+    ZDJ9WJ: {
+      ZDJ9: generaZDJ9config24(),
+    },
+  },
+  ZD6: {
+    // 双动双击
+    2324: {
+      "103A4": {
+        img: {
+          DWBS: getImgZD624("A", "DW"),
+          FWBS: getImgZD624("A", "FW"),
+          YJCDDWBS: getImgZD624("A", "DWC"),
+          YJCDFWBS: getImgZD624("A", "FWC"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+        C5: "D13→35-36→D15",
+        C6: "D14→25-26→D16",
+      },
+      "103B4": {
+        img: {
+          DWBS: getImgZD624("B", "DW"),
+          FWBS: getImgZD624("B", "FW"),
+          YJCDDWBS: getImgZD624("B", "DWC"),
+          YJCDFWBS: getImgZD624("B", "FWC"),
+        },
+        C1: "D13→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D14→21-22→D8",
+        C4: "D4→44-43→02-01→24-23→D10",
+        C5: "D15→35-36→D17",
+        C6: "D16→25-26→D18",
+      },
+      "203A4": {
+        img: {
+          YJCDDWBS: getImgZD624("C", "DW"),
+          YJCDFWBS: getImgZD624("C", "FW"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+      },
+      "203B4": {
+        img: {
+          YJCDDWBS: getImgZD624("D", "DW"),
+          YJCDFWBS: getImgZD624("D", "FW"),
+        },
+        C1: "D13→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D14→21-22→D8",
+        C4: "D4→44-43→02-01→24-23→D10",
+      },
+    },
+    // 单动单机
+    1314: {
+      "1314": {
+        img: {
+          YJCDDWBS: getImgZD624("C", "DW"),
+          YJCDFWBS: getImgZD624("C", "FW"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+      },
+    },
+    // 单动双机
+    1324: {
+      "13A4": {
+        img: {
+          YJCDDWBS: getImgZD624("C", "DW"),
+          YJCDFWBS: getImgZD624("C", "FW"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+      },
+      "13B4": {
+        img: {
+          YJCDDWBS: getImgZD624("D", "DW"),
+          YJCDFWBS: getImgZD624("D", "FW"),
+        },
+        C1: "D13→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D14→21-22→D8",
+        C4: "D4→44-43→02-01→24-23→D10",
+      },
+    },
+    //单-单-单-单
+    1111: {
+      10314: {
+        img: {
+          YJCDDWBS: getImgZD624("C", "DW"),
+          YJCDFWBS: getImgZD624("C", "FW"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+      },
+      20314: {
+        img: {
+          YJCDDWBS: getImgZD624("C", "DW"),
+          YJCDFWBS: getImgZD624("C", "FW"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+      },
+      30314: {
+        img: {
+          YJCDDWBS: getImgZD624("C", "DW"),
+          YJCDFWBS: getImgZD624("C", "FW"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+      },
+      40314: {
+        img: {
+          YJCDDWBS: getImgZD624("C", "DW"),
+          YJCDFWBS: getImgZD624("C", "FW"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+      },
+    },
+    //双-单-双-单
+    2121: {
+      "103A4": {
+        img: {
+          DWBS: getImgZD624("A", "DW"),
+          FWBS: getImgZD624("A", "FW"),
+          YJCDDWBS: getImgZD624("A", "DWC"),
+          YJCDFWBS: getImgZD624("A", "FWC"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+        C5: "D13→35-36→D15",
+        C6: "D14→25-26→D16",
+      },
+      "103B4": {
+        img: {
+          DWBS: getImgZD624("B", "DW"),
+          FWBS: getImgZD624("B", "FW"),
+          YJCDDWBS: getImgZD624("B", "DWC"),
+          YJCDFWBS: getImgZD624("B", "FWC"),
+        },
+        C1: "D13→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D14→21-22→D8",
+        C4: "D4→44-43→02-01→24-23→D10",
+        C5: "D15→35-36→D17",
+        C6: "D16→25-26→D18",
+      },
+      "20314": {
+        img: {
+          DWBS: getImgZD624("A", "DW"),
+          FWBS: getImgZD624("A", "FW"),
+          YJCDDWBS: getImgZD624("A", "DWC"),
+          YJCDFWBS: getImgZD624("A", "FWC"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+        C5: "D13→35-36→D15",
+        C6: "D14→25-26→D16",
+      },
+      "303A4": {
+        img: {
+          YJCDDWBS: getImgZD624("C", "DW"),
+          YJCDFWBS: getImgZD624("C", "FW"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+      },
+      "303B4": {
+        img: {
+          YJCDDWBS: getImgZD624("D", "DW"),
+          YJCDFWBS: getImgZD624("D", "FW"),
+        },
+        C1: "D13→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D14→21-22→D8",
+        C4: "D4→44-43→02-01→24-23→D10",
+      },
+      "40314": {
+        img: {
+          YJCDDWBS: getImgZD624("C", "DW"),
+          YJCDFWBS: getImgZD624("C", "FW"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+      },
+    },
+    // 单-单-双
+    112: {
+      "10314": {
+        img: {
+          DWBS: getImgZD624("A", "DW"),
+          FWBS: getImgZD624("A", "FW"),
+          YJCDDWBS: getImgZD624("A", "DWC"),
+          YJCDFWBS: getImgZD624("A", "FWC"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+        C5: "D13→35-36→D15",
+        C6: "D14→25-26→D16",
+      },
+      "20314": {
+        img: {
+          DWBS: getImgZD624("A", "DW"),
+          FWBS: getImgZD624("A", "FW"),
+          YJCDDWBS: getImgZD624("A", "DWC"),
+          YJCDFWBS: getImgZD624("A", "FWC"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+        C5: "D13→35-36→D15",
+        C6: "D14→25-26→D16",
+      },
+      "303A4": {
+        img: {
+          DWBS: getImgZD624("C", "DW"),
+          FWBS: getImgZD624("C", "FW"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+      },
+      "303B4": {
+        img: {
+          DWBS: getImgZD624("D", "DW"),
+          FWBS: getImgZD624("D", "FW"),
+        },
+        C1: "D13→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D14→21-22→D8",
+        C4: "D4→44-43→02-01→24-23→D10",
+      },
+    },
+    // 双-单-单
+    211: {
+      "103A4": {
+        img: {
+          DWBS: getImgZD624("C", "DW"),
+          FWBS: getImgZD624("C", "FW"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+      },
+      "103B4": {
+        img: {
+          DWBS: getImgZD624("D", "DW"),
+          FWBS: getImgZD624("D", "FW"),
+        },
+        C1: "D13→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D14→21-22→D8",
+        C4: "D4→44-43→02-01→24-23→D10",
+      },
+      "20314": {
+        img: {
+          DWBS: getImgZD624("C", "DW"),
+          FWBS: getImgZD624("C", "FW"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+      },
+      "30314": {
+        img: {
+          DWBS: getImgZD624("C", "DW"),
+          FWBS: getImgZD624("C", "FW"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+      },
+    },
+    // 双-单-双
+    212: {
+      "103A4": {
+        img: {
+          DWBS: getImgZD624("A", "DW"),
+          FWBS: getImgZD624("A", "FW"),
+          YJCDDWBS: getImgZD624("A", "DWC"),
+          YJCDFWBS: getImgZD624("A", "FWC"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+        C5: "D13→35-36→D15",
+        C6: "D14→25-26→D16",
+      },
+      "103B4": {
+        img: {
+          DWBS: getImgZD624("B", "DW"),
+          FWBS: getImgZD624("B", "FW"),
+          YJCDDWBS: getImgZD624("B", "DWC"),
+          YJCDFWBS: getImgZD624("B", "FWC"),
+        },
+        C1: "D13→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D14→21-22→D8",
+        C4: "D4→44-43→02-01→24-23→D10",
+        C5: "D15→35-36→D17",
+        C6: "D16→25-26→D18",
+      },
+      "20314": {
+        img: {
+          DWBS: getImgZD624("A", "DW"),
+          FWBS: getImgZD624("A", "FW"),
+          YJCDDWBS: getImgZD624("A", "DWC"),
+          YJCDFWBS: getImgZD624("A", "FWC"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+        C5: "D13→35-36→D15",
+        C6: "D14→25-26→D16",
+      },
+      "303A4": {
+        img: {
+          DWBS: getImgZD624("C", "DW"),
+          FWBS: getImgZD624("C", "FW"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+      },
+      "303B4": {
+        img: {
+          DWBS: getImgZD624("D", "DW"),
+          FWBS: getImgZD624("D", "FW"),
+        },
+        C1: "D13→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D14→21-22→D8",
+        C4: "D4→44-43→02-01→24-23→D10",
+      },
+    },
+    // 双-单-单-单
+    2111: {
+      "103A4": {
+        img: {
+          DWBS: getImgZD624("C", "DW"),
+          FWBS: getImgZD624("C", "FW"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+      },
+      "103B4": {
+        img: {
+          DWBS: getImgZD624("D", "DW"),
+          FWBS: getImgZD624("D", "FW"),
+        },
+        C1: "D13→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D14→21-22→D8",
+        C4: "D4→44-43→02-01→24-23→D10",
+      },
+      "20314": {
+        img: {
+          DWBS: getImgZD624("C", "DW"),
+          FWBS: getImgZD624("C", "FW"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+      },
+      "30314": {
+        img: {
+          DWBS: getImgZD624("C", "DW"),
+          FWBS: getImgZD624("C", "FW"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+      },
+      "40314": {
+        img: {
+          DWBS: getImgZD624("C", "DW"),
+          FWBS: getImgZD624("C", "FW"),
         },
         C1: "D1→41→31-32→D7",
         C2: "D3→04-03→14-13→34-33→D9",

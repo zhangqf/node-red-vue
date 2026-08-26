@@ -5,6 +5,7 @@ import {
   ZD6Serial,
   ModelConfig,
   collectConfig,
+  collectConfig24,
   DEFAULT_THRESHOLD,
 } from "./config";
 import type {
@@ -297,6 +298,7 @@ export const powerStatusJudgmen = (arr: number[], idxArr: number[]) => {
 };
 
 export function getCircuits(
+  selectedContactType: string,
   series: string,
   model: string,
   cfg: string,
@@ -309,7 +311,10 @@ export function getCircuits(
     series === "ZD9" ? "ZD6" : series
   ) as keyof typeof collectConfig;
 
-  const seriesConfig = collectConfig[seriesKey];
+  const seriesConfig =
+    selectedContactType === "collectConfig24"
+      ? collectConfig24[seriesKey]
+      : collectConfig[seriesKey];
   if (!seriesConfig) return;
 
   const serialConfig = ser !== undefined ? seriesConfig[ser] : undefined;
