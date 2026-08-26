@@ -147,7 +147,6 @@ const groupedRows = computed<GroupRow[]>(() => {
         <div class="modbusStatus-content">开启动作电源</div>
       </template>
       <template v-if="startBeforeLoading"> 启动前测试，等待结果中... </template>
-      <!-- 启动前测试结果（始终显示，不隐藏） -->
       <template v-if="testResult">
         <!-- <div class="direction-banner">
           <div class="direction-row">
@@ -166,7 +165,6 @@ const groupedRows = computed<GroupRow[]>(() => {
             </span>
           </div>
         </div> -->
-
         <div v-if="diagnosisMessages.length > 0" class="diagnosis-box">
           <div
             v-for="(msg, idx) in diagnosisMessages"
@@ -175,71 +173,60 @@ const groupedRows = computed<GroupRow[]>(() => {
             {{ msg }}
           </div>
         </div>
-
-        <template v-if="showDC">
-          <div class="section-label">
-            定操视角
-            <span v-if="availableDirections.DC" class="section-badge ok"
-              >通过</span
-            >
-            <span v-else class="section-badge ng">未通过</span>
+        <div class="section-label">
+          定操视角
+          <span v-if="availableDirections.DC" class="section-badge ok"
+            >通过</span
+          >
+          <span v-else class="section-badge ng">未通过</span>
+        </div>
+        <div
+          v-for="(test, idx) in testResult.dcResult"
+          :key="'dc-' + idx"
+          class="test-item">
+          <div class="test-header">
+            <span class="test-dot" :class="test.isNormal ? 'ok' : 'ng'"></span>
+            <span class="test-name">{{ test.channelName }}</span>
+            <span class="test-value">{{ test.value }}Ω</span>
           </div>
-          <div
-            v-for="(test, idx) in testResult.dcResult"
-            :key="'dc-' + idx"
-            class="test-item">
-            <div class="test-header">
-              <span
-                class="test-dot"
-                :class="test.isNormal ? 'ok' : 'ng'"></span>
-              <span class="test-name">{{ test.channelName }}</span>
-              <span class="test-value">{{ test.value }}Ω</span>
-            </div>
-            <div class="test-result" :class="test.isNormal ? 'ok' : 'ng'">
-              {{ test.tip }}
-              <button
+          <div class="test-result" :class="test.isNormal ? 'ok' : 'ng'">
+            {{ test.tip }}
+            <!-- <button
                 v-if="!test.isNormal && test.circuitImg"
                 class="circuit-view-btn"
                 style="margin-left: 8px"
                 @click="handleView(test.circuitImg!)">
                 查看电路图
-              </button>
-            </div>
+              </button> -->
           </div>
-        </template>
-
-        <template v-if="showFC">
-          <div class="section-label section-divider">
-            反操视角
-            <span v-if="availableDirections.FC" class="section-badge ok"
-              >通过</span
-            >
-            <span v-else class="section-badge ng">未通过</span>
+        </div>
+        <div class="section-label section-divider">
+          反操视角
+          <span v-if="availableDirections.FC" class="section-badge ok"
+            >通过</span
+          >
+          <span v-else class="section-badge ng">未通过</span>
+        </div>
+        <div
+          v-for="(test, idx) in testResult.fcResult"
+          :key="'fc-' + idx"
+          class="test-item">
+          <div class="test-header">
+            <span class="test-dot" :class="test.isNormal ? 'ok' : 'ng'"></span>
+            <span class="test-name">{{ test.channelName }}</span>
+            <span class="test-value">{{ test.value }}Ω</span>
           </div>
-          <div
-            v-for="(test, idx) in testResult.fcResult"
-            :key="'fc-' + idx"
-            class="test-item">
-            <div class="test-header">
-              <span
-                class="test-dot"
-                :class="test.isNormal ? 'ok' : 'ng'"></span>
-              <span class="test-name">{{ test.channelName }}</span>
-              <span class="test-value">{{ test.value }}Ω</span>
-            </div>
-            <div class="test-result" :class="test.isNormal ? 'ok' : 'ng'">
-              {{ test.tip }}
-              <button
-                v-if="!test.isNormal && test.circuitImg"
-                class="circuit-view-btn"
-                style="margin-left: 8px"
-                @click="handleView(test.circuitImg!)">
-                查看电路图
-              </button>
-            </div>
+          <div class="test-result" :class="test.isNormal ? 'ok' : 'ng'">
+            {{ test.tip }}
+            <!-- <button
+              v-if="!test.isNormal && test.circuitImg"
+              class="circuit-view-btn"
+              style="margin-left: 8px"
+              @click="handleView(test.circuitImg!)">
+              查看电路图 
+            </button>-->
           </div>
-        </template>
-
+        </div>
         <div class="section-divider"></div>
       </template>
       <!-- 常规表示继电器结果 -->
@@ -386,7 +373,7 @@ const groupedRows = computed<GroupRow[]>(() => {
               </svg>
             </button>
           </div>
-          <div style="width: 100%; height: 80vh; padding: 10px">
+          <div style="width: 100%; height: 100vh; padding: 10px">
             <img :src="perviewImg" alt="" width="100%" height="100%" />
           </div>
         </div>
@@ -425,13 +412,13 @@ const groupedRows = computed<GroupRow[]>(() => {
 }
 
 .panel-title {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   color: #e0e8f0;
 }
 
 .modbusStatus-content {
-  font-size: 16px;
+  font-size: 18px;
   color: #f87171;
   padding: 10px;
   background: rgba(248, 113, 113, 0.1);
@@ -497,19 +484,19 @@ const groupedRows = computed<GroupRow[]>(() => {
 }
 
 .test-name {
-  font-size: 12px;
+  font-size: 18px;
   color: #bccfde;
 }
 
 .test-value {
-  font-size: 11px;
+  font-size: 16px;
   color: #5a7288;
   margin-left: auto;
   font-family: "SF Mono", "Monaco", "Menlo", monospace;
 }
 
 .test-result {
-  font-size: 10px;
+  font-size: 16px;
   color: #5a7288;
   padding-left: 13px;
   font-family: "SF Mono", "Monaco", "Menlo", monospace;
@@ -617,13 +604,13 @@ const groupedRows = computed<GroupRow[]>(() => {
 }
 
 .direction-label {
-  font-size: 13px;
+  font-size: 16px;
   color: #8fb4d8;
   font-weight: 600;
 }
 
 .direction-status {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 700;
   padding: 2px 10px;
   border-radius: 4px;
@@ -670,7 +657,7 @@ const groupedRows = computed<GroupRow[]>(() => {
 }
 
 .diagnosis-item {
-  font-size: 11px;
+  font-size: 16px;
   color: #fca5a5;
   line-height: 1.8;
   font-family: "SF Mono", "Monaco", "Menlo", monospace;
@@ -684,7 +671,7 @@ const groupedRows = computed<GroupRow[]>(() => {
 
 /* ---- 区块标签 ---- */
 .section-label {
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 600;
   color: #8fb4d8;
   padding: 6px 0 2px;
@@ -700,7 +687,7 @@ const groupedRows = computed<GroupRow[]>(() => {
 }
 
 .section-badge {
-  font-size: 10px;
+  font-size: 14px;
   padding: 1px 8px;
   border-radius: 3px;
   font-weight: 700;
@@ -731,8 +718,8 @@ const groupedRows = computed<GroupRow[]>(() => {
   background: #0b1d33;
   border: 1px solid #1a2d44;
   border-radius: 14px;
-  width: 860px;
-  max-height: 85vh;
+  width: 100%;
+  max-height: 100vh;
   overflow-y: auto;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
 }
@@ -754,13 +741,13 @@ const groupedRows = computed<GroupRow[]>(() => {
 }
 
 .modal-title {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
   color: #e0e8f0;
 }
 
 .modal-subtitle {
-  font-size: 13px;
+  font-size: 16px;
   color: #5a7288;
 }
 
@@ -794,7 +781,7 @@ const groupedRows = computed<GroupRow[]>(() => {
 
 /* ---- 表示项分组标题 ---- */
 .relay-group-label {
-  font-size: 11px;
+  font-size: 24px;
   font-weight: 600;
   color: #8fb4d8;
   padding: 10px 10px 4px;
@@ -838,7 +825,7 @@ const groupedRows = computed<GroupRow[]>(() => {
   border: 1px solid rgba(90, 146, 208, 0.2);
   border-radius: 3px;
   color: #5a92d0;
-  font-size: 11px;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
   flex-shrink: 0;
@@ -852,7 +839,7 @@ const groupedRows = computed<GroupRow[]>(() => {
 
 .circuit-toggle-icon {
   display: inline-block;
-  font-size: 8px;
+  font-size: 14px;
   transition: transform 0.2s ease;
 }
 
@@ -892,14 +879,14 @@ const groupedRows = computed<GroupRow[]>(() => {
   border: 1px solid rgba(90, 146, 208, 0.25);
   border-radius: 3px;
   color: #8fb4d8;
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 700;
   font-family: "SF Mono", "Monaco", "Menlo", monospace;
   flex-shrink: 0;
 }
 
 .circuit-path-text {
-  font-size: 11px;
+  font-size: 14px;
   color: #6a8fa8;
   font-family: "SF Mono", "Monaco", "Menlo", monospace;
   word-break: break-all;
@@ -934,7 +921,7 @@ const groupedRows = computed<GroupRow[]>(() => {
   border: 1px solid rgba(90, 146, 208, 0.2);
   border-radius: 4px;
   color: #5a92d0;
-  font-size: 12px;
+  font-size: 16px;
   cursor: pointer;
   transition: all 0.2s;
 }

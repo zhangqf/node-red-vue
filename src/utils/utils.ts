@@ -5,6 +5,7 @@ import {
   ZD6Serial,
   ModelConfig,
   collectConfig,
+  collectConfig24,
 } from "./config";
 import type {
   ChannelExpect,
@@ -120,7 +121,7 @@ export const findRelayIndex = (
  * UNKNOWN：不在以上区间，阻值异常无法判定
  */
 function classifyResistance(val: number): ResistanceState {
-  if (val >= 0 && val <= 40) return "NORMAL";
+  if (val > 0.6 && val <= 15) return "NORMAL";
   if (val >= 10000) return "OPEN";
   if (val <= 0.5) return "SHORT";
   return "UNKNOWN";
@@ -129,7 +130,7 @@ function classifyResistance(val: number): ResistanceState {
 // 10 -15
 
 function classifyResistanceZD6(val: number): ResistanceState {
-  if (val >= 0 && val <= 40) return "NORMAL";
+  if (val > 0.6 && val <= 15) return "NORMAL";
   if (val >= 10000) return "OPEN";
   if (val <= 0.5) return "SHORT";
   return "UNKNOWN";
@@ -236,23 +237,29 @@ export const startBeforeTestExpress = (
     };
   });
 
-  // 全路12-17Ω → 两种方向均可用
+  // 全路均导通（NORMAL）→ 混线异常，两个方向均不合格
   const allNormal = states.slice(0, 4).every((s) => s === "NORMAL");
 
-  const dcPassed = allNormal || dcResult.every((r) => r.isNormal);
-  const fcPassed = allNormal || fcResult.every((r) => r.isNormal);
+  const dcPassed = dcResult.every((r) => r.isNormal);
+  const fcPassed = fcResult.every((r) => r.isNormal);
 
   const diagnosis: string[] = [];
 
-  if (!dcPassed && !fcPassed) {
-    dcResult.forEach((r) => {
-      if (!r.isNormal)
-        diagnosis.push(`定操-${r.channelName}: ${r.tip}(${r.value}Ω)`);
-    });
-    fcResult.forEach((r) => {
-      if (!r.isNormal)
-        diagnosis.push(`反操-${r.channelName}: ${r.tip}(${r.value}Ω)`);
-    });
+  if (allNormal) {
+    diagnosis.push("混线：所有通道阻值均为正常区间");
+  } else {
+    if (!dcPassed) {
+      dcResult.forEach((r) => {
+        if (!r.isNormal)
+          diagnosis.push(`定操-${r.channelName}: ${r.tip}(${r.value}Ω)`);
+      });
+    }
+    if (!fcPassed) {
+      fcResult.forEach((r) => {
+        if (!r.isNormal)
+          diagnosis.push(`反操-${r.channelName}: ${r.tip}(${r.value}Ω)`);
+      });
+    }
   }
 
   return {
@@ -285,26 +292,64 @@ export const powerStatusJudgmen = (arr: number[], idxArr: number[]) => {
   };
 };
 
+// export function getCircuits(
+//   series: string,
+//   model: string,
+//   cfg: string,
+//   field: string,
+// ) {
+//   if (!series || !model || !cfg) return;
+//   const ser = ZD6Serial[model];
+//   const mod = ModelConfig[cfg];
+//   return collectConfig[series][ser][mod];
+// }
+
+// export function mergeResistance(data: number[]) {
+//   let mergeData: number[] = [];
+//   console.log(data);
+//   if (Array.isArray(data)) {
+//     data.reduce((prev, curr, idx) => {
+//       if (idx % 2 === 1) mergeData.push(Number(prev * 65535 + curr) / 100);
+//       return curr;
+//     }, null);
+//   }
+//   return mergeData;
+// }
+
 export function getCircuits(
+  selectedContactType: string,
   series: string,
   model: string,
   cfg: string,
   field: string,
 ) {
   if (!series || !model || !cfg) return;
-  const ser = ZD6Serial[model];
-  const mod = ModelConfig[cfg];
-  return collectConfig[series][ser][mod];
+  const ser = ZD6Serial[model as keyof typeof ZD6Serial];
+  const mod = ModelConfig[cfg as keyof typeof ModelConfig];
+  const seriesKey = (
+    series === "ZD9" ? "ZD6" : series
+  ) as keyof typeof collectConfig;
+
+  const seriesConfig =
+    selectedContactType === "contact24Closed"
+      ? collectConfig24[seriesKey]
+      : collectConfig[seriesKey];
+  if (!seriesConfig) return;
+
+  const serialConfig = ser !== undefined ? seriesConfig[ser] : undefined;
+  if (!serialConfig) return;
+
+  const modelConfig = mod !== undefined ? serialConfig[mod] : undefined;
+  return modelConfig;
 }
 
 export function mergeResistance(data: number[]) {
   let mergeData: number[] = [];
-  console.log(data);
   if (Array.isArray(data)) {
-    data.reduce((prev, curr, idx) => {
+    data.reduce((prev: number, curr: number, idx) => {
       if (idx % 2 === 1) mergeData.push(Number(prev * 65535 + curr) / 100);
       return curr;
-    }, null);
+    }, 0);
   }
   return mergeData;
 }

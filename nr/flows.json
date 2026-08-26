@@ -428,7 +428,8 @@
             "d54c3d24b64be8a2",
             "ceab28bdc14f368c",
             "069b66a93b3c85a9",
-            "2be3e27f199091c5"
+            "2be3e27f199091c5",
+            "ebddc8fcc7e77962"
         ],
         "x": 1154,
         "y": 619,
@@ -4083,7 +4084,7 @@
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
         "name": "debug 21",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -4980,14 +4981,14 @@
                 "vt": "str"
             }
         ],
-        "repeat": "",
+        "repeat": "1",
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1270,
+        "x": 1280,
         "y": 820,
         "wires": [
             [
@@ -5012,7 +5013,8 @@
         "y": 820,
         "wires": [
             [
-                "7410291c8a0585e6"
+                "7410291c8a0585e6",
+                "ebddc8fcc7e77962"
             ]
         ]
     },
@@ -5056,7 +5058,7 @@
         "z": "e4bbd3713100fe17",
         "g": "9e2d670578adbe41",
         "name": "debug 3",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -5074,7 +5076,7 @@
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
         "name": "表示",
-        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst data = [1,1,0,0,0,0,0,0,1,1,1,0,0,1,1,1]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 3,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
+        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst data = [1,1,1,0,0,0,0,0,1,1,1,1,0,1,1,1]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 3,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -5093,7 +5095,6 @@
         "id": "a20ffea59d710210",
         "type": "inject",
         "z": "e4bbd3713100fe17",
-        "d": true,
         "g": "264be9ece447ca9d",
         "name": "",
         "props": [
@@ -5126,7 +5127,7 @@
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
         "name": "开启电源",
-        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst tempArr = new Array(32).fill(0)\n\ntempArr[31] = 1\ntempArr[30] = 1\ntempArr[29] = 0\nconst data = [1,1,1,1,1,1,1,1,]\n\nmsg.sendData = {\n    data:tempArr,\n    type:\"modbusRealData\",\n    unitId: 1,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
+        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst tempArr = new Array(32).fill(0)\n\ntempArr[31] = 1\ntempArr[30] = 1\ntempArr[29] = 1\nconst data = [1,1,1,1,1,1,1,1,]\n\nmsg.sendData = {\n    data:tempArr,\n    type:\"modbusRealData\",\n    unitId: 2,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -5482,7 +5483,6 @@
         "id": "069b66a93b3c85a9",
         "type": "inject",
         "z": "e4bbd3713100fe17",
-        "d": true,
         "g": "264be9ece447ca9d",
         "name": "",
         "props": [
@@ -5515,7 +5515,7 @@
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
         "name": "debug 12",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -5956,6 +5956,24 @@
         "statusType": "auto",
         "x": 620,
         "y": 5320,
+        "wires": []
+    },
+    {
+        "id": "ebddc8fcc7e77962",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "264be9ece447ca9d",
+        "name": "debug 15",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1830,
+        "y": 720,
         "wires": []
     }
 ]

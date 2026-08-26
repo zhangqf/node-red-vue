@@ -194,7 +194,13 @@ const resetAllLock = () => {
 
 const handleFindCollect = (field: string) => {
   const cfg = configName.value.replace(/(【.+?】)$/, "");
-  return getCircuits(deviceType.value, combinationName.value, cfg, field);
+  return getCircuits(
+    selectedContactType.value,
+    deviceType.value,
+    combinationName.value,
+    cfg,
+    field,
+  );
 };
 
 /* 表示数据处理 */
@@ -236,10 +242,10 @@ const handleWsRelayData = (data: number[]) => {
                   closed,
                 });
               }
-              relayTips.push({ name: v, path: resCollect[v], closed });
+              relayTips.push({ name: v, path: resCollect?.[v] || "", closed });
               break;
             default:
-              relayTips.push({ name: v, path: resCollect[v], closed });
+              relayTips.push({ name: v, path: resCollect?.[v] || "", closed });
           }
         } else {
           relayTips.push({ name: v, path: resCollect?.[v] || "", closed });
