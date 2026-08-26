@@ -12,6 +12,7 @@ interface RecordItem {
   config_name: string;
   op_type: string;
   status: string;
+  fail_reason?: string;
   peak_current: number;
   valley_current: number;
   curve_file: string;
@@ -105,7 +106,16 @@ function preTestLabel(r: RecordItem): string {
   return "不可用";
 }
 
-
+// 详情：反操(FC)只显示反操方向与提示，定操(DC)只显示定操方向与提示
+const detailOpType = computed(() => currentRecord.value?.op_type || "");
+const detailIsFC = computed(() => detailOpType.value === "FC");
+const detailIsDC = computed(() => detailOpType.value === "DC");
+const detailDiagnosis = computed(() => {
+  const d = currentRecord.value?.pre_test?.direction?.diagnosis || [];
+  if (detailIsFC.value) return d.filter((m) => !m.startsWith("定操-"));
+  if (detailIsDC.value) return d.filter((m) => !m.startsWith("反操-"));
+  return d;
+});
 
 async function getList() {
   const params = new URLSearchParams();
@@ -204,10 +214,19 @@ function makeLine(name: string, data: number[], color: string, width = 2) {
     smooth: false,
     symbol: "none",
     color,
-    lineStyle: { color, width, shadowBlur: 6, shadowColor: gradient(color, 0.35) },
+    lineStyle: {
+      color,
+      width,
+      shadowBlur: 6,
+      shadowColor: gradient(color, 0.35),
+    },
     areaStyle: {
       color: {
-        type: "linear", x: 0, y: 0, x2: 0, y2: 1,
+        type: "linear",
+        x: 0,
+        y: 0,
+        x2: 0,
+        y2: 1,
         colorStops: [
           { offset: 0, color: gradient(color, 0.18) },
           { offset: 1, color: gradient(color, 0.01) },
@@ -240,7 +259,8 @@ const chartOpt = computed(() => {
         backgroundColor: "rgba(11,29,51,0.96)",
         borderColor: "#2d5280",
         textStyle: { color: "#e0e8f0", fontSize: 12 },
-        extraCssText: "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
+        extraCssText:
+          "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
       },
       backgroundColor: "transparent",
       grid: { left: 55, right: 20, top: 12, bottom: 40 },
@@ -249,8 +269,15 @@ const chartOpt = computed(() => {
         data: timeLabels,
         axisLine: { lineStyle: { color: "#1a2d44" } },
         axisTick: { show: false },
-        splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
-        axisLabel: { color: "#5a7288", fontSize: 10, interval: Math.max(Math.floor((timeLabels.length || 1) / 6), 0) },
+        splitLine: {
+          show: true,
+          lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" },
+        },
+        axisLabel: {
+          color: "#5a7288",
+          fontSize: 10,
+          interval: Math.max(Math.floor((timeLabels.length || 1) / 6), 0),
+        },
       },
       yAxis: {
         type: "value",
@@ -259,13 +286,24 @@ const chartOpt = computed(() => {
         splitNumber: 4,
         axisLine: { show: false },
         axisTick: { show: false },
-        splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
-        axisLabel: { color: "#5a7288", fontSize: 11, formatter: (v: number) => v.toFixed(1) },
+        splitLine: {
+          show: true,
+          lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" },
+        },
+        axisLabel: {
+          color: "#5a7288",
+          fontSize: 11,
+          formatter: (v: number) => v.toFixed(1),
+        },
       },
       legend: {
         data: ["A相", "B相", "C相"],
-        bottom: 0, left: 55, textStyle: { color: "#8fb4d8", fontSize: 10 },
-        icon: "roundRect", itemWidth: 14, itemHeight: 8,
+        bottom: 0,
+        left: 55,
+        textStyle: { color: "#8fb4d8", fontSize: 10 },
+        icon: "roundRect",
+        itemWidth: 14,
+        itemHeight: 8,
       },
       series: [
         makeLine("A相", dataA, COLORS_3.A, 1.5),
@@ -306,7 +344,15 @@ const chartOpt = computed(() => {
         type: "text",
         left: toX(m.idx) - 24,
         top: toY(m.val) - 22,
-        style: { text: `${m.label} ${m.val.toFixed(1)}A`, fill: "#fff", fontSize: 11, fontWeight: 600, textAlign: "center", textShadowBlur: 4, textShadowColor: "rgba(0,0,0,0.7)" },
+        style: {
+          text: `${m.label} ${m.val.toFixed(1)}A`,
+          fill: "#fff",
+          fontSize: 11,
+          fontWeight: 600,
+          textAlign: "center",
+          textShadowBlur: 4,
+          textShadowColor: "rgba(0,0,0,0.7)",
+        },
         z: 100,
       });
       graphic.push({
@@ -321,14 +367,21 @@ const chartOpt = computed(() => {
   return {
     graphic,
     animationDuration: 0,
-    tooltip: hasData ? {
-      trigger: "axis",
-      axisPointer: { type: "cross", crossStyle: { color: "#3a5670" }, label: { backgroundColor: "#0b1d33", color: "#e0e8f0" } },
-      backgroundColor: "rgba(11,29,51,0.96)",
-      borderColor: "#2d5280",
-      textStyle: { color: "#e0e8f0", fontSize: 12 },
-      extraCssText: "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
-    } : undefined,
+    tooltip: hasData
+      ? {
+          trigger: "axis",
+          axisPointer: {
+            type: "cross",
+            crossStyle: { color: "#3a5670" },
+            label: { backgroundColor: "#0b1d33", color: "#e0e8f0" },
+          },
+          backgroundColor: "rgba(11,29,51,0.96)",
+          borderColor: "#2d5280",
+          textStyle: { color: "#e0e8f0", fontSize: 12 },
+          extraCssText:
+            "box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: 6px;",
+        }
+      : undefined,
     backgroundColor: "transparent",
     grid: { left: 55, right: 20, top: 20, bottom: 40 },
     xAxis: {
@@ -336,8 +389,15 @@ const chartOpt = computed(() => {
       data: timeLabels,
       axisLine: { lineStyle: { color: "#1a2d44" } },
       axisTick: { show: false },
-      splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
-      axisLabel: { color: "#5a7288", fontSize: 10, interval: hasData ? Math.max(Math.floor(data.length / 6), 0) : 0 },
+      splitLine: {
+        show: true,
+        lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" },
+      },
+      axisLabel: {
+        color: "#5a7288",
+        fontSize: 10,
+        interval: hasData ? Math.max(Math.floor(data.length / 6), 0) : 0,
+      },
     },
     yAxis: {
       type: "value",
@@ -346,8 +406,15 @@ const chartOpt = computed(() => {
       splitNumber: 4,
       axisLine: { show: false },
       axisTick: { show: false },
-      splitLine: { show: true, lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" } },
-      axisLabel: { color: "#5a7288", fontSize: 11, formatter: (v: number) => v.toFixed(1) },
+      splitLine: {
+        show: true,
+        lineStyle: { color: "rgba(26,45,68,0.5)", type: "dashed" },
+      },
+      axisLabel: {
+        color: "#5a7288",
+        fontSize: 11,
+        formatter: (v: number) => v.toFixed(1),
+      },
     },
     series: [makeLine("电流", data, COLORS_SINGLE, 2)],
   };
@@ -432,12 +499,14 @@ async function handleDelete(item: RecordItem) {
   const id = item.id;
   const curve_file = item.curve_file;
 
-  const delAction = withLoading(async () => {
-    const res = await deleteList(String(id), curve_file);
-    records.value = records.value.filter((c) => c.id !== id);
-    total.value--;
-    return res;
-  }, "正在删除...");
+  const delAction = async () => {
+    return await withLoading(async () => {
+      const res = await deleteList(String(id), curve_file);
+      records.value = records.value.filter((c) => c.id !== id);
+      total.value--;
+      return res;
+    }, "正在删除...");
+  };
   try {
     await delAction();
     if (records.value.length === 0 && currentPage.value > 1) {
@@ -520,7 +589,7 @@ onMounted(async () => {
         <select v-model="searchStatus" class="search-select">
           <option value="">状态</option>
           <option value="success">成功</option>
-          <option value="fail">失败</option>
+          <option value="error">失败</option>
         </select>
       </div>
       <div class="search-actions">
@@ -538,6 +607,7 @@ onMounted(async () => {
             <th class="col-combo">组合方式</th>
             <th class="col-config">测试机型</th>
             <th class="col-op">操作类型</th>
+            <th class="col-status">状态</th>
             <th class="col-pretest">启动前测试</th>
             <th class="col-time">测试时间</th>
             <th class="col-action">操作</th>
@@ -555,6 +625,19 @@ onMounted(async () => {
               <span class="op-type-tag" :class="r.op_type.toLowerCase()">
                 {{ opTypeLabels[r.op_type] || r.op_type }}
               </span>
+            </td>
+            <td class="col-status">
+              <span
+                v-if="r.status"
+                class="status-tag"
+                :class="r.status === 'success' ? 'success' : 'fail'"
+                :title="r.fail_reason || ''">
+                <span
+                  class="status-dot"
+                  :class="r.status === 'success' ? 'success' : 'fail'"></span>
+                {{ r.status === "success" ? "成功" : "失败" }}
+              </span>
+              <span v-else class="no-data">-</span>
             </td>
             <td class="col-pretest">
               <span
@@ -610,7 +693,7 @@ onMounted(async () => {
             </td>
           </tr>
           <tr v-if="records.length === 0">
-            <td colspan="11" class="empty-row">
+            <td colspan="9" class="empty-row">
               <div class="empty-state">
                 <svg viewBox="0 0 48 48" fill="none" class="empty-icon">
                   <rect
@@ -730,29 +813,42 @@ onMounted(async () => {
               }}</span>
             </div>
           </div>
+          <!-- 失败原因 -->
+          <div v-if="currentRecord?.fail_reason" class="modal-fail-reason">
+            <span class="fail-reason-label">失败原因</span>
+            <span class="fail-reason-text">{{
+              currentRecord.fail_reason
+            }}</span>
+          </div>
           <!-- 启动前测试 -->
           <div class="modal-pretest" v-if="currentRecord?.pre_test">
             <span class="result-section-label">启动前测试</span>
             <div class="pretest-direction-row">
-              <span class="pretest-dir-label">定操</span>
+              <template v-if="!detailIsFC">
+                <span class="pretest-dir-label">定操</span>
+                <span
+                  class="pretest-dir-status"
+                  :class="currentRecord.pre_test.direction.DC ? 'ok' : 'ng'">
+                  {{ currentRecord.pre_test.direction.DC ? "可用" : "不可用" }}
+                </span>
+              </template>
               <span
-                class="pretest-dir-status"
-                :class="currentRecord.pre_test.direction.DC ? 'ok' : 'ng'">
-                {{ currentRecord.pre_test.direction.DC ? "可用" : "不可用" }}
-              </span>
-              <span class="pretest-dir-divider">|</span>
-              <span class="pretest-dir-label">反操</span>
-              <span
-                class="pretest-dir-status"
-                :class="currentRecord.pre_test.direction.FC ? 'ok' : 'ng'">
-                {{ currentRecord.pre_test.direction.FC ? "可用" : "不可用" }}
-              </span>
+                v-if="!detailIsFC && !detailIsDC"
+                class="pretest-dir-divider"
+                >|</span
+              >
+              <template v-if="!detailIsDC">
+                <span class="pretest-dir-label">反操</span>
+                <span
+                  class="pretest-dir-status"
+                  :class="currentRecord.pre_test.direction.FC ? 'ok' : 'ng'">
+                  {{ currentRecord.pre_test.direction.FC ? "可用" : "不可用" }}
+                </span>
+              </template>
             </div>
-            <div
-              v-if="currentRecord.pre_test.direction.diagnosis.length > 0"
-              class="pretest-diagnosis">
+            <div v-if="detailDiagnosis.length > 0" class="pretest-diagnosis">
               <div
-                v-for="(msg, idx) in currentRecord.pre_test.direction.diagnosis"
+                v-for="(msg, idx) in detailDiagnosis"
                 :key="idx"
                 class="pretest-diagnosis-item">
                 {{ msg }}
@@ -1306,8 +1402,8 @@ onMounted(async () => {
   background: #0b1d33;
   border: 1px solid #1a2d44;
   border-radius: 14px;
-  width: 860px;
-  max-height: 85vh;
+  width: 100%;
+  max-height: 100vh;
   overflow-y: auto;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
 }
@@ -1406,6 +1502,32 @@ onMounted(async () => {
 
 .stat-value.valley {
   color: #34a3d3;
+}
+
+/* ---- Modal fail reason ---- */
+.modal-fail-reason {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 28px 16px;
+  padding: 10px 14px;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: 6px;
+}
+
+.fail-reason-label {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #f87171;
+}
+
+.fail-reason-text {
+  font-size: 12px;
+  color: #fca5a5;
+  line-height: 1.6;
+  word-break: break-all;
 }
 
 /* ---- Modal pre-test ---- */

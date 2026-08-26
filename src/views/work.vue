@@ -32,8 +32,13 @@ import {
   contact24Closed,
   contact13Closed,
   DEFAULT_THRESHOLD,
+  DEFAULT_CURVE_THRESHOLD,
 } from "@/utils/config";
-import type { ChannelExpect, ResistanceThreshold } from "@/utils/config";
+import type {
+  ChannelExpect,
+  ResistanceThreshold,
+  CurveThreshold,
+} from "@/utils/config";
 
 import { speak } from "@/utils/speech";
 
@@ -72,7 +77,7 @@ const testResults = ref<TestItem[]>([]);
 
 const startBeforeLoading = ref(false);
 
-let tempDate = [];
+let tempDate: number[][] = [];
 
 // 寄存器计算属性：永远返回缓存的最新寄存器数据，不会清空
 const registerArr = computed(() => lastRegisterArr.value);
@@ -161,6 +166,10 @@ const FC_GROUP_TYPES = new Set([
   "FCCX",
 ]);
 
+// 记录判定范围：反操(FC)检查定位表示+定操项，定操(DC)检查反位表示+反操项
+const FC_RECORD_TYPES = new Set<string>(["GreenLight", ...DC_GROUP_TYPES]);
+const DC_RECORD_TYPES = new Set<string>(["YellowLight", ...FC_GROUP_TYPES]);
+
 // 定位表示 / 反位表示 实时状态
 const positioningTrue = computed(() => {
   const item = testResults.value.find((t) => t.type === "GreenLight");
@@ -171,9 +180,18 @@ const reverseTrue = computed(() => {
   return item?.status === true;
 });
 
-// 定操/反操视角与按钮显示控制（交叉映射）：定位表示 → 显示反操，反位表示 → 显示定操
-const showDCGroup = computed(() => !positioningTrue.value);
-const showFCGroup = computed(() => !reverseTrue.value);
+// 定位/反位表示灯的显示：定位成功优先，只显示定位；反位仅在定位失败时显示
+const showPositioning = computed(() => positioningTrue.value);
+const showReverse = computed(() => !positioningTrue.value && reverseTrue.value);
+
+// 定操/反操视角与按钮显示控制（交叉映射）：
+// 定位表示成功 → 显示反操视角；反位表示成功（且定位失败）→ 显示定操视角
+const showDCGroup = computed(() => {
+  return !positioningTrue.value && reverseTrue.value;
+});
+const showFCGroup = computed(() => {
+  return positioningTrue.value;
+});
 
 // 诊断提示按当前视角过滤：定操视角只显示定操项，反操视角只显示反操项，混线等通用提示始终显示
 const displayDiagnosisMessages = computed(() => {
@@ -187,7 +205,8 @@ const displayDiagnosisMessages = computed(() => {
 // 按定位/反位状态过滤后的表示项
 const displayedTestResults = computed(() => {
   return testResults.value.filter((item) => {
-    if (item.type === "GreenLight" || item.type === "YellowLight") return true;
+    if (item.type === "GreenLight") return showPositioning.value;
+    if (item.type === "YellowLight") return showReverse.value;
     if (DC_GROUP_TYPES.has(item.type)) return positioningTrue.value;
     if (FC_GROUP_TYPES.has(item.type)) return reverseTrue.value;
     return true;
@@ -204,7 +223,13 @@ const resetAllLock = () => {
 
 const handleFindCollect = (field: string) => {
   const cfg = configName.value.replace(/(【.+?】)$/, "");
-  return getCircuits(deviceType.value, combinationName.value, cfg, field);
+  return getCircuits(
+    selectedContactType.value,
+    deviceType.value,
+    combinationName.value,
+    cfg,
+    field,
+  );
 };
 
 /* 表示数据处理 */
@@ -268,7 +293,10 @@ const handleWsRelayData = (data: number[]) => {
 };
 
 /* 电源状态 */
-const powerStatus = ref({});
+const powerStatus = ref({
+  isRunning: false,
+  desc: "",
+});
 
 /* 动作继电器 */
 const handleActionRelays = (data: Record<string, any>) => {
@@ -290,7 +318,6 @@ const handleActionRelays = (data: Record<string, any>) => {
 const startBeforeTestTips = ref<{
   dcResult: any[];
   fcResult: any[];
-  allTrue: boolean;
   direction: { DC: boolean; FC: boolean; diagnosis: string[] };
 } | null>(null);
 
@@ -302,8 +329,8 @@ const handleExpressRelays = (data: Record<string, any>) => {
 };
 
 /* 采集直流曲线 */
-const handleCollectDCCurve = (data) => {
-  const rawReg = Array.isArray(data.data) ? data.data : [];
+const handleCollectDCCurve = (data: Record<string, any>) => {
+  const rawReg: number[] = Array.isArray(data.data) ? data.data : [];
   tempDate.unshift(rawReg);
 
   // 限制最大20条，超出截断
@@ -321,8 +348,7 @@ const handleCollectDCCurve = (data) => {
 /*
   启动前测试表示
   */
-const handleStartBeforeTestExpress = (data) => {
-  console.log(startBeforeLoading.value);
+const handleStartBeforeTestExpress = (data: Record<string, any>) => {
   if (!startBeforeLoading.value) return;
   const r = mergeResistance(data.data);
   const result = startBeforeTestExpress(
@@ -343,24 +369,34 @@ const handleStartBeforeTestExpress = (data) => {
     r.circuitImg = resolveImg(r.circuitField);
   });
   startBeforeTestTips.value = result;
-  if (result.allTrue) {
+
+  // 方向门控（定位优先）：定位表示成功 → 只看反操(FC)电阻；
+  // 定位失败且反位成功 → 只看定操(DC)电阻；均不正常时不进入下一步
+  const proceed = positioningTrue.value
+    ? result.direction.FC
+    : reverseTrue.value
+      ? result.direction.DC
+      : false;
+
+  if (proceed) {
     startBeforeLoading.value = false;
     startBeforeTestFinshed.value = true;
     availableDirections.value = {
-      DC: result.direction.DC,
-      FC: result.direction.FC,
+      DC: !positioningTrue.value && reverseTrue.value,
+      FC: positioningTrue.value,
     };
     diagnosisMessages.value = result.direction.diagnosis;
     completedDirections.value = new Set();
     initTestResults();
   } else {
+    // 未通过：保持 startBeforeLoading=true，继续接收实时电阻数据反复判断
     startBeforeTestFinshed.value = false;
     availableDirections.value = { DC: false, FC: false };
     diagnosisMessages.value = result.direction.diagnosis;
   }
 };
 
-const funWsRealData = (data) => {
+const funWsRealData = (data: Record<string, string | number>) => {
   let unitId = data.unitId;
   switch (unitId) {
     // case 1:
@@ -393,7 +429,7 @@ const funWsRealData = (data) => {
 
 const speakDelayTime = ref(0);
 
-const funWsStatus = (data) => {
+const funWsStatus = (data: Record<string, string>) => {
   if (!data.connected) {
     lastCoilArr.value = [];
     isThreePhase.value = false;
@@ -409,14 +445,15 @@ const funWsStatus = (data) => {
 };
 
 /* 三相采集模块初级处理 */
-const funThreePhaseACCollector = (data) => {
+const funThreePhaseACCollector = (data: number[] | undefined) => {
+  if (!data) return;
   if (deviceType.value !== "ZYJ7" && deviceType.value !== "ZDJ9") return;
   isThreePhase.value = true;
-  temperature.value = handleCalculate(data[4], 100);
-  phaseACurrent.value = handleCalculate(data[8], 1000);
-  phaseBCurrent.value = handleCalculate(data[9], 1000);
-  phaseCCurrent.value = handleCalculate(data[10], 1000);
-  phasePower.value = handleCalculate(data[15], 10000);
+  temperature.value = handleCalculate(data[4] ?? 0, 100);
+  phaseACurrent.value = handleCalculate(data[8] ?? 0, 1000);
+  phaseBCurrent.value = handleCalculate(data[9] ?? 0, 1000);
+  phaseCCurrent.value = handleCalculate(data[10] ?? 0, 1000);
+  phasePower.value = handleCalculate(data[15] ?? 0, 10000);
 
   if (isAction.value) {
     registerArrA.value = [phaseACurrent.value];
@@ -467,7 +504,6 @@ const handleContactDialogSelect = (type: string) => {
   handleContactConfigClick(type);
   showContactDialog.value = false;
 };
-
 const handleBack = () => {
   const result = terminals.value.map(() => 0);
   wsSendData.value = gen32BitArray(result, []);
@@ -500,17 +536,20 @@ watch(active, (newkey) => {
   getConfig(newkey);
 });
 
-watch(powerStatus?.isRunning, (newKey) => {
-  if (newKey) {
-    initTestResults();
-  } else {
-    startBeforeLoading.value = false;
-    startBeforeTestFinshed.value = false;
-    availableDirections.value = { DC: false, FC: false };
-    diagnosisMessages.value = [];
-    startBeforeTestTips.value = null;
-  }
-});
+watch(
+  () => powerStatus.value.isRunning,
+  (newKey) => {
+    if (newKey) {
+      initTestResults();
+    } else {
+      startBeforeLoading.value = false;
+      startBeforeTestFinshed.value = false;
+      availableDirections.value = { DC: false, FC: false };
+      diagnosisMessages.value = [];
+      startBeforeTestTips.value = null;
+    }
+  },
+);
 
 /* 回到启动前测试初始状态 */
 const resetToStartBeforeTest = () => {
@@ -618,8 +657,16 @@ function initTestResults(direction?: "DC" | "FC") {
   testResults.value = relayConfigList
     .filter((item) => relayData[item.field] && relayData[item.field].length > 0)
     .map((item) => {
-      const field = typeToFieldMap[item.type];
+      let field = typeToFieldMap[item.type];
+      // console.log("闭合方式", selectedContactType.value, field);
+      // if (selectedContactType.value === "contact24Closed") {
+      //   if (field === "DWBS" || field === "FWBS") {
+      //     field = field === "DWBS" ? "FWBS" : "DWBS";
+      //   }
+      // }
+      console.log(field);
       const resCollect = field ? handleFindCollect(field) : undefined;
+      console.log(resCollect?.img?.[field]);
       return {
         type: item.type,
         name: item.name,
@@ -708,7 +755,7 @@ const currentCurveRef = ref<InstanceType<typeof CurrentCurve>>();
 const powerCurveRef = ref<InstanceType<typeof PowerCurve>>();
 
 /* 动作定时器与电流归零计时 */
-let actionTimerId: number | null = null;
+let actionTimerId: ReturnType<typeof setTimeout> | null = null;
 let zeroSince: number | null = null;
 let currentActionKey: keyof ActionRelays | null = null;
 let finalizeTimerId: number | null = null;
@@ -845,12 +892,16 @@ const handleDo = () => {
 
 /* 发送命令 */
 function sendCmd(data: number[] | null, type: string, deviceType?: string) {
+  console.log("发送命令", type, data, deviceType);
+  if (type === "startBeforeTestRelays" || type === "relays") {
+    console.log("发送继电器命令", type, data, deviceType);
+  }
   ws.send({ type: type, value: data, deviceType: deviceType });
 }
 
-const updateConfigData = () => {
-  wsSendData.value = result;
-};
+// const updateConfigData = () => {
+//   wsSendData.value = result;
+// };
 
 const butItemIsDisable = ref(false);
 
@@ -935,6 +986,36 @@ const currentThreshold = computed<ResistanceThreshold>(() => {
     : DEFAULT_THRESHOLD;
 });
 
+/* 曲线判定阈值（全局，按 deviceType 匹配） */
+const curveThresholds = ref<
+  {
+    device_type: string;
+    current_peak_min: number;
+    current_peak_max: number;
+    current_zero_max: number;
+    min_points: number;
+    power_peak_min: number;
+    power_peak_max: number;
+    power_zero_max: number;
+  }[]
+>([]);
+const currentCurveThreshold = computed<CurveThreshold>(() => {
+  const t = curveThresholds.value.find(
+    (c) => c.device_type === deviceType.value,
+  );
+  return t
+    ? {
+        currentPeakMin: t.current_peak_min,
+        currentPeakMax: t.current_peak_max,
+        currentZeroMax: t.current_zero_max,
+        minPoints: t.min_points,
+        powerPeakMin: t.power_peak_min,
+        powerPeakMax: t.power_peak_max,
+        powerZeroMax: t.power_zero_max,
+      }
+    : DEFAULT_CURVE_THRESHOLD;
+});
+
 /* 获取列表数据 */
 async function getList() {
   try {
@@ -945,6 +1026,7 @@ async function getList() {
       configRes,
       channelConfigRes,
       thresholdRes,
+      curveThresholdRes,
     ] = await Promise.all([
       fetch(HTTP_URL + "/getConfig/" + deviceId + "/" + combinationId.value),
       fetch(HTTP_URL + "/getDevice/" + deviceId),
@@ -952,6 +1034,7 @@ async function getList() {
       fetch(HTTP_URL + "/getConfigList/" + configId.value),
       fetch(HTTP_URL + "/getChannelConfigs"),
       fetch(HTTP_URL + "/getResistanceThresholds"),
+      fetch(HTTP_URL + "/getCurveThresholds"),
     ]);
 
     itemConfig.value = await itemRes.json();
@@ -977,6 +1060,7 @@ async function getList() {
 
     channelConfigs.value = await channelConfigRes.json();
     resistanceThresholds.value = await thresholdRes.json();
+    curveThresholds.value = await curveThresholdRes.json();
   } catch (e) {
     console.error("加载数据失败:", e);
     throw e;
@@ -986,13 +1070,19 @@ async function getList() {
 /* 获取代码设备列表 */
 async function getCodeDeviceList() {
   try {
-    const [comboRes, configRes, channelConfigRes, thresholdRes] =
-      await Promise.all([
-        fetch(HTTP_URL + "/getCombination/" + combinationId.value),
-        fetch(HTTP_URL + "/getConfigList/" + configId.value),
-        fetch(HTTP_URL + "/getChannelConfigs"),
-        fetch(HTTP_URL + "/getResistanceThresholds"),
-      ]);
+    const [
+      comboRes,
+      configRes,
+      channelConfigRes,
+      thresholdRes,
+      curveThresholdRes,
+    ] = await Promise.all([
+      fetch(HTTP_URL + "/getCombination/" + combinationId.value),
+      fetch(HTTP_URL + "/getConfigList/" + configId.value),
+      fetch(HTTP_URL + "/getChannelConfigs"),
+      fetch(HTTP_URL + "/getResistanceThresholds"),
+      fetch(HTTP_URL + "/getCurveThresholds"),
+    ]);
 
     active.value = configId.value;
     device.value.name = codeName;
@@ -1010,6 +1100,7 @@ async function getCodeDeviceList() {
 
     channelConfigs.value = await channelConfigRes.json();
     resistanceThresholds.value = await thresholdRes.json();
+    curveThresholds.value = await curveThresholdRes.json();
 
     if (
       routeCloseType === "contact13Closed" ||
@@ -1021,6 +1112,60 @@ async function getCodeDeviceList() {
     console.error("加载数据失败:", e);
     throw e;
   }
+}
+
+/* 电流曲线判定：峰值区间 + 末段归零 + 采样点数 */
+function judgeCurrentCurve(
+  peak: any,
+  history: any,
+  th: CurveThreshold,
+): { ok: boolean; peak: number; end: number; points: number } {
+  let peakVal = 0;
+  let endVal = 0;
+  let points = 0;
+  if (Array.isArray(history)) {
+    points = history.length;
+    peakVal =
+      typeof peak === "number" ? peak : points ? Math.max(...history) : 0;
+    endVal = points ? history[history.length - 1] : 0;
+  } else if (history && typeof history === "object") {
+    const a: number[] = history.A ?? [];
+    const b: number[] = history.B ?? [];
+    const c: number[] = history.C ?? [];
+    points = Math.max(a.length, b.length, c.length);
+    peakVal = Math.max(
+      typeof peak?.A === "number" ? peak.A : 0,
+      typeof peak?.B === "number" ? peak.B : 0,
+      typeof peak?.C === "number" ? peak.C : 0,
+    );
+    const lastA = a.length ? (a[a.length - 1] ?? 0) : 0;
+    const lastB = b.length ? (b[b.length - 1] ?? 0) : 0;
+    const lastC = c.length ? (c[c.length - 1] ?? 0) : 0;
+    endVal = Math.max(lastA, lastB, lastC);
+  }
+  const ok =
+    points >= th.minPoints &&
+    peakVal >= th.currentPeakMin &&
+    peakVal <= th.currentPeakMax &&
+    endVal <= th.currentZeroMax;
+  return { ok, peak: peakVal, end: endVal, points };
+}
+
+/* 功率曲线判定：峰值区间 + 末段归零 */
+function judgePowerCurve(
+  history: number[],
+  th: CurveThreshold,
+): { ok: boolean; peak: number; end: number } {
+  if (!Array.isArray(history) || history.length < 1) {
+    return { ok: false, peak: 0, end: 0 };
+  }
+  const peakVal = Math.max(...history);
+  const endVal = history[history.length - 1] ?? 0;
+  const ok =
+    peakVal >= th.powerPeakMin &&
+    peakVal <= th.powerPeakMax &&
+    endVal <= th.powerZeroMax;
+  return { ok, peak: peakVal, end: endVal };
 }
 
 /* 构建保存数据（不发送请求） */
@@ -1049,12 +1194,76 @@ const buildRecordData = (relay: keyof ActionRelays): Record<string, any> => {
     history = exposed?.currentHistory;
     xLabels = exposed?.xLabels;
   }
+
+  // 曲线 + 表示继电器综合判定（仅判断当前操作相关的表示项）
+  const th = currentCurveThreshold.value;
+  const currentJudge = judgeCurrentCurve(peak, history, th);
+  const recordTypes = relay === "FC" ? FC_RECORD_TYPES : DC_RECORD_TYPES;
+  const relevantTests = toRaw(testResults.value).filter((item) =>
+    recordTypes.has(item.type),
+  );
+  const resultPass = !relevantTests.some((item) => item.status === false);
+  let powerJudge: { ok: boolean; peak: number; end: number } | null = null;
+  const pw = powerCurveRef.value;
+  if (isThreePhase.value && pw) {
+    powerJudge = judgePowerCurve(pw.history, th);
+  }
+  const powerOk = powerJudge ? powerJudge.ok : true;
+  const status = resultPass && currentJudge.ok && powerOk ? "success" : "error";
+
+  // 失败原因（仅失败时记录，供历史记录展示）
+  const reasons: string[] = [];
+  if (!resultPass) {
+    const failed = relevantTests
+      .filter((item) => item.status === false)
+      .map((item) => {
+        if (item.name) return item.name;
+        if (item.relayName && item.relayName.length)
+          return item.relayName.join(",");
+        return "";
+      })
+      .filter((s) => s);
+    if (failed.length) reasons.push(`表示继电器异常(${failed.join(",")})`);
+  }
+  if (!currentJudge.ok) {
+    if (currentJudge.points < th.minPoints)
+      reasons.push(`采样点不足(${currentJudge.points}<${th.minPoints})`);
+    if (currentJudge.peak < th.currentPeakMin)
+      reasons.push(
+        `电流峰值偏低(${currentJudge.peak.toFixed(1)}<${th.currentPeakMin}A)`,
+      );
+    if (currentJudge.peak > th.currentPeakMax)
+      reasons.push(
+        `电流峰值偏高(${currentJudge.peak.toFixed(1)}>${th.currentPeakMax}A)`,
+      );
+    if (currentJudge.end > th.currentZeroMax)
+      reasons.push(
+        `电流未归零(${currentJudge.end.toFixed(1)}>${th.currentZeroMax}A)`,
+      );
+  }
+  if (powerJudge && !powerJudge.ok) {
+    if (powerJudge.peak < th.powerPeakMin)
+      reasons.push(
+        `功率峰值偏低(${powerJudge.peak.toFixed(2)}<${th.powerPeakMin}KW)`,
+      );
+    if (powerJudge.peak > th.powerPeakMax)
+      reasons.push(
+        `功率峰值偏高(${powerJudge.peak.toFixed(2)}>${th.powerPeakMax}KW)`,
+      );
+    if (powerJudge.end > th.powerZeroMax)
+      reasons.push(
+        `功率未归零(${powerJudge.end.toFixed(2)}>${th.powerZeroMax}KW)`,
+      );
+  }
+  const fail_reason = reasons.join("；");
+
   const tempData: Record<string, any> = {
     device_name: device.value.name,
     combination_name: combinationName.value,
     config_name: configName.value,
     op_type: relay,
-    status: "success",
+    status,
+    fail_reason,
     peak_current: typeof peak === "object" ? JSON.stringify(peak) : peak,
     valley_current:
       typeof valley === "object" ? JSON.stringify(valley) : valley,
@@ -1075,12 +1284,9 @@ const buildRecordData = (relay: keyof ActionRelays): Record<string, any> => {
     };
   }
 
-  if (isThreePhase.value) {
-    const pw = powerCurveRef.value;
-    if (pw) {
-      tempData.phasePower = pw.history;
-      tempData.power_time = pw.xLabels;
-    }
+  if (isThreePhase.value && pw) {
+    tempData.phasePower = pw.history;
+    tempData.power_time = pw.xLabels;
   }
 
   return tempData;

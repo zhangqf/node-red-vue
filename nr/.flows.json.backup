@@ -77,7 +77,6 @@
             "b23876d9dc0184f1",
             "5f829c6a2cbec815",
             "54cf7476d7f4cf15",
-            "11836aace9c6d856",
             "8e5bb841558f7674",
             "ad803c27d1464a2e",
             "6c73b535266f1f23",
@@ -86,13 +85,12 @@
             "010538068717c445",
             "bd98acdecbf1659f",
             "ca862f075ce41d0c",
-            "b9fa938bcac61576",
-            "d7ffddd0457bc27a"
+            "b9fa938bcac61576"
         ],
         "x": 74,
-        "y": 619,
-        "w": 992,
-        "h": 362
+        "y": 599,
+        "w": 1112,
+        "h": 282
     },
     {
         "id": "a78c98a47184b2fa",
@@ -397,7 +395,7 @@
             "37653c2a49dc3995"
         ],
         "x": 114,
-        "y": 4279,
+        "y": 4239,
         "w": 1612,
         "h": 442
     },
@@ -430,7 +428,7 @@
             "069b66a93b3c85a9",
             "2be3e27f199091c5"
         ],
-        "x": 1154,
+        "x": 1194,
         "y": 619,
         "w": 912,
         "h": 322
@@ -478,12 +476,17 @@
             "cab95c171cc5909c",
             "ce15735096e71c15",
             "078c0a98c1f64460",
-            "89c1558278b3aad0"
+            "89c1558278b3aad0",
+            "cd00000000000001",
+            "cd00000000000002",
+            "cd00000000000003",
+            "cd00000000000004",
+            "cd00000000000005"
         ],
         "x": 114,
-        "y": 4939,
-        "w": 1612,
-        "h": 542
+        "y": 4739,
+        "w": 1772,
+        "h": 702
     },
     {
         "id": "4a4648dc89761239",
@@ -505,10 +508,83 @@
             "2094fe2a8608dfa4",
             "7c9b49f104d62a5c"
         ],
-        "x": 134,
-        "y": 5539,
+        "x": 2014,
+        "y": 6439,
         "w": 792,
         "h": 322
+    },
+    {
+        "id": "d0bb0b84c9c34f48",
+        "type": "group",
+        "z": "e4bbd3713100fe17",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "cc00000000000001",
+            "cc00000000000002",
+            "cc00000000000003",
+            "cc00000000000004",
+            "cc00000000000005",
+            "cc00000000000006",
+            "cc00000000000007",
+            "cc00000000000008",
+            "cc00000000000009",
+            "cc00000000000010",
+            "cc00000000000011",
+            "cc00000000000012",
+            "cc00000000000013",
+            "cc00000000000014",
+            "cc00000000000015",
+            "cc00000000000016",
+            "rt00000000000001",
+            "rt00000000000002",
+            "rt00000000000003",
+            "rt00000000000004",
+            "rt00000000000005",
+            "rt00000000000006",
+            "rt00000000000007",
+            "rt00000000000008",
+            "rt00000000000009",
+            "rt00000000000010",
+            "rt00000000000011",
+            "rt00000000000012",
+            "rt00000000000013",
+            "rt00000000000014",
+            "rt00000000000015",
+            "rt00000000000016",
+            "ct00000000000001",
+            "ct00000000000002",
+            "ct00000000000003",
+            "ct00000000000004",
+            "ct00000000000005",
+            "ct00000000000006",
+            "ct00000000000007",
+            "ct00000000000008",
+            "ct00000000000009",
+            "ct00000000000010",
+            "ct00000000000011",
+            "ct00000000000012",
+            "ct00000000000013",
+            "ct00000000000014",
+            "ct00000000000015",
+            "ct00000000000016",
+            "lr00000000000001",
+            "lr00000000000002",
+            "lr00000000000003",
+            "lr00000000000004",
+            "44fae1fd7ef69436"
+        ],
+        "x": 3014,
+        "y": 4119,
+        "w": 1522,
+        "h": 1622
     },
     {
         "id": "6030307041b868b9",
@@ -915,7 +991,6 @@
         "y": 720,
         "wires": [
             [
-                "11836aace9c6d856",
                 "f6e9d7e097e60402"
             ]
         ]
@@ -957,7 +1032,7 @@
         "z": "e4bbd3713100fe17",
         "g": "9e2d670578adbe41",
         "name": "function 1",
-        "func": "// 取出前端传来的线圈数组\nconst coilArr = msg.value || [];\n// 初始化32个0的数组\nconst rawData = new Array(32).fill(0);\n// 从下标0开始，覆盖对应长度，剩余保持0\nrawData.splice(0, coilArr.length, ...coilArr);\n\nconst unitId = msg.deviceType === 'ZD6' ? 1 : 2\n\n// msg.payload = {\n//   \"fc\":1,\n//     \"unitid\":2,\n//     \"address\":0,\n//     \"quantity\":32,\n//     \"name\":\"继电器状态\",\n//   \"value\": msg.value\n// };\n\n \n\n  msg.payload = {\n    \"fc\":15,\n    \"unitid\":unitId,\n    \"address\":0,\n    \"quantity\":32,\n    \"value\": rawData\n  };\nreturn msg;",
+        "func": "// 取出前端传来的线圈数组\nconst coilArr = msg.value || [];\n// 初始化32个0的数组\nconst rawData = new Array(32).fill(0);\n// 从下标0开始，覆盖对应长度，剩余保持0\nrawData.splice(0, coilArr.length, ...coilArr);\n\nconst unitId = msg.deviceType === 'ZD6' || msg.deviceType === 'ZD9' ? 1 : 2\n\n// msg.payload = {\n//   \"fc\":1,\n//     \"unitid\":2,\n//     \"address\":0,\n//     \"quantity\":32,\n//     \"name\":\"继电器状态\",\n//   \"value\": msg.value\n// };\n\n \n\n  msg.payload = {\n    \"fc\":15,\n    \"unitid\":unitId,\n    \"address\":0,\n    \"quantity\":32,\n    \"value\": rawData\n  };\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -965,7 +1040,7 @@
         "finalize": "",
         "libs": [],
         "x": 500,
-        "y": 720,
+        "y": 680,
         "wires": [
             [
                 "54cf7476d7f4cf15",
@@ -1218,26 +1293,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 720,
-        "y": 780,
-        "wires": []
-    },
-    {
-        "id": "11836aace9c6d856",
-        "type": "debug",
-        "z": "e4bbd3713100fe17",
-        "g": "9e2d670578adbe41",
-        "name": "debug 11",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 280,
-        "y": 840,
+        "x": 680,
+        "y": 640,
         "wires": []
     },
     {
@@ -1254,7 +1311,7 @@
         "keepMsgProperties": true,
         "delayOnStart": false,
         "startDelayTime": "",
-        "x": 750,
+        "x": 890,
         "y": 700,
         "wires": [
             [
@@ -2369,8 +2426,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 960,
-        "y": 720,
+        "x": 1080,
+        "y": 700,
         "wires": []
     },
     {
@@ -3098,8 +3155,8 @@
         "name": "",
         "scope": null,
         "uncaught": false,
-        "x": 240,
-        "y": 5580,
+        "x": 2120,
+        "y": 6480,
         "wires": [
             [
                 "a622718cfb27d050"
@@ -3118,8 +3175,8 @@
         "createDir": false,
         "overwriteFile": "false",
         "encoding": "utf8",
-        "x": 780,
-        "y": 5580,
+        "x": 2660,
+        "y": 6480,
         "wires": [
             [
                 "2094fe2a8608dfa4",
@@ -3140,8 +3197,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 480,
-        "y": 5580,
+        "x": 2360,
+        "y": 6480,
         "wires": [
             [
                 "703262395864eb9e"
@@ -3160,7 +3217,7 @@
         "skipBodyParsing": false,
         "swaggerDoc": "",
         "x": 210,
-        "y": 4400,
+        "y": 4360,
         "wires": [
             [
                 "18087b30c35111f7",
@@ -3174,7 +3231,7 @@
         "z": "e4bbd3713100fe17",
         "g": "8f47e2e3400d33b2",
         "name": "写入JSON",
-        "func": " const fs = global.get('fs');\n  const path = global.get('path');\n  const rootPath = global.get('rootPath');\n\n  const payload = msg.payload;\n\n  // 生成文件名\n  const now = new Date();\n  const month = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;\n  const timestamp =\n  `${month}-${String(now.getDate()).padStart(2,'0')}${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;\n  \n   const safeDeviceName = payload.device_name.replace(/[ #]/g, '-');\n  const fileName = `${timestamp}-${payload.op_type}-${safeDeviceName}.json`;\n  // const fileName = `${timestamp}-${payload.op_type}-${payload.device_name}.json`;\n\n  // 目录：records/2025-01/\n  const dir = path.join(rootPath, '/data/records', month);\n  if (!fs.existsSync(dir)) {\n      fs.mkdirSync(dir, { recursive: true });\n  }\n\n  const data = {\n    data:payload.curve_data,\n    time:payload.time_data\n  }\n\n  // 如果存在功率数据，也写入\n  if (payload.phasePower && payload.phasePower.length) {\n    data.phasePower = payload.phasePower;\n    data.power_time = payload.power_time;\n  }\n\n  let status = \"success\"\n\n  if(payload.result.length > 0) {\n    const res = payload.result.filter(v => v.status=== false)\n    if(res.length > 0) status = \"error\"\n  } \n\n  payload.status = status\n\n  // 写曲线数据\n  const filePath = path.join(dir, fileName);\n  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));\n\n  // 把路径和参数传给下一个节点\n  msg.curve_file = path.join('records', month, fileName);\n  msg.params = [\n      payload.device_name,\n      payload.combination_name,\n      payload.config_name,\n      payload.op_type,\n      payload.status,\n      payload.peak_current,\n      payload.valley_current,\n      msg.curve_file,\n      JSON.stringify(payload.result),\n      JSON.stringify(payload.pre_test || null),\n  ];\n  return msg;",
+        "func": " const fs = global.get('fs');\n  const path = global.get('path');\n  const rootPath = global.get('rootPath');\n\n  const payload = msg.payload;\n\n  // 生成文件名\n  const now = new Date();\n  const month = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;\n  const timestamp =\n  `${month}-${String(now.getDate()).padStart(2,'0')}${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;\n  \n   const safeDeviceName = payload.device_name.replace(/[ #]/g, '-');\n  const fileName = `${timestamp}-${payload.op_type}-${safeDeviceName}.json`;\n  // const fileName = `${timestamp}-${payload.op_type}-${payload.device_name}.json`;\n\n  // 目录：records/2025-01/\n  const dir = path.join(rootPath, '/data/records', month);\n  if (!fs.existsSync(dir)) {\n      fs.mkdirSync(dir, { recursive: true });\n  }\n\n  const data = {\n    data:payload.curve_data,\n    time:payload.time_data\n  }\n\n  // 如果存在功率数据，也写入\n  if (payload.phasePower && payload.phasePower.length) {\n    data.phasePower = payload.phasePower;\n    data.power_time = payload.power_time;\n  }\n\n  // 前端已综合表示继电器 + 电流曲线 + 功率曲线判定，这里直接采用\n  payload.status = payload.status || \"success\"\n\n  // 写曲线数据\n  const filePath = path.join(dir, fileName);\n  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));\n\n  // 把路径和参数传给下一个节点\n  msg.curve_file = path.join('records', month, fileName);\n  msg.params = [\n      payload.device_name,\n      payload.combination_name,\n      payload.config_name,\n      payload.op_type,\n      payload.status,\n      payload.peak_current,\n      payload.valley_current,\n      msg.curve_file,\n      JSON.stringify(payload.result),\n      JSON.stringify(payload.pre_test || null),\n      payload.fail_reason || \"\",\n  ];\n  return msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -3182,7 +3239,7 @@
         "finalize": "",
         "libs": [],
         "x": 510,
-        "y": 4400,
+        "y": 4360,
         "wires": [
             [
                 "f0e807248014ea5d"
@@ -3196,10 +3253,10 @@
         "g": "8f47e2e3400d33b2",
         "mydb": "a074385e545da94b",
         "sqlquery": "prepared",
-        "sql": "  INSERT INTO operation_records\n    (device_name, combination_name, config_name, op_type, status, peak_current, valley_current, curve_file,result,pre_test)\n  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "sql": "  INSERT INTO operation_records\n    (device_name, combination_name, config_name, op_type, status, peak_current, valley_current, curve_file,result,pre_test,fail_reason)\n  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         "name": "",
         "x": 760,
-        "y": 4400,
+        "y": 4360,
         "wires": [
             [
                 "1c125f2e5bf7d17f"
@@ -3220,7 +3277,7 @@
         "finalize": "",
         "libs": [],
         "x": 1000,
-        "y": 4400,
+        "y": 4360,
         "wires": [
             [
                 "7616693109f924fc"
@@ -3238,7 +3295,7 @@
             "content-type": "application/json"
         },
         "x": 1640,
-        "y": 4360,
+        "y": 4320,
         "wires": []
     },
     {
@@ -3249,7 +3306,7 @@
         "name": "历史记录",
         "info": "",
         "x": 300,
-        "y": 4340,
+        "y": 4300,
         "wires": []
     },
     {
@@ -3264,7 +3321,7 @@
         "skipBodyParsing": false,
         "swaggerDoc": "",
         "x": 230,
-        "y": 4580,
+        "y": 4540,
         "wires": [
             [
                 "61ddaf6c150c9e97"
@@ -3281,7 +3338,7 @@
         "sql": "SELECT * FROM operation_records ORDER BY created_at DESC",
         "name": "",
         "x": 680,
-        "y": 4580,
+        "y": 4540,
         "wires": [
             [
                 "fa6adc257e705b7c",
@@ -3300,7 +3357,7 @@
             "content-type": "application/json"
         },
         "x": 1640,
-        "y": 4580,
+        "y": 4540,
         "wires": []
     },
     {
@@ -3315,7 +3372,7 @@
         "skipBodyParsing": false,
         "swaggerDoc": "",
         "x": 200,
-        "y": 4680,
+        "y": 4640,
         "wires": [
             [
                 "e2e409d9a6d6f299"
@@ -3336,7 +3393,7 @@
         "finalize": "",
         "libs": [],
         "x": 550,
-        "y": 4680,
+        "y": 4640,
         "wires": [
             [
                 "dbe61619444831dc"
@@ -3354,7 +3411,7 @@
             "content-type": "application/json"
         },
         "x": 1640,
-        "y": 4680,
+        "y": 4640,
         "wires": []
     },
     {
@@ -3950,8 +4007,7 @@
                 "bd98acdecbf1659f"
             ],
             [
-                "setDeviceTypeHandler",
-                "d7ffddd0457bc27a"
+                "setDeviceTypeHandler"
             ]
         ]
     },
@@ -3968,7 +4024,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 530,
+        "x": 500,
         "y": 860,
         "wires": [
             []
@@ -3987,8 +4043,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 530,
-        "y": 780,
+        "x": 510,
+        "y": 720,
         "wires": [
             [
                 "010538068717c445"
@@ -4009,8 +4065,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 740,
-        "y": 840,
+        "x": 660,
+        "y": 720,
         "wires": []
     },
     {
@@ -4069,7 +4125,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1730,
+        "x": 1770,
         "y": 900,
         "wires": [
             [
@@ -4091,7 +4147,7 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1960,
+        "x": 2000,
         "y": 880,
         "wires": []
     },
@@ -4103,7 +4159,7 @@
         "name": "三相交流采集器",
         "server": "4b736505764b58bb",
         "client": "",
-        "x": 1940,
+        "x": 1980,
         "y": 800,
         "wires": []
     },
@@ -4184,8 +4240,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 470,
-        "y": 5820,
+        "x": 2350,
+        "y": 6720,
         "wires": []
     },
     {
@@ -4200,7 +4256,7 @@
         "skipBodyParsing": false,
         "swaggerDoc": "",
         "x": 210,
-        "y": 4460,
+        "y": 4420,
         "wires": [
             [
                 "870e4422a56ffb66"
@@ -4221,7 +4277,7 @@
         "finalize": "",
         "libs": [],
         "x": 510,
-        "y": 4460,
+        "y": 4420,
         "wires": [
             [
                 "8ff6c774df68041e"
@@ -4238,7 +4294,7 @@
         "sql": "",
         "name": "",
         "x": 760,
-        "y": 4460,
+        "y": 4420,
         "wires": [
             [
                 "80d48c3968dc9c91"
@@ -4259,7 +4315,7 @@
         "finalize": "",
         "libs": [],
         "x": 990,
-        "y": 4460,
+        "y": 4420,
         "wires": [
             [
                 "c2f6d62403a4338f"
@@ -4277,7 +4333,7 @@
             "content-type": "application/json"
         },
         "x": 1640,
-        "y": 4460,
+        "y": 4420,
         "wires": []
     },
     {
@@ -4291,8 +4347,8 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 250,
-        "y": 4980,
+        "x": 410,
+        "y": 4780,
         "wires": [
             [
                 "63ccc41c2612fcc4"
@@ -4308,8 +4364,8 @@
         "sqlquery": "fixed",
         "sql": "SELECT * FROM config",
         "name": "",
-        "x": 860,
-        "y": 4980,
+        "x": 1020,
+        "y": 4780,
         "wires": [
             [
                 "76fd03d948f2aa36"
@@ -4329,8 +4385,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1050,
-        "y": 4980,
+        "x": 1210,
+        "y": 4780,
         "wires": [
             [
                 "9b5600cf9b613bc7"
@@ -4359,8 +4415,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 954.5,
-        "y": 5363,
+        "x": 1114.5,
+        "y": 5163,
         "wires": [
             [
                 "a528db28f90d5e06"
@@ -4376,8 +4432,8 @@
         "sqlquery": "fixed",
         "sql": "SELECT * FROM combination",
         "name": "",
-        "x": 1260,
-        "y": 4980,
+        "x": 1420,
+        "y": 4780,
         "wires": [
             [
                 "e0a06f9872e142fa"
@@ -4397,8 +4453,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1450,
-        "y": 4980,
+        "x": 1610,
+        "y": 4780,
         "wires": [
             [
                 "8c0726481070e543"
@@ -4415,8 +4471,8 @@
         "headers": {
             "content-type": "application/json"
         },
-        "x": 1640,
-        "y": 4980,
+        "x": 1800,
+        "y": 4780,
         "wires": []
     },
     {
@@ -4432,8 +4488,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 670,
-        "y": 4980,
+        "x": 830,
+        "y": 4780,
         "wires": [
             [
                 "1544f35b09647027"
@@ -4449,8 +4505,8 @@
         "sqlquery": "fixed",
         "sql": "SELECT typeName FROM device;",
         "name": "",
-        "x": 480,
-        "y": 4980,
+        "x": 640,
+        "y": 4780,
         "wires": [
             [
                 "1de3b5508ca75a83"
@@ -4468,8 +4524,8 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 220,
-        "y": 5060,
+        "x": 380,
+        "y": 4860,
         "wires": [
             [
                 "0a0e4905bb8c08c1",
@@ -4485,8 +4541,8 @@
         "name": "saveDeviceOut",
         "statusCode": "200",
         "headers": {},
-        "x": 1620,
-        "y": 5180,
+        "x": 1780,
+        "y": 4980,
         "wires": []
     },
     {
@@ -4501,8 +4557,8 @@
         "name": "",
         "field": "uuid",
         "fieldType": "msg",
-        "x": 1130,
-        "y": 5040,
+        "x": 1290,
+        "y": 4840,
         "wires": [
             [
                 "5c87d26c06eecef6"
@@ -4522,8 +4578,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1170,
-        "y": 5160,
+        "x": 1330,
+        "y": 4960,
         "wires": [
             [
                 "b37218260a9bd94b"
@@ -4539,8 +4595,8 @@
         "sqlquery": "prepared",
         "sql": "INSERT OR REPLACE INTO code_device (id, name,typeName, location,configId,combinationId,closeType) VALUES ($id, $name, $typeName,$location, $configId,$combinationId,$closeType)\n\n",
         "name": "deviceDB",
-        "x": 1320,
-        "y": 5040,
+        "x": 1480,
+        "y": 4840,
         "wires": [
             [
                 "3dd844af753b1235"
@@ -4560,8 +4616,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1380,
-        "y": 5160,
+        "x": 1540,
+        "y": 4960,
         "wires": [
             [
                 "5a681a63f51d5bfa"
@@ -4578,8 +4634,8 @@
         "sqlquery": "fixed",
         "sql": "\n\nCREATE TABLE IF NOT EXISTS code_device (\n    id TEXT PRIMARY KEY NOT NULL,\n    name TEXT NOT NULL,\n    typeName TEXT NOT NULL,\n    combinationId TEXT NOT NULL,\n    configId TEXT NOT NULL,\n    location TEXT,\n    closeType TEXT,\n    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);\n\n--   CREATE TABLE device_combination_bindings (\n--     device_id      TEXT NOT NULL,\n--     combination_id TEXT NOT NULL,\n--     PRIMARY KEY (device_id, combination_id),\n--     FOREIGN KEY (device_id)      REFERENCES device(id) ON DELETE CASCADE,\n--     FOREIGN KEY (combination_id) REFERENCES combinations(id)  ON DELETE CASCADE\n--   );\n",
         "name": "deviceDB",
-        "x": 1220,
-        "y": 5360,
+        "x": 1380,
+        "y": 5160,
         "wires": [
             []
         ]
@@ -4597,8 +4653,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 250,
-        "y": 5380,
+        "x": 410,
+        "y": 5180,
         "wires": [
             [
                 "7a49af81221d5f65"
@@ -4617,8 +4673,8 @@
         "sqlquery": "msg.topic",
         "sql": "",
         "name": "",
-        "x": 360,
-        "y": 5240,
+        "x": 520,
+        "y": 5040,
         "wires": [
             [
                 "3ed76cd49525df5f"
@@ -4638,8 +4694,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 490,
-        "y": 5060,
+        "x": 650,
+        "y": 4860,
         "wires": [
             [
                 "d59f47defe495995"
@@ -4655,8 +4711,8 @@
         "sqlquery": "msg.topic",
         "sql": "",
         "name": "",
-        "x": 600,
-        "y": 5220,
+        "x": 760,
+        "y": 5020,
         "wires": [
             [
                 "c7702ff2b255de4e"
@@ -4676,8 +4732,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 720,
-        "y": 5060,
+        "x": 880,
+        "y": 4860,
         "wires": [
             [
                 "node_check_name_sqlite"
@@ -4693,8 +4749,8 @@
         "sqlquery": "msg.topic",
         "sql": "",
         "name": "查重name",
-        "x": 800,
-        "y": 5220,
+        "x": 960,
+        "y": 5020,
         "wires": [
             [
                 "node_check_name_switch"
@@ -4724,8 +4780,8 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 940,
-        "y": 5060,
+        "x": 1100,
+        "y": 4860,
         "wires": [
             [
                 "5508bc675df3d4bf"
@@ -4748,8 +4804,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1010,
-        "y": 5220,
+        "x": 1170,
+        "y": 5020,
         "wires": [
             [
                 "5a681a63f51d5bfa"
@@ -4813,7 +4869,19 @@
                 "8a559de294823de1",
                 "c2f6d62403a4338f",
                 "8c0726481070e543",
-                "5a681a63f51d5bfa"
+                "5a681a63f51d5bfa",
+                "cab95c171cc5909c",
+                "cd00000000000005",
+                "lr00000000000004",
+                "ct00000000000016",
+                "ct00000000000009",
+                "ct00000000000004",
+                "rt00000000000016",
+                "rt00000000000009",
+                "rt00000000000004",
+                "cc00000000000016",
+                "cc00000000000009",
+                "cc00000000000004"
             ]
         ]
     },
@@ -4828,8 +4896,8 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 250,
-        "y": 5440,
+        "x": 410,
+        "y": 5240,
         "wires": [
             [
                 "0dace50e9abecc01"
@@ -4845,8 +4913,8 @@
         "sqlquery": "fixed",
         "sql": "SELECT * FROM code_device ORDER BY created_at DESC\n\n",
         "name": "查询deviceList",
-        "x": 620,
-        "y": 5440,
+        "x": 780,
+        "y": 5240,
         "wires": [
             [
                 "cab95c171cc5909c"
@@ -4863,8 +4931,8 @@
         "headers": {
             "content-type": "application/json"
         },
-        "x": 1640,
-        "y": 5400,
+        "x": 1800,
+        "y": 5200,
         "wires": []
     },
     {
@@ -4881,7 +4949,7 @@
         "finalize": "",
         "libs": [],
         "x": 470,
-        "y": 4580,
+        "y": 4540,
         "wires": [
             [
                 "a246ecd9553dfb91"
@@ -4903,7 +4971,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 920,
-        "y": 4620,
+        "y": 4580,
         "wires": []
     },
     {
@@ -4920,7 +4988,7 @@
         "finalize": "",
         "libs": [],
         "x": 1330,
-        "y": 4580,
+        "y": 4540,
         "wires": [
             [
                 "708e32731ad70d8d"
@@ -4941,7 +5009,7 @@
         "finalize": "",
         "libs": [],
         "x": 930,
-        "y": 4580,
+        "y": 4540,
         "wires": [
             [
                 "0fabe0243ee29da8"
@@ -4958,7 +5026,7 @@
         "sql": "",
         "name": "",
         "x": 1140,
-        "y": 4580,
+        "y": 4540,
         "wires": [
             [
                 "8d1c4fc5a1ecd863"
@@ -4980,14 +5048,14 @@
                 "vt": "str"
             }
         ],
-        "repeat": "",
+        "repeat": "1",
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1270,
+        "x": 1320,
         "y": 820,
         "wires": [
             [
@@ -5001,14 +5069,14 @@
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
         "name": "电阻模块表示",
-        "func": "\n// const data =[\n//    0.2,0.2,14,15\n//   ]\n\nconst data = [0,900,0,900,0,1200,0,1200,0,1700,0,1700,0,1700,0,1700,0,1700]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 6,\n\tfc: 3,\n\taddress:0,\n\tquantity:16,\n}\n\nreturn msg",
+        "func": "\n// const data =[\n//    0.2,0.2,14,15\n//   ]\n\nconst data = [0,900,0,900,0,129999900,0,1200,0,1700,0,17999900,0,1700,0,17999999900,0,1700]\n\nmsg.sendData = {\n    data:data,\n    type:\"modbusRealData\",\n    unitId: 6,\n\tfc: 3,\n\taddress:0,\n\tquantity:16,\n}\n\nreturn msg",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1540,
+        "x": 1580,
         "y": 820,
         "wires": [
             [
@@ -5024,8 +5092,8 @@
         "name": "saveDeviceOut",
         "statusCode": "200",
         "headers": {},
-        "x": 820,
-        "y": 5760,
+        "x": 2700,
+        "y": 6660,
         "wires": []
     },
     {
@@ -5041,8 +5109,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 510,
-        "y": 900,
+        "x": 670,
+        "y": 800,
         "wires": [
             [
                 "ca862f075ce41d0c",
@@ -5064,8 +5132,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 780,
-        "y": 940,
+        "x": 860,
+        "y": 840,
         "wires": []
     },
     {
@@ -5081,7 +5149,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1510,
+        "x": 1550,
         "y": 720,
         "wires": [
             [
@@ -5111,7 +5179,7 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1280,
+        "x": 1320,
         "y": 720,
         "wires": [
             [
@@ -5125,14 +5193,14 @@
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
         "name": "开启电源",
-        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst tempArr = new Array(32).fill(0)\n\ntempArr[31] = 1\ntempArr[30] = 1\ntempArr[29] = 0\nconst data = [1,1,1,1,1,1,1,1,]\n\nmsg.sendData = {\n    data:tempArr,\n    type:\"modbusRealData\",\n    unitId: 1,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
+        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst tempArr = new Array(32).fill(0)\n\ntempArr[31] = 1\ntempArr[30] = 1\ntempArr[29] = 1\nconst data = [1,1,1,1,1,1,1,1,]\n\nmsg.sendData = {\n    data:tempArr,\n    type:\"modbusRealData\",\n    unitId: 1,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nreturn msg",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1520,
+        "x": 1560,
         "y": 760,
         "wires": [
             [
@@ -5162,7 +5230,7 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1250,
+        "x": 1290,
         "y": 760,
         "wires": [
             [
@@ -5185,7 +5253,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 470,
-        "y": 4320,
+        "y": 4280,
         "wires": []
     },
     {
@@ -5345,8 +5413,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 470,
-        "y": 660,
+        "x": 480,
+        "y": 640,
         "wires": []
     },
     {
@@ -5398,7 +5466,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1490,
+        "x": 1530,
         "y": 880,
         "wires": [
             [
@@ -5429,7 +5497,7 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1280,
+        "x": 1320,
         "y": 880,
         "wires": [
             [
@@ -5438,37 +5506,19 @@
         ]
     },
     {
-        "id": "d7ffddd0457bc27a",
-        "type": "debug",
-        "z": "e4bbd3713100fe17",
-        "g": "9e2d670578adbe41",
-        "name": "debug 9",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 520,
-        "y": 820,
-        "wires": []
-    },
-    {
         "id": "ceab28bdc14f368c",
         "type": "function",
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
         "name": "表示",
-        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst data = [1,1,3,5,3,8,0,0,1,1,0,1,0,0,0,0]\n\nlet r = []\n\nlet idx = context.get('idx') || 0\nif (idx >= data.length) idx = 0;\n r = [data[idx]];\n\nmsg.sendData = {\n    data:r,\n    type:\"modbusRealData\",\n    unitId: 4,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nidx = idx + 1;\nif (idx >= data.length) idx = 0;\ncontext.set(\"idx\", idx);\n\nreturn msg",
+        "func": "\n// const data =[17,10000000,100000000,15]\n\nconst data = [1,1,3,5,3,8,0,0,1,1,0,1,2,3,4,6,4,5,6,7,7,3,3,2,4,6,2,3,3,2,2,2,1,1,1,0,0,0,0,0,]\n\nlet r = []\n\nlet idx = context.get('idx') || 0\nif (idx >= data.length) idx = 0;\n r = [data[idx]];\n\nmsg.sendData = {\n    data:r,\n    type:\"modbusRealData\",\n    unitId: 4,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\nidx = idx + 1;\nif (idx >= data.length) idx = 0;\ncontext.set(\"idx\", idx);\n\nreturn msg",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1490,
+        "x": 1530,
         "y": 680,
         "wires": [
             [
@@ -5481,7 +5531,6 @@
         "id": "069b66a93b3c85a9",
         "type": "inject",
         "z": "e4bbd3713100fe17",
-        "d": true,
         "g": "264be9ece447ca9d",
         "name": "",
         "props": [
@@ -5500,7 +5549,7 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1280,
+        "x": 1320,
         "y": 680,
         "wires": [
             [
@@ -5522,7 +5571,7 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1670,
+        "x": 1710,
         "y": 660,
         "wires": []
     },
@@ -5530,14 +5579,15 @@
         "id": "cc00000000000001",
         "type": "http in",
         "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
         "name": "getChannelConfigs",
         "url": "/getChannelConfigs",
         "method": "get",
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 160,
-        "y": 4600,
+        "x": 3150,
+        "y": 4260,
         "wires": [
             [
                 "cc00000000000002"
@@ -5548,12 +5598,13 @@
         "id": "cc00000000000002",
         "type": "sqlite",
         "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
         "mydb": "a074385e545da94b",
         "sqlquery": "fixed",
         "sql": "SELECT * FROM channel_config ORDER BY device_type",
         "name": "获取channelConfig",
-        "x": 430,
-        "y": 4600,
+        "x": 3420,
+        "y": 4260,
         "wires": [
             [
                 "cc00000000000003"
@@ -5564,6 +5615,7 @@
         "id": "cc00000000000003",
         "type": "function",
         "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
         "name": "处理数据",
         "func": "const rows = Array.isArray(msg.payload) ? msg.payload : [];\nmsg.payload = rows.map((r) => {\n  let config = [];\n  try { config = JSON.parse(r.config); } catch (e) { config = []; }\n  return { device_type: r.device_type, config };\n});\nreturn msg;",
         "outputs": 1,
@@ -5572,8 +5624,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 760,
-        "y": 4600,
+        "x": 3750,
+        "y": 4260,
         "wires": [
             [
                 "cc00000000000004"
@@ -5584,27 +5636,29 @@
         "id": "cc00000000000004",
         "type": "http response",
         "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
         "name": "response",
         "statusCode": "200",
         "headers": {
             "content-type": "application/json"
         },
-        "x": 1060,
-        "y": 4600,
+        "x": 4050,
+        "y": 4260,
         "wires": []
     },
     {
         "id": "cc00000000000005",
         "type": "http in",
         "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
         "name": "saveChannelConfig",
         "url": "/saveChannelConfig",
         "method": "post",
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 160,
-        "y": 4720,
+        "x": 3150,
+        "y": 4380,
         "wires": [
             [
                 "cc00000000000006"
@@ -5615,6 +5669,7 @@
         "id": "cc00000000000006",
         "type": "function",
         "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
         "name": "构建保存SQL",
         "func": "const data = msg.req.body || {};\nconst deviceType = (data.device_type ?? \"\").replace(/'/g, \"''\");\nconst config = JSON.stringify(data.config || []);\nmsg.topic = `INSERT OR REPLACE INTO channel_config (device_type, config) VALUES ('${deviceType}', '${config.replace(/'/g, \"''\")}')`;\nmsg.payloadOut = { code: 200, message: \"保存成功\" };\nreturn msg;",
         "outputs": 1,
@@ -5623,8 +5678,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 560,
-        "y": 4720,
+        "x": 3550,
+        "y": 4380,
         "wires": [
             [
                 "cc00000000000007"
@@ -5635,12 +5690,13 @@
         "id": "cc00000000000007",
         "type": "sqlite",
         "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
         "mydb": "a074385e545da94b",
         "sqlquery": "msg.topic",
         "sql": "",
         "name": "保存channelConfig",
-        "x": 880,
-        "y": 4720,
+        "x": 3870,
+        "y": 4380,
         "wires": [
             [
                 "cc00000000000008"
@@ -5651,6 +5707,7 @@
         "id": "cc00000000000008",
         "type": "function",
         "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
         "name": "处理响应",
         "func": "msg.payload = msg.payloadOut || { code: 200, message: \"操作成功\" };\nreturn msg;",
         "outputs": 1,
@@ -5659,8 +5716,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1180,
-        "y": 4720,
+        "x": 4170,
+        "y": 4380,
         "wires": [
             [
                 "cc00000000000009"
@@ -5671,19 +5728,22 @@
         "id": "cc00000000000009",
         "type": "http response",
         "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
         "name": "response",
         "statusCode": "200",
         "headers": {
             "content-type": "application/json"
         },
-        "x": 1460,
-        "y": 4720,
+        "x": 4450,
+        "y": 4380,
         "wires": []
     },
     {
         "id": "cc00000000000010",
         "type": "inject",
         "z": "e4bbd3713100fe17",
+        "d": true,
+        "g": "d0bb0b84c9c34f48",
         "name": "",
         "props": [
             {
@@ -5701,8 +5761,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 160,
-        "y": 4840,
+        "x": 3150,
+        "y": 4500,
         "wires": [
             [
                 "cc00000000000011"
@@ -5713,12 +5773,13 @@
         "id": "cc00000000000011",
         "type": "sqlite",
         "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
         "mydb": "a074385e545da94b",
         "sqlquery": "fixed",
         "sql": "CREATE TABLE IF NOT EXISTS channel_config (\n    device_type TEXT PRIMARY KEY,\n    config TEXT NOT NULL,\n    updated_at TEXT DEFAULT (datetime('now', 'localtime'))\n)",
         "name": "CreateChannelConfigDB",
-        "x": 430,
-        "y": 4840,
+        "x": 3420,
+        "y": 4500,
         "wires": [
             []
         ]
@@ -5727,14 +5788,15 @@
         "id": "cc00000000000012",
         "type": "http in",
         "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
         "name": "deleteChannelConfig",
         "url": "/deleteChannelConfig/:deviceType",
         "method": "delete",
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 160,
-        "y": 4960,
+        "x": 3150,
+        "y": 4620,
         "wires": [
             [
                 "cc00000000000013"
@@ -5745,6 +5807,7 @@
         "id": "cc00000000000013",
         "type": "function",
         "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
         "name": "构建删除SQL",
         "func": "const deviceType = (msg.req.params.deviceType ?? '').replace(/'/g, \"''\");\nmsg.topic = \"DELETE FROM channel_config WHERE device_type = '\" + deviceType + \"'\";\nmsg.payloadOut = { code: 200, message: '删除成功' };\nreturn msg;",
         "outputs": 1,
@@ -5753,8 +5816,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 560,
-        "y": 4960,
+        "x": 3550,
+        "y": 4620,
         "wires": [
             [
                 "cc00000000000014"
@@ -5765,12 +5828,13 @@
         "id": "cc00000000000014",
         "type": "sqlite",
         "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
         "mydb": "a074385e545da94b",
         "sqlquery": "msg.topic",
         "sql": "",
         "name": "删除channelConfig",
-        "x": 880,
-        "y": 4960,
+        "x": 3870,
+        "y": 4620,
         "wires": [
             [
                 "cc00000000000015"
@@ -5781,6 +5845,7 @@
         "id": "cc00000000000015",
         "type": "function",
         "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
         "name": "处理响应",
         "func": "msg.payload = msg.payloadOut || { code: 200, message: '操作成功' };\nreturn msg;",
         "outputs": 1,
@@ -5789,8 +5854,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1180,
-        "y": 4960,
+        "x": 4170,
+        "y": 4620,
         "wires": [
             [
                 "cc00000000000016"
@@ -5801,13 +5866,687 @@
         "id": "cc00000000000016",
         "type": "http response",
         "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
         "name": "response",
         "statusCode": "200",
         "headers": {
             "content-type": "application/json"
         },
-        "x": 1460,
-        "y": 4960,
+        "x": 4450,
+        "y": 4620,
+        "wires": []
+    },
+    {
+        "id": "rt00000000000001",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "getResistanceThresholds",
+        "url": "/getResistanceThresholds",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 3150,
+        "y": 4740,
+        "wires": [
+            [
+                "rt00000000000002"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000002",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "fixed",
+        "sql": "SELECT * FROM resistance_threshold ORDER BY device_type",
+        "name": "获取resistanceThreshold",
+        "x": 3420,
+        "y": 4740,
+        "wires": [
+            [
+                "rt00000000000003"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000003",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "处理数据",
+        "func": "const rows = Array.isArray(msg.payload) ? msg.payload : [];\nmsg.payload = rows.map((r) => ({\n  device_type: r.device_type,\n  normal_min: Number(r.normal_min),\n  normal_max: Number(r.normal_max),\n  open_min: Number(r.open_min),\n  short_max: Number(r.short_max),\n}));\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 3750,
+        "y": 4740,
+        "wires": [
+            [
+                "rt00000000000004"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000004",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 4360,
+        "y": 4740,
+        "wires": []
+    },
+    {
+        "id": "rt00000000000005",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "saveResistanceThreshold",
+        "url": "/saveResistanceThreshold",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 3150,
+        "y": 4860,
+        "wires": [
+            [
+                "rt00000000000006"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000006",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "构建保存SQL",
+        "func": "const data = msg.req.body || {};\nconst deviceType = (data.device_type ?? \"\").replace(/'/g, \"''\");\nconst normalMin = Number(data.normal_min ?? 1);\nconst normalMax = Number(data.normal_max ?? 40);\nconst openMin = Number(data.open_min ?? 10000);\nconst shortMax = Number(data.short_max ?? 0.5);\nmsg.topic = `INSERT OR REPLACE INTO resistance_threshold (device_type, normal_min, normal_max, open_min, short_max) VALUES ('${deviceType}', ${normalMin}, ${normalMax}, ${openMin}, ${shortMax})`;\nmsg.payloadOut = { code: 200, message: \"保存成功\" };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 3550,
+        "y": 4860,
+        "wires": [
+            [
+                "rt00000000000007"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000007",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "保存resistanceThreshold",
+        "x": 3870,
+        "y": 4860,
+        "wires": [
+            [
+                "rt00000000000008"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000008",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "处理响应",
+        "func": "msg.payload = msg.payloadOut || { code: 200, message: \"操作成功\" };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 4170,
+        "y": 4860,
+        "wires": [
+            [
+                "rt00000000000009"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000009",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 4450,
+        "y": 4860,
+        "wires": []
+    },
+    {
+        "id": "rt00000000000010",
+        "type": "inject",
+        "z": "e4bbd3713100fe17",
+        "d": true,
+        "g": "d0bb0b84c9c34f48",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 3150,
+        "y": 4980,
+        "wires": [
+            [
+                "rt00000000000011"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000011",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "fixed",
+        "sql": "CREATE TABLE IF NOT EXISTS resistance_threshold (\n    device_type TEXT PRIMARY KEY,\n    normal_min REAL DEFAULT 1,\n    normal_max REAL DEFAULT 40,\n    open_min REAL DEFAULT 10000,\n    short_max REAL DEFAULT 0.5,\n    updated_at TEXT DEFAULT (datetime('now', 'localtime'))\n)",
+        "name": "CreateResistanceThresholdDB",
+        "x": 3420,
+        "y": 4980,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "rt00000000000012",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "deleteResistanceThreshold",
+        "url": "/deleteResistanceThreshold/:deviceType",
+        "method": "delete",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 3150,
+        "y": 5100,
+        "wires": [
+            [
+                "rt00000000000013"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000013",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "构建删除SQL",
+        "func": "const deviceType = (msg.req.params.deviceType ?? '').replace(/'/g, \"''\");\nmsg.topic = \"DELETE FROM resistance_threshold WHERE device_type = '\" + deviceType + \"'\";\nmsg.payloadOut = { code: 200, message: '删除成功' };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 3550,
+        "y": 5100,
+        "wires": [
+            [
+                "rt00000000000014"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000014",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "删除resistanceThreshold",
+        "x": 3870,
+        "y": 5100,
+        "wires": [
+            [
+                "rt00000000000015"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000015",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "处理响应",
+        "func": "msg.payload = msg.payloadOut || { code: 200, message: '操作成功' };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 4170,
+        "y": 5100,
+        "wires": [
+            [
+                "rt00000000000016"
+            ]
+        ]
+    },
+    {
+        "id": "rt00000000000016",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 4450,
+        "y": 5100,
+        "wires": []
+    },
+    {
+        "id": "ct00000000000001",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "getCurveThresholds",
+        "url": "/getCurveThresholds",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 3150,
+        "y": 5220,
+        "wires": [
+            [
+                "ct00000000000002"
+            ]
+        ]
+    },
+    {
+        "id": "ct00000000000002",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "fixed",
+        "sql": "SELECT * FROM curve_threshold ORDER BY device_type",
+        "name": "获取curveThreshold",
+        "x": 3420,
+        "y": 5220,
+        "wires": [
+            [
+                "ct00000000000003"
+            ]
+        ]
+    },
+    {
+        "id": "ct00000000000003",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "处理数据",
+        "func": "const rows = Array.isArray(msg.payload) ? msg.payload : [];\nmsg.payload = rows.map((r) => ({\n  device_type: r.device_type,\n  current_peak_min: Number(r.current_peak_min),\n  current_peak_max: Number(r.current_peak_max),\n  current_zero_max: Number(r.current_zero_max),\n  min_points: Number(r.min_points),\n  power_peak_min: Number(r.power_peak_min),\n  power_peak_max: Number(r.power_peak_max),\n  power_zero_max: Number(r.power_zero_max),\n}));\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 3750,
+        "y": 5220,
+        "wires": [
+            [
+                "ct00000000000004"
+            ]
+        ]
+    },
+    {
+        "id": "ct00000000000004",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 4050,
+        "y": 5220,
+        "wires": []
+    },
+    {
+        "id": "ct00000000000005",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "saveCurveThreshold",
+        "url": "/saveCurveThreshold",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 3150,
+        "y": 5340,
+        "wires": [
+            [
+                "ct00000000000006"
+            ]
+        ]
+    },
+    {
+        "id": "ct00000000000006",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "构建保存SQL",
+        "func": "const data = msg.req.body || {};\nconst deviceType = (data.device_type ?? \"\").replace(/'/g, \"''\");\nconst currentPeakMin = Number(data.current_peak_min ?? 0.5);\nconst currentPeakMax = Number(data.current_peak_max ?? 20);\nconst currentZeroMax = Number(data.current_zero_max ?? 0.3);\nconst minPoints = Number(data.min_points ?? 10);\nconst powerPeakMin = Number(data.power_peak_min ?? 0.05);\nconst powerPeakMax = Number(data.power_peak_max ?? 50);\nconst powerZeroMax = Number(data.power_zero_max ?? 0.5);\nmsg.topic = `INSERT OR REPLACE INTO curve_threshold (device_type, current_peak_min, current_peak_max, current_zero_max, min_points, power_peak_min, power_peak_max, power_zero_max) VALUES ('${deviceType}', ${currentPeakMin}, ${currentPeakMax}, ${currentZeroMax}, ${minPoints}, ${powerPeakMin}, ${powerPeakMax}, ${powerZeroMax})`;\nmsg.payloadOut = { code: 200, message: \"保存成功\" };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 3550,
+        "y": 5340,
+        "wires": [
+            [
+                "ct00000000000007"
+            ]
+        ]
+    },
+    {
+        "id": "ct00000000000007",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "保存curveThreshold",
+        "x": 3870,
+        "y": 5340,
+        "wires": [
+            [
+                "ct00000000000008"
+            ]
+        ]
+    },
+    {
+        "id": "ct00000000000008",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "处理响应",
+        "func": "msg.payload = msg.payloadOut || { code: 200, message: \"操作成功\" };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 4170,
+        "y": 5340,
+        "wires": [
+            [
+                "ct00000000000009"
+            ]
+        ]
+    },
+    {
+        "id": "ct00000000000009",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 4450,
+        "y": 5340,
+        "wires": []
+    },
+    {
+        "id": "ct00000000000010",
+        "type": "inject",
+        "z": "e4bbd3713100fe17",
+        "d": true,
+        "g": "d0bb0b84c9c34f48",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 3150,
+        "y": 5460,
+        "wires": [
+            [
+                "ct00000000000011"
+            ]
+        ]
+    },
+    {
+        "id": "ct00000000000011",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "fixed",
+        "sql": "CREATE TABLE IF NOT EXISTS curve_threshold (\n    device_type TEXT PRIMARY KEY,\n    current_peak_min REAL DEFAULT 0.5,\n    current_peak_max REAL DEFAULT 20,\n    current_zero_max REAL DEFAULT 0.3,\n    min_points INTEGER DEFAULT 10,\n    power_peak_min REAL DEFAULT 0.05,\n    power_peak_max REAL DEFAULT 50,\n    power_zero_max REAL DEFAULT 0.5,\n    updated_at TEXT DEFAULT (datetime('now', 'localtime'))\n)",
+        "name": "CreateCurveThresholdDB",
+        "x": 3420,
+        "y": 5460,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ct00000000000012",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "deleteCurveThreshold",
+        "url": "/deleteCurveThreshold/:deviceType",
+        "method": "delete",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 3150,
+        "y": 5580,
+        "wires": [
+            [
+                "ct00000000000013"
+            ]
+        ]
+    },
+    {
+        "id": "ct00000000000013",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "构建删除SQL",
+        "func": "const deviceType = (msg.req.params.deviceType ?? '').replace(/'/g, \"''\");\nmsg.topic = \"DELETE FROM curve_threshold WHERE device_type = '\" + deviceType + \"'\";\nmsg.payloadOut = { code: 200, message: '删除成功' };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 3550,
+        "y": 5580,
+        "wires": [
+            [
+                "ct00000000000014"
+            ]
+        ]
+    },
+    {
+        "id": "ct00000000000014",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "删除curveThreshold",
+        "x": 3870,
+        "y": 5580,
+        "wires": [
+            [
+                "ct00000000000015"
+            ]
+        ]
+    },
+    {
+        "id": "ct00000000000015",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "处理响应",
+        "func": "msg.payload = msg.payloadOut || { code: 200, message: '操作成功' };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 4170,
+        "y": 5580,
+        "wires": [
+            [
+                "ct00000000000016"
+            ]
+        ]
+    },
+    {
+        "id": "ct00000000000016",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 4450,
+        "y": 5580,
+        "wires": []
+    },
+    {
+        "id": "lr00000000000001",
+        "type": "http in",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "latestOperationRecords",
+        "url": "/latestOperationRecords",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 3150,
+        "y": 5700,
+        "wires": [
+            [
+                "lr00000000000002"
+            ]
+        ]
+    },
+    {
+        "id": "lr00000000000002",
+        "type": "sqlite",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "fixed",
+        "sql": "SELECT * FROM operation_records WHERE id IN (SELECT MAX(id) FROM operation_records WHERE op_type IN ('DC','FC') GROUP BY device_name, op_type)",
+        "name": "查询最新定反操",
+        "x": 3420,
+        "y": 5700,
+        "wires": [
+            [
+                "lr00000000000003"
+            ]
+        ]
+    },
+    {
+        "id": "lr00000000000003",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "处理数据",
+        "func": "const rows = Array.isArray(msg.payload) ? msg.payload : [];\nmsg.payload = rows.map((r) => ({\n  device_name: r.device_name,\n  op_type: r.op_type,\n  status: r.status,\n  created_at: r.created_at,\n}));\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 3750,
+        "y": 5700,
+        "wires": [
+            [
+                "lr00000000000004"
+            ]
+        ]
+    },
+    {
+        "id": "lr00000000000004",
+        "type": "http response",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 4050,
+        "y": 5700,
         "wires": []
     },
     {
@@ -5821,8 +6560,8 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 220,
-        "y": 5540,
+        "x": 260,
+        "y": 5400,
         "wires": [
             [
                 "cd00000000000002"
@@ -5842,8 +6581,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 480,
-        "y": 5540,
+        "x": 520,
+        "y": 5400,
         "wires": [
             [
                 "cd00000000000003"
@@ -5862,8 +6601,8 @@
         "sqlquery": "prepared",
         "sql": "UPDATE code_device SET closeType = $closeType WHERE id = $id",
         "name": "更新closeType",
-        "x": 760,
-        "y": 5540,
+        "x": 800,
+        "y": 5400,
         "wires": [
             [
                 "cd00000000000004"
@@ -5883,8 +6622,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1010,
-        "y": 5540,
+        "x": 1050,
+        "y": 5400,
         "wires": [
             [
                 "cd00000000000005"
@@ -5901,8 +6640,8 @@
         "headers": {
             "content-type": "application/json"
         },
-        "x": 1240,
-        "y": 5540,
+        "x": 1280,
+        "y": 5400,
         "wires": []
     },
     {
@@ -5919,8 +6658,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 260,
-        "y": 5140,
+        "x": 420,
+        "y": 4940,
         "wires": []
     },
     {
@@ -5931,8 +6670,8 @@
         "name": "",
         "scope": null,
         "uncaught": false,
-        "x": 420,
-        "y": 5320,
+        "x": 580,
+        "y": 5120,
         "wires": [
             [
                 "89c1558278b3aad0"
@@ -5953,8 +6692,19 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 620,
-        "y": 5320,
+        "x": 780,
+        "y": 5120,
+        "wires": []
+    },
+    {
+        "id": "44fae1fd7ef69436",
+        "type": "comment",
+        "z": "e4bbd3713100fe17",
+        "g": "d0bb0b84c9c34f48",
+        "name": "操作成功与否的判断以及 站场模式 下列表测试通过显示成功标识",
+        "info": "",
+        "x": 3290,
+        "y": 4160,
         "wires": []
     }
 ]

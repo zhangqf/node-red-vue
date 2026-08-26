@@ -34,7 +34,10 @@
       "Bash(echo \"EXIT: $?\")",
       "Bash(git -C /Users/zhangfeng/project/node-red-vue/switch-machine diff --stat nr/flows.json)",
       "Bash(git -C /Users/zhangfeng/project/node-red-vue/switch-machine diff nr/flows.json)",
-      "Bash(grep *)"
+      "Bash(grep *)",
+      "Bash(node /tmp/fix_status.mjs)",
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('/Users/zhangfeng/project/node-red-vue/switch-machine/nr/flows.json','utf8'\\)\\); console.log\\('valid JSON'\\)\")",
+      "Bash(node *)"
     ]
   }
 }

@@ -5,6 +5,7 @@ import {
   ZD6Serial,
   ModelConfig,
   collectConfig,
+  collectConfig24,
   DEFAULT_THRESHOLD,
 } from "./config";
 import type {
@@ -182,8 +183,7 @@ function getDirectionTip(
  * 1. 批量将四路阻值转为电阻状态 NORMAL/OPEN/SHORT/UNKNOWN
  * 2. 分别计算【定操DC】、【反操FC】两套判定结果
  * 3. 满足全部通道NORMAL，或单套方向全部合格，则该方向判定通过
- * 4. 定操、反操均不合格时，汇总所有异常通道诊断文案
- * 5. allTrue：定操/反操任意一个方向合格即为整机检测通过
+ * 4. 任一方判定未通过时，汇总该方向的异常通道诊断文案
  */
 
 export const startBeforeTestExpress = (
@@ -192,21 +192,20 @@ export const startBeforeTestExpress = (
   channelConfig?: ChannelExpect[],
   threshold?: ResistanceThreshold,
 ): StartBeforeTestReturn => {
-  let states = [];
+  let states: Array<any> = [];
   const th = threshold ?? DEFAULT_THRESHOLD;
 
   let configOption: ChannelExpect[] = [];
-  console.log(arr);
+  // console.log(arr);
   if (deviceType === "ZD6" || deviceType === "ZD9") {
     arr = arr.slice(6, 8);
     states = arr.map((v) => classifyResistanceZD6(v, th));
     configOption = channelConfig ?? CHANNEL_CONFIGZD6;
   }
   if (deviceType === "ZYJ7" || deviceType === "ZDJ9") {
-    console.log(arr);
+    // console.log(arr);
     arr = arr.slice(2);
     states = arr.map((v) => classifyResistance(v, th));
-    console.log(states);
     configOption = channelConfig ?? CHANNEL_CONFIG;
   }
 
@@ -219,7 +218,7 @@ export const startBeforeTestExpress = (
     );
     return {
       channelName: cfg.name,
-      value: arr[i],
+      value: arr[i] ?? 0,
       state: states[i] ?? "UNKNOWN",
       tip,
       isNormal,
@@ -236,7 +235,7 @@ export const startBeforeTestExpress = (
     );
     return {
       channelName: cfg.name,
-      value: arr[i],
+      value: arr[i] ?? 0,
       state: states[i] ?? "UNKNOWN",
       tip,
       isNormal,
@@ -254,21 +253,24 @@ export const startBeforeTestExpress = (
 
   if (allNormal) {
     diagnosis.push("混线：所有通道阻值均为正常区间");
-  } else if (!dcPassed && !fcPassed) {
-    dcResult.forEach((r) => {
-      if (!r.isNormal)
-        diagnosis.push(`定操-${r.channelName}: ${r.tip}(${r.value}Ω)`);
-    });
-    fcResult.forEach((r) => {
-      if (!r.isNormal)
-        diagnosis.push(`反操-${r.channelName}: ${r.tip}(${r.value}Ω)`);
-    });
+  } else {
+    if (!dcPassed) {
+      dcResult.forEach((r) => {
+        if (!r.isNormal)
+          diagnosis.push(`定操-${r.channelName}: ${r.tip}(${r.value}Ω)`);
+      });
+    }
+    if (!fcPassed) {
+      fcResult.forEach((r) => {
+        if (!r.isNormal)
+          diagnosis.push(`反操-${r.channelName}: ${r.tip}(${r.value}Ω)`);
+      });
+    }
   }
 
   return {
     dcResult,
     fcResult,
-    allTrue: dcPassed || fcPassed,
     direction: { DC: dcPassed, FC: fcPassed, diagnosis },
   };
 };
@@ -296,26 +298,39 @@ export const powerStatusJudgmen = (arr: number[], idxArr: number[]) => {
 };
 
 export function getCircuits(
+  selectedContactType: string,
   series: string,
   model: string,
   cfg: string,
   field: string,
 ) {
   if (!series || !model || !cfg) return;
-  const ser = ZD6Serial[model];
-  const mod = ModelConfig[cfg];
-  const seriesKey = series === "ZD9" ? "ZD6" : series;
-  return collectConfig[seriesKey][ser][mod];
+  const ser = ZD6Serial[model as keyof typeof ZD6Serial];
+  const mod = ModelConfig[cfg as keyof typeof ModelConfig];
+  const seriesKey = (
+    series === "ZD9" ? "ZD6" : series
+  ) as keyof typeof collectConfig;
+
+  const seriesConfig =
+    selectedContactType === "collectConfig24"
+      ? collectConfig24[seriesKey]
+      : collectConfig[seriesKey];
+  if (!seriesConfig) return;
+
+  const serialConfig = ser !== undefined ? seriesConfig[ser] : undefined;
+  if (!serialConfig) return;
+
+  const modelConfig = mod !== undefined ? serialConfig[mod] : undefined;
+  return modelConfig;
 }
 
 export function mergeResistance(data: number[]) {
   let mergeData: number[] = [];
-  console.log(data);
   if (Array.isArray(data)) {
-    data.reduce((prev, curr, idx) => {
+    data.reduce((prev: number, curr: number, idx) => {
       if (idx % 2 === 1) mergeData.push(Number(prev * 65535 + curr) / 100);
       return curr;
-    }, null);
+    }, 0);
   }
   return mergeData;
 }

@@ -25,6 +25,7 @@ const menuItems = [
       { key: "binding-manager", label: "绑定配置" },
       { key: "channel-config-manager", label: "通道配置" },
       { key: "threshold-config-manager", label: "阻值阈值" },
+      { key: "curve-threshold-manager", label: "曲线阈值" },
     ],
   },
   { key: "history", label: "历史记录" },

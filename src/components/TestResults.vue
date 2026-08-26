@@ -24,18 +24,19 @@ const props = withDefaults(
     /** 启动前测试结果，非 null 时展示测试详情 */
     testResult?: {
       dcResult: {
+        circuitImg: string | null;
         channelName: string;
         value: number;
         tip: string;
         isNormal: boolean;
       }[];
       fcResult: {
+        circuitImg: string | null;
         channelName: string;
         value: number;
         tip: string;
         isNormal: boolean;
       }[];
-      allTrue: boolean;
       direction: { DC: boolean; FC: boolean; diagnosis: string[] };
     } | null;
     availableDirections: { DC: boolean; FC: boolean };
@@ -87,6 +88,13 @@ const secondaryGroupLabel = computed(() =>
     : "续操表示",
 );
 
+// 混线：定位表示与反位表示同时正常
+const isMixLine = computed(() => {
+  const g = indicationTests.value.find((t) => t.type === "GreenLight");
+  const y = indicationTests.value.find((t) => t.type === "YellowLight");
+  return g?.status === true && y?.status === true;
+});
+
 type GroupRow =
   | { key: string; isGroup: true; label: string }
   | { key: string; isGroup: false; test: TestItem };
@@ -95,7 +103,7 @@ const groupedRows = computed<GroupRow[]>(() => {
   const tests = props.tests || [];
   const rows: GroupRow[] = [];
   if (tests.length === 0) return rows;
-  if (tests[0].type === "empty") {
+  if (tests[0]?.type === "empty") {
     tests.forEach((t) => rows.push({ key: t.type, isGroup: false, test: t }));
     return rows;
   }
@@ -197,13 +205,13 @@ const groupedRows = computed<GroupRow[]>(() => {
             </div>
             <div class="test-result" :class="test.isNormal ? 'ok' : 'ng'">
               {{ test.tip }}
-              <button
+              <!-- <button
                 v-if="!test.isNormal && test.circuitImg"
                 class="circuit-view-btn"
                 style="margin-left: 8px"
                 @click="handleView(test.circuitImg!)">
                 查看电路图
-              </button>
+              </button> -->
             </div>
           </div>
         </template>
@@ -248,13 +256,13 @@ const groupedRows = computed<GroupRow[]>(() => {
           powerStatusIsRunning &&
           tests &&
           tests?.length > 0 &&
-          tests[0].type === 'empty'
+          tests[0]?.type === 'empty'
         "
         style="color: #c18232">
         暂无表示继电器配置，跳过该组状态校验
       </h4>
-
       <div class="relay-results">
+        <div v-if="isMixLine" class="mixline-warning">混线</div>
         <template v-for="row in groupedRows" :key="row.key">
           <div v-if="row.isGroup" class="relay-group-label">
             {{ row.label }}
@@ -395,7 +403,7 @@ const groupedRows = computed<GroupRow[]>(() => {
               </svg>
             </button>
           </div>
-          <div style="width: 100%; height: 80vh; padding: 10px">
+          <div style="width: 100%; height: 100vh; padding: 10px">
             <img :src="perviewImg" alt="" width="100%" height="100%" />
           </div>
         </div>
@@ -434,13 +442,13 @@ const groupedRows = computed<GroupRow[]>(() => {
 }
 
 .panel-title {
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 600;
   color: #e0e8f0;
 }
 
 .modbusStatus-content {
-  font-size: 16px;
+  font-size: 20px;
   color: #f87171;
   padding: 10px;
   background: rgba(248, 113, 113, 0.1);
@@ -506,19 +514,19 @@ const groupedRows = computed<GroupRow[]>(() => {
 }
 
 .test-name {
-  font-size: 12px;
+  font-size: 18px;
   color: #bccfde;
 }
 
 .test-value {
-  font-size: 11px;
+  font-size: 18px;
   color: #5a7288;
   margin-left: auto;
   font-family: "SF Mono", "Monaco", "Menlo", monospace;
 }
 
 .test-result {
-  font-size: 10px;
+  font-size: 18px;
   color: #5a7288;
   padding-left: 13px;
   font-family: "SF Mono", "Monaco", "Menlo", monospace;
@@ -626,13 +634,13 @@ const groupedRows = computed<GroupRow[]>(() => {
 }
 
 .direction-label {
-  font-size: 13px;
+  font-size: 18px;
   color: #8fb4d8;
   font-weight: 600;
 }
 
 .direction-status {
-  font-size: 13px;
+  font-size: 18px;
   font-weight: 700;
   padding: 2px 10px;
   border-radius: 4px;
@@ -655,7 +663,7 @@ const groupedRows = computed<GroupRow[]>(() => {
 
 .circuit-link {
   margin-left: auto;
-  font-size: 12px;
+  font-size: 18px;
   color: #5a92d0;
   cursor: pointer;
   border: 1px solid rgba(90, 146, 208, 0.25);
@@ -679,7 +687,7 @@ const groupedRows = computed<GroupRow[]>(() => {
 }
 
 .diagnosis-item {
-  font-size: 11px;
+  font-size: 18px;
   color: #fca5a5;
   line-height: 1.8;
   font-family: "SF Mono", "Monaco", "Menlo", monospace;
@@ -693,7 +701,7 @@ const groupedRows = computed<GroupRow[]>(() => {
 
 /* ---- 区块标签 ---- */
 .section-label {
-  font-size: 11px;
+  font-size: 18px;
   font-weight: 600;
   color: #8fb4d8;
   padding: 6px 0 2px;
@@ -709,7 +717,7 @@ const groupedRows = computed<GroupRow[]>(() => {
 }
 
 .section-badge {
-  font-size: 10px;
+  font-size: 18px;
   padding: 1px 8px;
   border-radius: 3px;
   font-weight: 700;
@@ -740,8 +748,8 @@ const groupedRows = computed<GroupRow[]>(() => {
   background: #0b1d33;
   border: 1px solid #1a2d44;
   border-radius: 14px;
-  width: 860px;
-  max-height: 85vh;
+  width: 100%;
+  max-height: 100vh;
   overflow-y: auto;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
 }
@@ -769,7 +777,7 @@ const groupedRows = computed<GroupRow[]>(() => {
 }
 
 .modal-subtitle {
-  font-size: 13px;
+  font-size: 18px;
   color: #5a7288;
 }
 
@@ -801,9 +809,24 @@ const groupedRows = computed<GroupRow[]>(() => {
   padding: 20px 28px;
 }
 
+/* ---- 混线警告 ---- */
+.mixline-warning {
+  margin: 4px 0;
+  padding: 8px 14px;
+  background: rgba(248, 113, 113, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  border-radius: 4px;
+  color: #f87171;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-align: center;
+  animation: pulse 1s ease-in-out infinite;
+}
+
 /* ---- 表示项分组标题 ---- */
 .relay-group-label {
-  font-size: 11px;
+  font-size: 18px;
   font-weight: 600;
   color: #8fb4d8;
   padding: 10px 10px 4px;
@@ -847,7 +870,7 @@ const groupedRows = computed<GroupRow[]>(() => {
   border: 1px solid rgba(90, 146, 208, 0.2);
   border-radius: 3px;
   color: #5a92d0;
-  font-size: 11px;
+  font-size: 18px;
   cursor: pointer;
   transition: all 0.2s;
   flex-shrink: 0;
@@ -861,7 +884,7 @@ const groupedRows = computed<GroupRow[]>(() => {
 
 .circuit-toggle-icon {
   display: inline-block;
-  font-size: 8px;
+  font-size: 18px;
   transition: transform 0.2s ease;
 }
 
@@ -901,14 +924,14 @@ const groupedRows = computed<GroupRow[]>(() => {
   border: 1px solid rgba(90, 146, 208, 0.25);
   border-radius: 3px;
   color: #8fb4d8;
-  font-size: 10px;
+  font-size: 18px;
   font-weight: 700;
   font-family: "SF Mono", "Monaco", "Menlo", monospace;
   flex-shrink: 0;
 }
 
 .circuit-path-text {
-  font-size: 11px;
+  font-size: 18px;
   color: #6a8fa8;
   font-family: "SF Mono", "Monaco", "Menlo", monospace;
   word-break: break-all;
@@ -958,7 +981,7 @@ const groupedRows = computed<GroupRow[]>(() => {
   border: 1px solid rgba(90, 146, 208, 0.2);
   border-radius: 4px;
   color: #5a92d0;
-  font-size: 12px;
+  font-size: 18px;
   cursor: pointer;
   transition: all 0.2s;
 }
