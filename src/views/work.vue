@@ -180,25 +180,10 @@ const reverseTrue = computed(() => {
   return item?.status === true;
 });
 
-// 启动前测试会操作表示继电器，实时表示会消失。点击启动前测试时快照当时的定位/反位表示，
-// 测试期间用快照维持定操/反操视角；开启动作电源后清空快照，恢复实时表示。
-const positioningSnapshot = ref<boolean | null>(null);
-const reverseSnapshot = ref<boolean | null>(null);
-
-// 定位/反位表示有效状态：启动前测试期间优先取快照，否则取实时
-const effectivePositioning = computed(() =>
-  positioningSnapshot.value === null
-    ? positioningTrue.value
-    : positioningSnapshot.value,
-);
-const effectiveReverse = computed(() =>
-  reverseSnapshot.value === null ? reverseTrue.value : reverseSnapshot.value,
-);
-
 // 定位/反位表示灯的显示：定位成功优先，只显示定位；反位仅在定位失败时显示
-const showPositioning = computed(() => effectivePositioning.value);
+const showPositioning = computed(() => positioningTrue.value);
 const showReverse = computed(
-  () => !effectivePositioning.value && effectiveReverse.value,
+  () => !positioningTrue.value && reverseTrue.value,
 );
 
 // 定操/反操视角始终显示，不再依赖定位/反位表示
@@ -219,8 +204,8 @@ const displayedTestResults = computed(() => {
   return testResults.value.filter((item) => {
     if (item.type === "GreenLight") return showPositioning.value;
     if (item.type === "YellowLight") return showReverse.value;
-    if (DC_GROUP_TYPES.has(item.type)) return effectivePositioning.value;
-    if (FC_GROUP_TYPES.has(item.type)) return effectiveReverse.value;
+    if (DC_GROUP_TYPES.has(item.type)) return positioningTrue.value;
+    if (FC_GROUP_TYPES.has(item.type)) return reverseTrue.value;
     return true;
   });
 });
@@ -382,19 +367,10 @@ const handleStartBeforeTestExpress = (data: Record<string, any>) => {
   });
   startBeforeTestTips.value = result;
 
-  // 方向门控（定位优先）：定位表示成功 → 只看反操(FC)电阻；
-  // 定位失败且反位成功 → 只看定操(DC)电阻；
-  // 均无表示 → 由电阻结果反推方向（FC 通过按定位、DC 通过按反位），任一通过即可放行
-  let dcAvailable = false;
-  let fcAvailable = false;
-  if (effectivePositioning.value) {
-    fcAvailable = result.direction.FC;
-  } else if (effectiveReverse.value) {
-    dcAvailable = result.direction.DC;
-  } else {
-    dcAvailable = result.direction.DC;
-    fcAvailable = result.direction.FC;
-  }
+  // 放行判断：完全由电阻判定结果决定，与定位/反位表示无关，
+  // 定操(DC)或反操(FC)任一方向电阻判定通过即可进入下一步
+  const dcAvailable = result.direction.DC;
+  const fcAvailable = result.direction.FC;
   const proceed = dcAvailable || fcAvailable;
 
   if (proceed) {
@@ -556,13 +532,8 @@ watch(
   () => powerStatus.value.isRunning,
   (newKey) => {
     if (newKey) {
-      // 开启动作电源后恢复实时表示
-      positioningSnapshot.value = null;
-      reverseSnapshot.value = null;
       initTestResults();
     } else {
-      positioningSnapshot.value = null;
-      reverseSnapshot.value = null;
       startBeforeLoading.value = false;
       startBeforeTestFinshed.value = false;
       availableDirections.value = { DC: false, FC: false };
@@ -602,8 +573,6 @@ const resetToStartBeforeTest = () => {
   startBeforeTestTips.value = null;
   completedDirections.value = new Set();
   pendingSaveData.value = null;
-  positioningSnapshot.value = null;
-  reverseSnapshot.value = null;
 
   // 清空曲线，重置锁定状态并重建测试项
   currentCurveRef.value?.resetData();
@@ -632,10 +601,6 @@ const handleStartBeforeTest = () => {
   // availableDirections.value = { DC: false, FC: false };
   // startBeforeTestTips.value = null
   // testResults.value = []
-  // 快照点击前的定位/反位表示：测试会操作表示继电器，实时表示会消失，用快照维持视角
-  positioningSnapshot.value = positioningTrue.value;
-  reverseSnapshot.value = reverseTrue.value;
-
   startBeforeLoading.value = true;
   startBeforeTestTips.value = null;
   diagnosisMessages.value = [];
@@ -754,8 +719,6 @@ const handleContactConfigClick = (type: string) => {
   startBeforeTestTips.value = null;
   completedDirections.value = new Set();
   pendingSaveData.value = null;
-  positioningSnapshot.value = null;
-  reverseSnapshot.value = null;
   switch (type) {
     case "contact13Closed":
       handleContact13Closed();

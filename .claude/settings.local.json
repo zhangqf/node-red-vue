@@ -37,7 +37,8 @@
       "Bash(grep *)",
       "Bash(node /tmp/fix_status.mjs)",
       "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('/Users/zhangfeng/project/node-red-vue/switch-machine/nr/flows.json','utf8'\\)\\); console.log\\('valid JSON'\\)\")",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(echo \"---exit:$?\")"
     ]
   }
 }
