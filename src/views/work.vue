@@ -561,6 +561,8 @@ watch(
       reverseSnapshot.value = null;
       initTestResults();
     } else {
+      positioningSnapshot.value = null;
+      reverseSnapshot.value = null;
       startBeforeLoading.value = false;
       startBeforeTestFinshed.value = false;
       availableDirections.value = { DC: false, FC: false };

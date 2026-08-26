@@ -187,7 +187,7 @@ const groupedRows = computed<GroupRow[]>(() => {
         <template v-if="showDC">
           <div class="section-label">
             定操视角
-            <span v-if="availableDirections.DC" class="section-badge ok"
+            <span v-if="testResult.direction.DC" class="section-badge ok"
               >通过</span
             >
             <span v-else class="section-badge ng">未通过</span>
@@ -219,7 +219,7 @@ const groupedRows = computed<GroupRow[]>(() => {
         <template v-if="showFC">
           <div class="section-label section-divider">
             反操视角
-            <span v-if="availableDirections.FC" class="section-badge ok"
+            <span v-if="testResult.direction.FC" class="section-badge ok"
               >通过</span
             >
             <span v-else class="section-badge ng">未通过</span>
