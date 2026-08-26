@@ -202,13 +202,12 @@ const showReverse = computed(
 );
 
 // 定操/反操视角与按钮显示控制（交叉映射）：
-// 定位表示成功 → 显示反操视角；反位表示成功（且定位失败）→ 显示定操视角
-const showDCGroup = computed(() => {
-  return !effectivePositioning.value && effectiveReverse.value;
-});
-const showFCGroup = computed(() => {
-  return effectivePositioning.value;
-});
+// 定位表示成功 → 显示反操视角；反位表示成功（且定位失败）→ 显示定操视角；
+// 定位/反位都不到位（无表示）→ 两个视角都显示
+const showDCGroup = computed(() => !effectivePositioning.value);
+const showFCGroup = computed(
+  () => effectivePositioning.value || !effectiveReverse.value,
+);
 
 // 诊断提示按当前视角过滤：定操视角只显示定操项，反操视角只显示反操项，混线等通用提示始终显示
 const displayDiagnosisMessages = computed(() => {
