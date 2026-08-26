@@ -180,17 +180,34 @@ const reverseTrue = computed(() => {
   return item?.status === true;
 });
 
+// 启动前测试会操作表示继电器，实时表示会消失。点击启动前测试时快照当时的定位/反位表示，
+// 测试期间用快照维持定操/反操视角；开启动作电源后清空快照，恢复实时表示。
+const positioningSnapshot = ref<boolean | null>(null);
+const reverseSnapshot = ref<boolean | null>(null);
+
+// 定位/反位表示有效状态：启动前测试期间优先取快照，否则取实时
+const effectivePositioning = computed(() =>
+  positioningSnapshot.value === null
+    ? positioningTrue.value
+    : positioningSnapshot.value,
+);
+const effectiveReverse = computed(() =>
+  reverseSnapshot.value === null ? reverseTrue.value : reverseSnapshot.value,
+);
+
 // 定位/反位表示灯的显示：定位成功优先，只显示定位；反位仅在定位失败时显示
-const showPositioning = computed(() => positioningTrue.value);
-const showReverse = computed(() => !positioningTrue.value && reverseTrue.value);
+const showPositioning = computed(() => effectivePositioning.value);
+const showReverse = computed(
+  () => !effectivePositioning.value && effectiveReverse.value,
+);
 
 // 定操/反操视角与按钮显示控制（交叉映射）：
 // 定位表示成功 → 显示反操视角；反位表示成功（且定位失败）→ 显示定操视角
 const showDCGroup = computed(() => {
-  return !positioningTrue.value && reverseTrue.value;
+  return !effectivePositioning.value && effectiveReverse.value;
 });
 const showFCGroup = computed(() => {
-  return positioningTrue.value;
+  return effectivePositioning.value;
 });
 
 // 诊断提示按当前视角过滤：定操视角只显示定操项，反操视角只显示反操项，混线等通用提示始终显示
@@ -207,8 +224,8 @@ const displayedTestResults = computed(() => {
   return testResults.value.filter((item) => {
     if (item.type === "GreenLight") return showPositioning.value;
     if (item.type === "YellowLight") return showReverse.value;
-    if (DC_GROUP_TYPES.has(item.type)) return positioningTrue.value;
-    if (FC_GROUP_TYPES.has(item.type)) return reverseTrue.value;
+    if (DC_GROUP_TYPES.has(item.type)) return effectivePositioning.value;
+    if (FC_GROUP_TYPES.has(item.type)) return effectiveReverse.value;
     return true;
   });
 });
@@ -372,9 +389,9 @@ const handleStartBeforeTestExpress = (data: Record<string, any>) => {
 
   // 方向门控（定位优先）：定位表示成功 → 只看反操(FC)电阻；
   // 定位失败且反位成功 → 只看定操(DC)电阻；均不正常时不进入下一步
-  const proceed = positioningTrue.value
+  const proceed = effectivePositioning.value
     ? result.direction.FC
-    : reverseTrue.value
+    : effectiveReverse.value
       ? result.direction.DC
       : false;
 
@@ -382,8 +399,8 @@ const handleStartBeforeTestExpress = (data: Record<string, any>) => {
     startBeforeLoading.value = false;
     startBeforeTestFinshed.value = true;
     availableDirections.value = {
-      DC: !positioningTrue.value && reverseTrue.value,
-      FC: positioningTrue.value,
+      DC: !effectivePositioning.value && effectiveReverse.value,
+      FC: effectivePositioning.value,
     };
     diagnosisMessages.value = result.direction.diagnosis;
     completedDirections.value = new Set();
@@ -540,6 +557,9 @@ watch(
   () => powerStatus.value.isRunning,
   (newKey) => {
     if (newKey) {
+      // 开启动作电源后恢复实时表示
+      positioningSnapshot.value = null;
+      reverseSnapshot.value = null;
       initTestResults();
     } else {
       startBeforeLoading.value = false;
@@ -581,6 +601,8 @@ const resetToStartBeforeTest = () => {
   startBeforeTestTips.value = null;
   completedDirections.value = new Set();
   pendingSaveData.value = null;
+  positioningSnapshot.value = null;
+  reverseSnapshot.value = null;
 
   // 清空曲线，重置锁定状态并重建测试项
   currentCurveRef.value?.resetData();
@@ -609,6 +631,10 @@ const handleStartBeforeTest = () => {
   // availableDirections.value = { DC: false, FC: false };
   // startBeforeTestTips.value = null
   // testResults.value = []
+  // 快照点击前的定位/反位表示：测试会操作表示继电器，实时表示会消失，用快照维持视角
+  positioningSnapshot.value = positioningTrue.value;
+  reverseSnapshot.value = reverseTrue.value;
+
   startBeforeLoading.value = true;
   startBeforeTestTips.value = null;
   diagnosisMessages.value = [];
@@ -727,6 +753,8 @@ const handleContactConfigClick = (type: string) => {
   startBeforeTestTips.value = null;
   completedDirections.value = new Set();
   pendingSaveData.value = null;
+  positioningSnapshot.value = null;
+  reverseSnapshot.value = null;
   switch (type) {
     case "contact13Closed":
       handleContact13Closed();
