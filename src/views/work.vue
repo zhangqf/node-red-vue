@@ -387,20 +387,24 @@ const handleStartBeforeTestExpress = (data: Record<string, any>) => {
   startBeforeTestTips.value = result;
 
   // 方向门控（定位优先）：定位表示成功 → 只看反操(FC)电阻；
-  // 定位失败且反位成功 → 只看定操(DC)电阻；均不正常时不进入下一步
-  const proceed = effectivePositioning.value
-    ? result.direction.FC
-    : effectiveReverse.value
-      ? result.direction.DC
-      : false;
+  // 定位失败且反位成功 → 只看定操(DC)电阻；
+  // 均无表示 → 由电阻结果反推方向（FC 通过按定位、DC 通过按反位），任一通过即可放行
+  let dcAvailable = false;
+  let fcAvailable = false;
+  if (effectivePositioning.value) {
+    fcAvailable = result.direction.FC;
+  } else if (effectiveReverse.value) {
+    dcAvailable = result.direction.DC;
+  } else {
+    dcAvailable = result.direction.DC;
+    fcAvailable = result.direction.FC;
+  }
+  const proceed = dcAvailable || fcAvailable;
 
   if (proceed) {
     startBeforeLoading.value = false;
     startBeforeTestFinshed.value = true;
-    availableDirections.value = {
-      DC: !effectivePositioning.value && effectiveReverse.value,
-      FC: effectivePositioning.value,
-    };
+    availableDirections.value = { DC: dcAvailable, FC: fcAvailable };
     diagnosisMessages.value = result.direction.diagnosis;
     completedDirections.value = new Set();
     initTestResults();
