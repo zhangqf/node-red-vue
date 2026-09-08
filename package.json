@@ -105,6 +105,7 @@
     "node-red-contrib-uibuilder": "~7.7.3",
     "node-red-contrib-uuid": "~0.0.4",
     "node-red-node-sqlite": "~2.0.1",
+    "pinia": "^4.0.3",
     "vue": "^3.5.32",
     "vue-echarts": "^8.0.1",
     "vue-router": "^4.6.4",

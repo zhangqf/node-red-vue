@@ -9,6 +9,10 @@ import TestResults from "@/components/TestResults.vue";
 import { HTTP_URL, WEBSOCKET_URL } from "@/config/config";
 import { useRoute, useRouter } from "vue-router";
 import { useToast } from "@/composables/useToast";
+import { useDeviceLoad } from "@/composables/useDeviceLoad";
+import { useModbus } from "@/composables/useModbus";
+import { useMessageHandler } from "@/composables/useMessageHandler";
+import { useSendCmd } from "@/composables/useSendCmd";
 import {
   gen32BitArray,
   handleCalculate,
@@ -29,8 +33,8 @@ import {
   relayConfigList,
   StartPowerConfig,
   StartBeforeTestConfig,
-  contact24Closed,
-  contact13Closed,
+  // contact24Closed,
+  // contact13Closed,
   DEFAULT_THRESHOLD,
   DEFAULT_CURVE_THRESHOLD,
 } from "@/utils/config";
@@ -45,14 +49,193 @@ import { speak } from "@/utils/speech";
 const route = useRoute();
 const router = useRouter();
 const { withLoading, showToast } = useToast();
+const {
+  active,
+  device,
+  combinationName,
+  deviceType,
+  configName,
+  contact13Closed,
+  contact24Closed,
+  channelConfigs,
+  resistanceThresholds,
+  curveThresholds,
+  itemConfig,
+  getCodeDeviceList,
+  getList,
+  deviceId,
+  combinationId,
+  configId,
+  codeName,
+  routeCloseType,
+} = useDeviceLoad();
 
+/* ws消息处理 */
 const ws = useSocket(WEBSOCKET_URL);
 ws.connect();
+
+const { registerEvent } = useMessageHandler({
+  ws,
+  maxHistory: 400,
+});
+
+registerEvent("modbusStatus", (data: Record<string, string>) => {
+  funWsStatus(data);
+});
+
+registerEvent("modbusRealData", (data: Record<string, string>) => {
+  funWsRealData(data);
+});
+
+registerEvent("ThreePhaseACCollector", (data: Record<string, number[]>) => {
+  funThreePhaseACCollector(data.value as number[]);
+});
+
+const isThreePhase = ref(false);
+const isAction = ref(false);
+
+/* 电流归零检测：1.5s 内持续为 0 则立即结束动作 */
+const checkZeroCurrent = () => {
+  if (!isAction.value) return;
+  const isZero = isThreePhase.value
+    ? phaseACurrent.value === 0 &&
+      phaseBCurrent.value === 0 &&
+      phaseCCurrent.value === 0
+    : (lastRegisterArr.value[0] ?? 0) === 0;
+
+  if (isZero) {
+    if (zeroSince === null) {
+      zeroSince = performance.now();
+    } else if (currentActionKey && performance.now() - zeroSince >= 1500) {
+      finishAction(currentActionKey);
+    }
+  } else {
+    zeroSince = null;
+  }
+};
+
+/* 动作继电器 */
+const handleActionRelays = (data: Record<string, any>) => {
+  const rawCoil = Array.isArray(data.data) ? data.data : [];
+  const coilArr = rawCoil.map((item: number) => (item ? 1 : 0));
+  let idxArr =
+    StartPowerConfig[deviceType.value as keyof typeof StartPowerConfig];
+  //  console.log(idxArr)
+
+  // 模拟继电器状态
+  // const tempArr = new Array(32).fill(0)
+  // tempArr[31] = 1
+  // tempArr[30] = 1
+  powerStatus.value = powerStatusJudgmen(coilArr, idxArr);
+
+  lastCoilArr.value = coilArr.slice(0, terminals.value.length);
+};
+
+/* 表示继电器 */
+const handleExpressRelays = (data: Record<string, any>) => {
+  //  if (isAction.value) {
+  return handleWsRelayData(data.data);
+  // }
+};
+
+/* 采集直流曲线 */
+const handleCollectDCCurve = (data: Record<string, any>) => {
+  const rawReg: number[] = Array.isArray(data.data) ? data.data : [];
+  tempDate.unshift(rawReg);
+
+  // 限制最大20条，超出截断
+  if (tempDate.length > 5) {
+    tempDate = tempDate.slice(0, 5);
+  }
+  if (isAction.value) {
+    tempDate.forEach((element) => {
+      lastRegisterArr.value = element;
+    });
+    checkZeroCurrent();
+  }
+};
+
+/*
+  启动前测试表示
+  */
+const handleStartBeforeTestExpress = (data: Record<string, any>) => {
+  if (!startBeforeLoading.value) return;
+  const r = mergeResistance(data.data);
+  const result = startBeforeTestExpress(
+    r,
+    deviceType.value,
+    currentChannelConfig.value,
+    currentThreshold.value,
+  );
+  // 解析电路图 URL
+  const resolveImg = (field: string) => {
+    const circuits = handleFindCollect(field);
+    return circuits?.img?.[field] || "";
+  };
+  result.dcResult.forEach((r) => {
+    r.circuitImg = resolveImg(r.circuitField);
+  });
+  result.fcResult.forEach((r) => {
+    r.circuitImg = resolveImg(r.circuitField);
+  });
+  startBeforeTestTips.value = result;
+
+  // 放行判断：完全由电阻判定结果决定，与定位/反位表示无关，
+  // 定操(DC)或反操(FC)任一方向电阻判定通过即可进入下一步
+  const dcAvailable = result.direction.DC;
+  const fcAvailable = result.direction.FC;
+  const proceed = dcAvailable || fcAvailable;
+
+  if (proceed) {
+    startBeforeLoading.value = false;
+    startBeforeTestFinshed.value = true;
+    availableDirections.value = { DC: dcAvailable, FC: fcAvailable };
+    diagnosisMessages.value = result.direction.diagnosis;
+    completedDirections.value = new Set();
+    initTestResults();
+  } else {
+    // 未通过：保持 startBeforeLoading=true，继续接收实时电阻数据反复判断
+    startBeforeTestFinshed.value = false;
+    availableDirections.value = { DC: false, FC: false };
+    diagnosisMessages.value = result.direction.diagnosis;
+  }
+};
+
+/* useModbus */
+const {
+  modbusStatus,
+  temperature,
+  phaseACurrent,
+  phaseBCurrent,
+  phaseCCurrent,
+  phasePower,
+  lastCoilArr,
+  funThreePhaseACCollector,
+  funWsRealData,
+  funWsStatus,
+} = useModbus({
+  deviceType,
+  isAction,
+  isThreePhase,
+  checkZeroCurrent,
+  handleActionRelays,
+  handleExpressRelays,
+  handleCollectDCCurve,
+  handleStartBeforeTestExpress,
+  speak,
+  handleCalculate,
+});
+
+/* 发送命令 */
+
+const { sendCmd } = useSendCmd({
+  ws,
+});
 
 // 原始websocket消息
 const rawWsMsg = ref<string | null>(null);
 // 分别缓存线圈、寄存器最新有效值
-const lastCoilArr = ref<number[]>([]);
+// const lastCoilArr = ref<number[]>([]);
 const lastRegisterArr = ref<number[]>([]);
 const configActionRelays = ref<ActionRelays | null>(null);
 
@@ -66,12 +249,12 @@ const lockStatus = ref<Record<string, boolean>>({
   PrimaryTransmissionPositioning: false,
 });
 
-const modbusStatus = ref();
-const temperature = ref(0);
-const phaseACurrent = ref(0);
-const phaseBCurrent = ref(0);
-const phaseCCurrent = ref(0);
-const phasePower = ref(0);
+// const modbusStatus = ref();
+// const temperature = ref(0);
+// const phaseACurrent = ref(0);
+// const phaseBCurrent = ref(0);
+// const phaseCCurrent = ref(0);
+// const phasePower = ref(0);
 
 const testResults = ref<TestItem[]>([]);
 
@@ -88,13 +271,7 @@ const registerArrB = ref<number[]>([]);
 const registerArrC = ref<number[]>([]);
 
 // 功率数组
-const powerArr = ref<number[]>([]);
-
-const device = ref({
-  name: "",
-});
-const combinationName = ref("");
-const configName = ref("");
+// const powerArr = ref<number[]>([]);
 
 const showContactDialog = ref(
   route.query.opeModel !== "code" && route.query.universal !== "true",
@@ -118,7 +295,7 @@ const powerData = ref({
 });
 const butItemStatus = ref("");
 
-const itemConfig = ref<any[]>([]);
+// const itemConfig = ref<any[]>([]);
 
 export type RelayKey = string;
 
@@ -126,16 +303,17 @@ const terminals = ref<any[]>([]);
 
 const wsSendData = ref<number[] | null>(null);
 
-const active = ref<string>("");
+// const active = ref<string>("");
 
-const deviceId = route.params.deviceId as string;
-const combinationId = ref(route.params.combinationId as string);
-const configId = ref(route.params.configId as string);
+deviceId.value = route.params.deviceId as string;
+combinationId.value = route.params.combinationId as string;
+configId.value = route.params.configId as string;
 
 const opeModel = route.query.opeModel as string;
-const codeName = route.query.name as string;
+codeName.value = route.query.name as string;
 const isUniversalMode = route.query.universal === "true";
-const routeCloseType = route.query.closeType as string;
+routeCloseType.value = route.query.closeType as string;
+console.log(routeCloseType.value, "routeCloseType.value");
 const indicationRelay = ref<any[]>([]);
 
 const startBeforeTestFinshed = ref(false);
@@ -182,9 +360,7 @@ const reverseTrue = computed(() => {
 
 // 定位/反位表示灯的显示：定位成功优先，只显示定位；反位仅在定位失败时显示
 const showPositioning = computed(() => positioningTrue.value);
-const showReverse = computed(
-  () => !positioningTrue.value && reverseTrue.value,
-);
+const showReverse = computed(() => !positioningTrue.value && reverseTrue.value);
 
 // 定操/反操视角始终显示，不再依赖定位/反位表示
 const showDCGroup = computed(() => true);
@@ -295,190 +471,149 @@ const powerStatus = ref({
   desc: "",
 });
 
-/* 动作继电器 */
-const handleActionRelays = (data: Record<string, any>) => {
-  const rawCoil = Array.isArray(data.data) ? data.data : [];
-  const coilArr = rawCoil.map((item: number) => (item ? 1 : 0));
-  let idxArr =
-    StartPowerConfig[deviceType.value as keyof typeof StartPowerConfig];
-  //  console.log(idxArr)
-
-  // 模拟继电器状态
-  // const tempArr = new Array(32).fill(0)
-  // tempArr[31] = 1
-  // tempArr[30] = 1
-  powerStatus.value = powerStatusJudgmen(coilArr, idxArr);
-
-  lastCoilArr.value = coilArr.slice(0, terminals.value.length);
-};
-
 const startBeforeTestTips = ref<{
   dcResult: any[];
   fcResult: any[];
   direction: { DC: boolean; FC: boolean; diagnosis: string[] };
 } | null>(null);
 
-/* 表示继电器 */
-const handleExpressRelays = (data: Record<string, any>) => {
-  //  if (isAction.value) {
-  return handleWsRelayData(data.data);
-  // }
-};
+// /*
+//   启动前测试表示
+//   */
+// const handleStartBeforeTestExpress = (data: Record<string, any>) => {
+//   if (!startBeforeLoading.value) return;
+//   const r = mergeResistance(data.data);
+//   const result = startBeforeTestExpress(
+//     r,
+//     deviceType.value,
+//     currentChannelConfig.value,
+//     currentThreshold.value,
+//   );
+//   // 解析电路图 URL
+//   const resolveImg = (field: string) => {
+//     const circuits = handleFindCollect(field);
+//     return circuits?.img?.[field] || "";
+//   };
+//   result.dcResult.forEach((r) => {
+//     r.circuitImg = resolveImg(r.circuitField);
+//   });
+//   result.fcResult.forEach((r) => {
+//     r.circuitImg = resolveImg(r.circuitField);
+//   });
+//   startBeforeTestTips.value = result;
 
-/* 采集直流曲线 */
-const handleCollectDCCurve = (data: Record<string, any>) => {
-  const rawReg: number[] = Array.isArray(data.data) ? data.data : [];
-  tempDate.unshift(rawReg);
+//   // 放行判断：完全由电阻判定结果决定，与定位/反位表示无关，
+//   // 定操(DC)或反操(FC)任一方向电阻判定通过即可进入下一步
+//   const dcAvailable = result.direction.DC;
+//   const fcAvailable = result.direction.FC;
+//   const proceed = dcAvailable || fcAvailable;
 
-  // 限制最大20条，超出截断
-  if (tempDate.length > 5) {
-    tempDate = tempDate.slice(0, 5);
-  }
-  if (isAction.value) {
-    tempDate.forEach((element) => {
-      lastRegisterArr.value = element;
-    });
-    checkZeroCurrent();
-  }
-};
+//   if (proceed) {
+//     startBeforeLoading.value = false;
+//     startBeforeTestFinshed.value = true;
+//     availableDirections.value = { DC: dcAvailable, FC: fcAvailable };
+//     diagnosisMessages.value = result.direction.diagnosis;
+//     completedDirections.value = new Set();
+//     initTestResults();
+//   } else {
+//     // 未通过：保持 startBeforeLoading=true，继续接收实时电阻数据反复判断
+//     startBeforeTestFinshed.value = false;
+//     availableDirections.value = { DC: false, FC: false };
+//     diagnosisMessages.value = result.direction.diagnosis;
+//   }
+// };
 
-/*
-  启动前测试表示
-  */
-const handleStartBeforeTestExpress = (data: Record<string, any>) => {
-  if (!startBeforeLoading.value) return;
-  const r = mergeResistance(data.data);
-  const result = startBeforeTestExpress(
-    r,
-    deviceType.value,
-    currentChannelConfig.value,
-    currentThreshold.value,
-  );
-  // 解析电路图 URL
-  const resolveImg = (field: string) => {
-    const circuits = handleFindCollect(field);
-    return circuits?.img?.[field] || "";
-  };
-  result.dcResult.forEach((r) => {
-    r.circuitImg = resolveImg(r.circuitField);
-  });
-  result.fcResult.forEach((r) => {
-    r.circuitImg = resolveImg(r.circuitField);
-  });
-  startBeforeTestTips.value = result;
-
-  // 放行判断：完全由电阻判定结果决定，与定位/反位表示无关，
-  // 定操(DC)或反操(FC)任一方向电阻判定通过即可进入下一步
-  const dcAvailable = result.direction.DC;
-  const fcAvailable = result.direction.FC;
-  const proceed = dcAvailable || fcAvailable;
-
-  if (proceed) {
-    startBeforeLoading.value = false;
-    startBeforeTestFinshed.value = true;
-    availableDirections.value = { DC: dcAvailable, FC: fcAvailable };
-    diagnosisMessages.value = result.direction.diagnosis;
-    completedDirections.value = new Set();
-    initTestResults();
-  } else {
-    // 未通过：保持 startBeforeLoading=true，继续接收实时电阻数据反复判断
-    startBeforeTestFinshed.value = false;
-    availableDirections.value = { DC: false, FC: false };
-    diagnosisMessages.value = result.direction.diagnosis;
-  }
-};
-
-const funWsRealData = (data: Record<string, string | number>) => {
-  let unitId = data.unitId;
-  switch (unitId) {
-    // case 1:
-    // case 2:
-    //   handleActionRelays(data);
-    //   break;
-    case 1:
-      if (deviceType.value === "ZYJ7" || deviceType.value === "ZDJ9") return;
-      handleActionRelays(data);
-      break;
-    case 2:
-      if (deviceType.value === "ZD6" || deviceType.value === "ZD9") return;
-      handleActionRelays(data);
-      break;
-    case 3:
-      // 表示
-      handleExpressRelays(data);
-      break;
-    case 4:
-      // 采集220曲线
-      handleCollectDCCurve(data);
-      break;
-    case 6:
-      handleStartBeforeTestExpress(data);
-      break;
-    default:
-      console.warn("未知 unitId:", unitId);
-  }
-};
+// const funWsRealData = (data: Record<string, string | number>) => {
+//   let unitId = data.unitId;
+//   switch (unitId) {
+//     // case 1:
+//     // case 2:
+//     //   handleActionRelays(data);
+//     //   break;
+//     case 1:
+//       if (deviceType.value === "ZYJ7" || deviceType.value === "ZDJ9") return;
+//       handleActionRelays(data);
+//       break;
+//     case 2:
+//       if (deviceType.value === "ZD6" || deviceType.value === "ZD9") return;
+//       handleActionRelays(data);
+//       break;
+//     case 3:
+//       // 表示
+//       handleExpressRelays(data);
+//       break;
+//     case 4:
+//       // 采集220曲线
+//       handleCollectDCCurve(data);
+//       break;
+//     case 6:
+//       handleStartBeforeTestExpress(data);
+//       break;
+//     default:
+//       console.warn("未知 unitId:", unitId);
+//   }
+// };
 
 const speakDelayTime = ref(0);
 
-const funWsStatus = (data: Record<string, string>) => {
-  if (!data.connected) {
-    lastCoilArr.value = [];
-    isThreePhase.value = false;
-  }
-  if (!data.connected && speakDelayTime.value <= 0) {
-    speak("通讯异常，请检查通讯连接或设备状态");
-  }
-  speakDelayTime.value++;
-  if (speakDelayTime.value >= 7) {
-    speakDelayTime.value = 0;
-  }
-  modbusStatus.value = data;
-};
+// const funWsStatus = (data: Record<string, string>) => {
+//   if (!data.connected) {
+//     lastCoilArr.value = [];
+//     isThreePhase.value = false;
+//   }
+//   if (!data.connected && speakDelayTime.value <= 0) {
+//     speak("通讯异常，请检查通讯连接或设备状态");
+//   }
+//   speakDelayTime.value++;
+//   if (speakDelayTime.value >= 7) {
+//     speakDelayTime.value = 0;
+//   }
+//   modbusStatus.value = data;
+// };
 
-/* 三相采集模块初级处理 */
-const funThreePhaseACCollector = (data: number[] | undefined) => {
-  if (!data) return;
-  if (deviceType.value !== "ZYJ7" && deviceType.value !== "ZDJ9") return;
-  isThreePhase.value = true;
-  temperature.value = handleCalculate(data[4] ?? 0, 100);
-  phaseACurrent.value = handleCalculate(data[8] ?? 0, 1000);
-  phaseBCurrent.value = handleCalculate(data[9] ?? 0, 1000);
-  phaseCCurrent.value = handleCalculate(data[10] ?? 0, 1000);
-  phasePower.value = handleCalculate(data[15] ?? 0, 10000);
+// /* 三相采集模块初级处理 */
+// const funThreePhaseACCollector = (data: number[] | undefined) => {
+//   if (!data) return;
+//   if (deviceType.value !== "ZYJ7" && deviceType.value !== "ZDJ9") return;
+//   isThreePhase.value = true;
+//   temperature.value = handleCalculate(data[4] ?? 0, 100);
+//   phaseACurrent.value = handleCalculate(data[8] ?? 0, 1000);
+//   phaseBCurrent.value = handleCalculate(data[9] ?? 0, 1000);
+//   phaseCCurrent.value = handleCalculate(data[10] ?? 0, 1000);
+//   phasePower.value = handleCalculate(data[15] ?? 0, 10000);
 
-  if (isAction.value) {
-    registerArrA.value = [phaseACurrent.value];
-    registerArrB.value = [phaseBCurrent.value];
-    registerArrC.value = [phaseCCurrent.value];
-    powerArr.value = [phasePower.value];
-    checkZeroCurrent();
-  }
-};
+//   if (isAction.value) {
+//     registerArrA.value = [phaseACurrent.value];
+//     registerArrB.value = [phaseBCurrent.value];
+//     registerArrC.value = [phaseCCurrent.value];
+//     powerArr.value = [phasePower.value];
+//     checkZeroCurrent();
+//   }
+// };
 
 // 监听ws消息，自动更新对应缓存，另一个数组保留旧值
-watch(
-  () => ws.message.value,
-  (newMsg) => {
-    rawWsMsg.value = newMsg;
-    const data = parseWsData(newMsg);
-    if (!data) return;
-    if (data && data.sendData) {
-      switch (data.sendData.type) {
-        case "modbusStatus":
-          funWsStatus(data.sendData);
-          break;
-        case "modbusRealData":
-          funWsRealData(data.sendData);
-          break;
-        case "ThreePhaseACCollector":
-          funThreePhaseACCollector(data.sendData.value);
-          break;
-      }
-    }
-  },
-  { immediate: true },
-);
+// watch(
+//   () => ws.message.value,
+//   (newMsg) => {
+//     rawWsMsg.value = newMsg;
+//     const data = parseWsData(newMsg);
+//     if (!data) return;
+//     if (data && data.sendData) {
+//       switch (data.sendData.type) {
+//         case "modbusStatus":
+//           funWsStatus(data.sendData);
+//           break;
+//         case "modbusRealData":
+//           funWsRealData(data.sendData);
+//           break;
+//         case "ThreePhaseACCollector":
+//           funThreePhaseACCollector(data.sendData.value);
+//           break;
+//       }
+//     }
+//   },
+//   { immediate: true },
+// );
 
 // 线圈计算属性：永远返回缓存的最新线圈数据，不会清空
 const coilArr = computed(() => lastCoilArr.value);
@@ -499,11 +634,17 @@ const handleContactDialogSelect = (type: string) => {
 const handleBack = () => {
   const result = terminals.value.map(() => 0);
   wsSendData.value = gen32BitArray(result, []);
-  sendCmd(wsSendData.value, "relays", deviceType.value);
+  // sendCmd(wsSendData.value, "relays", deviceType.value);
+  sendCmd("relays", {
+    value: wsSendData.value,
+    deviceType: deviceType.value,
+  });
+  ws.close();
   router.back();
 };
 
 async function getConfig(itemType: string) {
+  console.log(itemType, "itemType");
   try {
     const response = await fetch(HTTP_URL + "/getConfigRelays/" + itemType, {
       method: "get",
@@ -516,7 +657,11 @@ async function getConfig(itemType: string) {
     // WS 连上后先发端子默认状态（不带电源），电源等用户点击"开启动作电源"时再发
     const initResult = terminals.value.map((item) => item.default_status);
     wsSendData.value = gen32BitArray(initResult, []);
-    sendCmd(wsSendData.value, "relays", deviceType.value);
+    // sendCmd(, "relays", deviceType.value);
+    sendCmd("relays", {
+      value: wsSendData.value,
+      deviceType: deviceType.value,
+    });
   } catch (e) {
     console.error("加载配置失败:", e);
     terminals.value = [];
@@ -524,6 +669,7 @@ async function getConfig(itemType: string) {
 }
 
 watch(active, (newkey) => {
+  console.log("active changed:", newkey);
   if (!newkey) return;
   getConfig(newkey);
 });
@@ -587,7 +733,7 @@ const handleStart = () => {
     // 紧急停止：全关，不包含电源位
     const result = terminals.value.map(() => 0);
     wsSendData.value = gen32BitArray(result, []);
-    sendCmd(wsSendData.value, "relays", deviceType.value);
+    // sendCmd(wsSendData.value, "relays", deviceType.value);
 
     // 回到启动前测试初始状态
     resetToStartBeforeTest();
@@ -616,7 +762,7 @@ const handleStartBeforeTest = () => {
 
   const result = gen32BitArray([], [...idxArr]);
 
-  sendCmd(result, "startBeforeTestRelays", deviceType.value);
+  // sendCmd(result, "startBeforeTestRelays", deviceType.value);
 };
 
 // 单个更新
@@ -682,7 +828,7 @@ function initTestResults(direction?: "DC" | "FC") {
   }
 }
 
-/* 
+/*
   闭合方式配置
 */
 const handleContact13Closed = () => {
@@ -729,9 +875,6 @@ const handleContactConfigClick = (type: string) => {
   }
   persistCloseType(type);
 };
-
-const isAction = ref(false);
-const isThreePhase = ref(false);
 
 /* 开始记录 */
 const startRecord = () => {
@@ -822,26 +965,6 @@ const finalizeAction = async (key: keyof ActionRelays) => {
   }
 };
 
-/* 电流归零检测：1.5s 内持续为 0 则立即结束动作 */
-const checkZeroCurrent = () => {
-  if (!isAction.value) return;
-  const isZero = isThreePhase.value
-    ? phaseACurrent.value === 0 &&
-      phaseBCurrent.value === 0 &&
-      phaseCCurrent.value === 0
-    : (lastRegisterArr.value[0] ?? 0) === 0;
-
-  if (isZero) {
-    if (zeroSince === null) {
-      zeroSince = performance.now();
-    } else if (currentActionKey && performance.now() - zeroSince >= 1500) {
-      finishAction(currentActionKey);
-    }
-  } else {
-    zeroSince = null;
-  }
-};
-
 /* 处理继电器动作 */
 const handleRelayAction = (key: keyof ActionRelays) => {
   const relay = configActionRelays.value![key];
@@ -879,21 +1002,21 @@ const handleDo = () => {
     StartPowerConfig[deviceType.value as keyof typeof StartPowerConfig];
   wsSendData.value = gen32BitArray(result, idxArr);
 
-  sendCmd(wsSendData.value, "relays", deviceType.value);
+  // sendCmd(wsSendData.value, "relays", deviceType.value);
 };
 
 /* 发送命令 */
-function sendCmd(data: number[] | null, type: string, deviceType?: string) {
-  console.log("发送命令", type, data, deviceType);
-  if (type === "startBeforeTestRelays" || type === "relays") {
-    console.log("发送继电器命令", type, data, deviceType);
-  }
-  ws.send({ type: type, value: data, deviceType: deviceType });
-}
+// function sendCmd(data: number[] | null, type: string, deviceType?: string) {
+//   console.log("发送命令", type, data, deviceType);
+//   if (type === "startBeforeTestRelays" || type === "relays") {
+//     console.log("发送继电器命令", type, data, deviceType);
+//   }
+//   ws.send({ type: type, value: data, deviceType: deviceType });
+// }
 
-// const updateConfigData = () => {
-//   wsSendData.value = result;
-// };
+const updateConfigData = () => {
+  wsSendData.value = result;
+};
 
 const butItemIsDisable = ref(false);
 
@@ -943,27 +1066,27 @@ const handleOpe = (type: string) => {
 };
 
 /* 设备类型 */
-const deviceType = ref("");
+// const deviceType = ref("");
 
 /* 通道电阻配置（全局，按 deviceType 匹配） */
-const channelConfigs = ref<{ device_type: string; config: ChannelExpect[] }[]>(
-  [],
-);
+// const channelConfigs = ref<{ device_type: string; config: ChannelExpect[] }[]>(
+//   [],
+// );
 const currentChannelConfig = computed<ChannelExpect[] | undefined>(() => {
   return channelConfigs.value.find((c) => c.device_type === deviceType.value)
     ?.config;
 });
 
 /* 阻值判定阈值（全局，按 deviceType 匹配） */
-const resistanceThresholds = ref<
-  {
-    device_type: string;
-    normal_min: number;
-    normal_max: number;
-    open_min: number;
-    short_max: number;
-  }[]
->([]);
+// const resistanceThresholds = ref<
+//   {
+//     device_type: string;
+//     normal_min: number;
+//     normal_max: number;
+//     open_min: number;
+//     short_max: number;
+//   }[]
+// >([]);
 const currentThreshold = computed<ResistanceThreshold>(() => {
   const t = resistanceThresholds.value.find(
     (c) => c.device_type === deviceType.value,
@@ -979,18 +1102,18 @@ const currentThreshold = computed<ResistanceThreshold>(() => {
 });
 
 /* 曲线判定阈值（全局，按 deviceType 匹配） */
-const curveThresholds = ref<
-  {
-    device_type: string;
-    current_peak_min: number;
-    current_peak_max: number;
-    current_zero_max: number;
-    min_points: number;
-    power_peak_min: number;
-    power_peak_max: number;
-    power_zero_max: number;
-  }[]
->([]);
+// const curveThresholds = ref<
+//   {
+//     device_type: string;
+//     current_peak_min: number;
+//     current_peak_max: number;
+//     current_zero_max: number;
+//     min_points: number;
+//     power_peak_min: number;
+//     power_peak_max: number;
+//     power_zero_max: number;
+//   }[]
+// >([]);
 const currentCurveThreshold = computed<CurveThreshold>(() => {
   const t = curveThresholds.value.find(
     (c) => c.device_type === deviceType.value,
@@ -1007,104 +1130,6 @@ const currentCurveThreshold = computed<CurveThreshold>(() => {
       }
     : DEFAULT_CURVE_THRESHOLD;
 });
-
-/* 获取列表数据 */
-async function getList() {
-  try {
-    const [
-      itemRes,
-      deviceRes,
-      comboRes,
-      configRes,
-      channelConfigRes,
-      thresholdRes,
-      curveThresholdRes,
-    ] = await Promise.all([
-      fetch(HTTP_URL + "/getConfig/" + deviceId + "/" + combinationId.value),
-      fetch(HTTP_URL + "/getDevice/" + deviceId),
-      fetch(HTTP_URL + "/getCombination/" + combinationId.value),
-      fetch(HTTP_URL + "/getConfigList/" + configId.value),
-      fetch(HTTP_URL + "/getChannelConfigs"),
-      fetch(HTTP_URL + "/getResistanceThresholds"),
-      fetch(HTTP_URL + "/getCurveThresholds"),
-    ]);
-
-    itemConfig.value = await itemRes.json();
-
-    if (itemConfig.value.length > 0) {
-      active.value = itemConfig.value.filter(
-        (v) => v.id === configId.value,
-      )[0].id;
-    }
-
-    const deviceData = await deviceRes.json();
-    device.value.name = deviceData.name || "";
-
-    const comboData = await comboRes.json();
-    combinationName.value = comboData.name || "";
-    deviceType.value = comboData.deviceType || "";
-    ws.send({ type: "setDeviceType", deviceType: deviceType.value });
-    const configData = await configRes.json();
-    // configActionRelays.value = configData.actionRelays || {};
-    contact13Closed.value = configData.contact13Closed || {};
-    contact24Closed.value = configData.contact24Closed || {};
-    configName.value = configData.name || "";
-
-    channelConfigs.value = await channelConfigRes.json();
-    resistanceThresholds.value = await thresholdRes.json();
-    curveThresholds.value = await curveThresholdRes.json();
-  } catch (e) {
-    console.error("加载数据失败:", e);
-    throw e;
-  }
-}
-
-/* 获取代码设备列表 */
-async function getCodeDeviceList() {
-  try {
-    const [
-      comboRes,
-      configRes,
-      channelConfigRes,
-      thresholdRes,
-      curveThresholdRes,
-    ] = await Promise.all([
-      fetch(HTTP_URL + "/getCombination/" + combinationId.value),
-      fetch(HTTP_URL + "/getConfigList/" + configId.value),
-      fetch(HTTP_URL + "/getChannelConfigs"),
-      fetch(HTTP_URL + "/getResistanceThresholds"),
-      fetch(HTTP_URL + "/getCurveThresholds"),
-    ]);
-
-    active.value = configId.value;
-    device.value.name = codeName;
-    const comboData = await comboRes.json();
-
-    combinationName.value = comboData.name || "";
-    deviceType.value = comboData.deviceType || "";
-    ws.send({ type: "setDeviceType", deviceType: deviceType.value });
-
-    const configData = await configRes.json();
-    // configActionRelays.value = configData.actionRelays || {};
-    contact13Closed.value = configData.contact13Closed || {};
-    contact24Closed.value = configData.contact24Closed || {};
-    configName.value = configData.name || "";
-
-    channelConfigs.value = await channelConfigRes.json();
-    resistanceThresholds.value = await thresholdRes.json();
-    curveThresholds.value = await curveThresholdRes.json();
-
-    if (
-      routeCloseType === "contact13Closed" ||
-      routeCloseType === "contact24Closed"
-    ) {
-      handleContactConfigClick(routeCloseType);
-    }
-  } catch (e) {
-    console.error("加载数据失败:", e);
-    throw e;
-  }
-}
 
 /* 电流曲线判定：峰值区间 + 末段归零 + 采样点数 */
 function judgeCurrentCurve(
@@ -1335,13 +1360,14 @@ onMounted(async () => {
   await withLoading(async () => {
     switch (opeModel) {
       case "code":
-        await getCodeDeviceList();
+        await getCodeDeviceList(handleContactConfigClick);
+        sendCmd("setDeviceType", { deviceType: deviceType.value, seq: 1 });
         break;
       default:
         await getList();
+        sendCmd("setDeviceType", { deviceType: deviceType.value, seq: 2 });
         break;
     }
-    // await getList();
   }, "数据加载成功");
 });
 </script>

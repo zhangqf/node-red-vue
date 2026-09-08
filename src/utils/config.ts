@@ -69,35 +69,6 @@ export const StartBeforeTestConfig = {
   ZDJ9: [13, 14, 15, 16, 17, 18, 19, 20, 23, 24, 25, 26, 27],
 };
 
-export const contact13Closed = ref<ActionRelays>({
-  DC: [],
-  FC: [],
-  DWBS: [],
-  EJCDDWBS: [],
-  EJCDFWBS: [],
-  FWBS: [],
-  YJCDDWBS: [],
-  YJCDFWBS: [],
-  DCB: [],
-  FCB: [],
-  DCC: [],
-  FCC: [],
-});
-export const contact24Closed = ref<ActionRelays>({
-  DC: [],
-  FC: [],
-  DWBS: [],
-  EJCDDWBS: [],
-  EJCDFWBS: [],
-  FWBS: [],
-  YJCDDWBS: [],
-  YJCDFWBS: [],
-  DCB: [],
-  FCB: [],
-  DCC: [],
-  FCC: [],
-});
-
 // ===== 4路阻值合并配置 =====
 // dcExpect / fcExpect: 该方向时期望的阻值状态
 // dcShortTip / fcShortTip: 定操/反操方向下混线(<0.5Ω)时的故障提示

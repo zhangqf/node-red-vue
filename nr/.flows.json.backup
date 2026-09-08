@@ -85,7 +85,9 @@
             "010538068717c445",
             "bd98acdecbf1659f",
             "ca862f075ce41d0c",
-            "b9fa938bcac61576"
+            "b9fa938bcac61576",
+            "de8f9e07acb965ab",
+            "dc2ec8f1fb892576"
         ],
         "x": 74,
         "y": 599,
@@ -426,12 +428,13 @@
             "d54c3d24b64be8a2",
             "ceab28bdc14f368c",
             "069b66a93b3c85a9",
-            "2be3e27f199091c5"
+            "2be3e27f199091c5",
+            "9a0e41ec6b4f676c"
         ],
         "x": 1194,
-        "y": 619,
+        "y": 599,
         "w": 912,
-        "h": 322
+        "h": 342
     },
     {
         "id": "cf823ce89da7f786",
@@ -991,7 +994,8 @@
         "y": 720,
         "wires": [
             [
-                "f6e9d7e097e60402"
+                "f6e9d7e097e60402",
+                "de8f9e07acb965ab"
             ]
         ]
     },
@@ -1171,7 +1175,7 @@
         "z": "e4bbd3713100fe17",
         "g": "a78c98a47184b2fa",
         "name": "1236",
-        "func": "const deviceType = flow.get(\"deviceType\") || \"\";\nconst isZYJ7orZDJ9 = deviceType === \"ZYJ7\" || deviceType === \"ZDJ9\";\n\nconst allDevices = [\n  { fc:1, unitid:1, address:0, quantity:32, name:\"ZD6\" },\n  { fc:1, unitid:2, address:0, quantity:32, name:\"ZYJ7\" },\n  { fc:2, unitid:3, address:0, quantity:16, name:\"表示\" },\n  { fc:3, unitid:6, address:0, quantity:16, name:\"电阻\" }\n];\n\nconst deviceList = allDevices.filter(d => {\n    if (isZYJ7orZDJ9 && d.unitid === 1) return false;\n    if (!isZYJ7orZDJ9 && d.unitid === 2) return false;\n    return true;\n});\n\nlet idx = context.get(\"idx\") || 0;\nif (idx >= deviceList.length) idx = 0;\nconst dev = deviceList[idx];\nmsg.modbus = {};\nmsg.payload = {\n    fc: dev.fc,\n    unitid: dev.unitid,\n    address: dev.address,\n    quantity: dev.quantity\n};\nmsg.deviceName = dev.name;\nidx = idx + 1;\nif (idx >= deviceList.length) idx = 0;\ncontext.set(\"idx\", idx);\nreturn msg;",
+        "func": "const deviceType = flow.get(\"deviceType\") || \"\";\nconst isZYJ7orZDJ9 = deviceType === \"ZYJ7\" || deviceType === \"ZDJ9\";\n\nconst allDevices = [\n  { fc:1, unitid:1, address:0, quantity:32, name:\"ZD6\" },\n  { fc:1, unitid:2, address:0, quantity:32, name:\"ZYJ7\" },\n  { fc:2, unitid:3, address:0, quantity:16, name:\"表示\" },\n  { fc:3, unitid:6, address:0, quantity:16, name:\"电阻\" }\n];\n\nconst deviceList = allDevices.filter(d => {\n    if (isZYJ7orZDJ9 && d.unitid === 1) return false;\n    if (!isZYJ7orZDJ9 && d.unitid === 2) return false;\n    return true;\n});\n\nlet idx = context.get(\"idx\") || 0;\nif (idx >= deviceList.length) idx = 0;\nconst dev = deviceList[idx];\nmsg.modbus = {};\nmsg.payload = {\n    fc: dev.fc,\n    seq:flow.get('seq'),\n    unitid: dev.unitid,\n    address: dev.address,\n    quantity: dev.quantity\n};\nmsg.deviceName = dev.name;\nidx = idx + 1;\nif (idx >= deviceList.length) idx = 0;\ncontext.set(\"idx\", idx);\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -4007,7 +4011,8 @@
                 "bd98acdecbf1659f"
             ],
             [
-                "setDeviceTypeHandler"
+                "setDeviceTypeHandler",
+                "dc2ec8f1fb892576"
             ]
         ]
     },
@@ -4017,7 +4022,7 @@
         "z": "e4bbd3713100fe17",
         "g": "9e2d670578adbe41",
         "name": "设置设备类型",
-        "func": "if (msg.deviceType) {\n    flow.set(\"deviceType\", msg.deviceType);\n}\nreturn msg;",
+        "func": "if (msg.payload.deviceType) {\n    flow.set(\"deviceType\", msg.payload.deviceType);\n    flow.set(\"seq\",msg.payload.seq)\n}\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -5183,7 +5188,8 @@
         "y": 720,
         "wires": [
             [
-                "30151d7bd9eec3f3"
+                "30151d7bd9eec3f3",
+                "9a0e41ec6b4f676c"
             ]
         ]
     },
@@ -5531,6 +5537,7 @@
         "id": "069b66a93b3c85a9",
         "type": "inject",
         "z": "e4bbd3713100fe17",
+        "d": true,
         "g": "264be9ece447ca9d",
         "name": "",
         "props": [
@@ -6706,5 +6713,62 @@
         "x": 3290,
         "y": 4160,
         "wires": []
+    },
+    {
+        "id": "de8f9e07acb965ab",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "9e2d670578adbe41",
+        "name": "debug 9",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 250,
+        "y": 800,
+        "wires": []
+    },
+    {
+        "id": "dc2ec8f1fb892576",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "9e2d670578adbe41",
+        "name": "debug 11",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 390,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "9a0e41ec6b4f676c",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "264be9ece447ca9d",
+        "name": "32路继电器",
+        "func": "\nconst data = new Array(32).fill(0)\n\ndata[0] = 1\ndata[3] = 1\ndata[4] = 1\ndata[5] = 1\ndata[6] = 1\ndata[7] = 1\n\nmsg.sendData = {\n    data,\n    type:\"modbusRealData\",\n    seq:flow.get('seq'),\n    unitId: 2,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\n\nreturn msg",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1550,
+        "y": 640,
+        "wires": [
+            [
+                "7410291c8a0585e6"
+            ]
+        ]
     }
 ]

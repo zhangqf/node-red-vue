@@ -1,5 +1,6 @@
 import { createApp } from "vue";
 import App from "./App.vue";
+import { createPinia } from "pinia";
 import router from "./router";
 import VChart from "vue-echarts";
 import * as echarts from "echarts/core";
@@ -39,6 +40,7 @@ echarts.use([
 
 const app = createApp(App);
 app.component("v-chart", VChart);
+app.use(createPinia());
 app.use(router);
 app.mount("#app");
 

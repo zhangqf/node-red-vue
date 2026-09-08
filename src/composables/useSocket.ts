@@ -4,6 +4,7 @@ export function useSocket(url: string) {
   let socket: WebSocket | null = null;
   const status = ref("未连接");
   const message = ref("");
+  let isManualClose = false; // 标记是否是手动关闭连接
 
   // 建立连接
   const connect = () => {
@@ -20,7 +21,9 @@ export function useSocket(url: string) {
     socket.onclose = () => {
       status.value = "断开";
       // 简单重连
-      setTimeout(connect, 2000);
+      if (!isManualClose) {
+        setTimeout(connect, 2000);
+      }
     };
   };
 
@@ -34,6 +37,7 @@ export function useSocket(url: string) {
 
   // 关闭
   const close = () => {
+    isManualClose = true; // 标记为手动关闭
     socket?.close();
   };
 
@@ -50,3 +54,5 @@ export function useSocket(url: string) {
     close,
   };
 }
+
+export type UseSocketReturn = ReturnType<typeof useSocket>;
