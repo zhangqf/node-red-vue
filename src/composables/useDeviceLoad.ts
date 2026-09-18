@@ -11,7 +11,7 @@ import { HTTP_URL, WEBSOCKET_URL } from "@/config/config";
 import type { ActionRelays } from "@/utils/interface";
 import { ref } from "vue";
 
-export function useDeviceLoad() {
+export function useDeviceLoad(ws: { connect: () => void }) {
   const active = ref<string>("");
   const device = ref<{ name: string }>({ name: "" });
   const combinationName = ref<string>("");
@@ -56,7 +56,7 @@ export function useDeviceLoad() {
   const configId = ref("");
   const codeName = ref("");
   const routeCloseType = ref("");
-
+  ws.connect();
   /* 获取代码设备列表 */
   async function getCodeDeviceList(
     handleContactConfigClick: (type: string) => void,

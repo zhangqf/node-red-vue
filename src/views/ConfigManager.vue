@@ -125,6 +125,7 @@ function removeRelay(index: number) {
 
 function toggleRelayStatus(index: number) {
   const r = form.value.relays[index];
+  if (!r) return;
   r.default_status = r.default_status === 1 ? 0 : 1;
 }
 
@@ -153,6 +154,7 @@ function removeIndicationRelay(index: number) {
 
 function toggleIndicationRelayStatus(index: number) {
   const r = form.value.indicationRelays[index];
+  if (!r) return;
   r.default_status = r.default_status === 1 ? 0 : 1;
 }
 
@@ -354,11 +356,12 @@ const deleteList = async (id: string) => {
 };
 
 async function remove(id: string) {
-  const delAction = withLoading(async () => {
-    const res = await deleteList(id);
-    configs.value = configs.value.filter((c) => c.id !== id);
-    return res;
-  }, "正在删除...");
+  const delAction = () =>
+    withLoading(async () => {
+      const res = await deleteList(id);
+      configs.value = configs.value.filter((c) => c.id !== id);
+      return res;
+    }, "正在删除...");
   try {
     await delAction();
   } catch (error: any) {

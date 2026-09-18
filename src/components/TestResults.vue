@@ -15,7 +15,7 @@ const props = withDefaults(
   defineProps<{
     tests?: TestItem[];
     modbusStatus?: {
-      connected: boolean;
+      connected?: boolean;
       msg?: string;
       color?: string;
     };

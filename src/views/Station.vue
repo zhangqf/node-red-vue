@@ -125,9 +125,9 @@ async function fetchDevices() {
   }
 }
 
-const combinationOptions = ref<string[]>([]);
-const configOptions = ref<string[]>([]);
-const typeOptions = ref<string[]>([]);
+const combinationOptions = ref<{ name: string }[]>([]);
+const configOptions = ref<{ name: string }[]>([]);
+const typeOptions = ref<{ typeName: string }[]>([]);
 async function fetchTemplateData() {
   try {
     const response = await fetch(HTTP_URL + "/getCombinationAndConfig", {
@@ -276,6 +276,7 @@ function parseRows(rows: Record<string, string>[]): Device[] {
   const imported: Device[] = [];
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
+    if (!row) continue;
     const name = String(
       row["name"] || row["Name"] || row["设备名称"] || row["设备名"] || "",
     ).trim();
@@ -317,13 +318,17 @@ async function parseCsvFile(file: File): Promise<Device[]> {
   if (lines.length < 2) {
     throw new Error("至少需要标题行和一条数据");
   }
-  const headers = lines[0]
+  const headerLine = lines[0];
+  if (!headerLine) throw new Error("至少需要标题行和一条数据");
+  const headers = headerLine
     .trim()
     .split(",")
     .map((h) => h.trim());
   const rows: Record<string, string>[] = [];
   for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i]
+    const line = lines[i];
+    if (!line) continue;
+    const cols = line
       .trim()
       .split(",")
       .map((c) => c.trim());
@@ -343,19 +348,20 @@ async function parseExcelFile(file: File): Promise<Device[]> {
   // 优先查找"设备信息" sheet，否则用第一个有数据的 sheet
   let sheetName = "设备信息";
   if (!wb.SheetNames.includes(sheetName)) {
-    sheetName =
-      wb.SheetNames.find((n) => {
-        const s = wb.Sheets[n];
-        const rows = XLSX.utils.sheet_to_json<Record<string, string>>(s, {
-          defval: "",
-          header: 1,
-        });
-        return rows.some((r: any) => String(r[0] || "").trim());
-      }) || wb.SheetNames[0];
+    const found = wb.SheetNames.find((n) => {
+      const s = wb.Sheets[n];
+      if (!s) return false;
+      const tryRows = XLSX.utils.sheet_to_json<Record<string, string>>(s, {
+        defval: "",
+        header: 1,
+      });
+      return tryRows.some((r: any) => String(r[0] || "").trim());
+    });
+    sheetName = found ?? wb.SheetNames[0] ?? "设备信息";
   }
-  if (!sheetName) throw new Error("文件中无工作表");
 
   const sheet = wb.Sheets[sheetName];
+  if (!sheet) throw new Error("文件中无工作表");
   const rows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, {
     defval: "",
   });

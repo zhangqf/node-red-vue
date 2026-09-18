@@ -157,7 +157,20 @@ function buildChartOpt(
     option.series = [makeLineSeries("电流", data, COLOR_SINGLE, 2)];
 
     if (data.length > 1 && chartWidth > 0) {
-      addMarkers(option, data, minVal, maxVal, padding, chartWidth, chartHeight, 55, 20, 50, COLOR_SINGLE, 11);
+      addMarkers(
+        option,
+        data,
+        minVal,
+        maxVal,
+        padding,
+        chartWidth,
+        chartHeight,
+        55,
+        20,
+        50,
+        COLOR_SINGLE,
+        11,
+      );
     }
   }
 
@@ -234,10 +247,24 @@ function buildThreePhaseChartOpt(
   const allData = [...dataA, ...dataB, ...dataC];
   const hasData = allData.length > 0;
 
-  let peakA = 0, valleyA = 0, peakB = 0, valleyB = 0, peakC = 0, valleyC = 0;
-  if (dataA.length > 0) { peakA = Math.max(...dataA); valleyA = Math.min(...dataA); }
-  if (dataB.length > 0) { peakB = Math.max(...dataB); valleyB = Math.min(...dataB); }
-  if (dataC.length > 0) { peakC = Math.max(...dataC); valleyC = Math.min(...dataC); }
+  let peakA = 0,
+    valleyA = 0,
+    peakB = 0,
+    valleyB = 0,
+    peakC = 0,
+    valleyC = 0;
+  if (dataA.length > 0) {
+    peakA = Math.max(...dataA);
+    valleyA = Math.min(...dataA);
+  }
+  if (dataB.length > 0) {
+    peakB = Math.max(...dataB);
+    valleyB = Math.min(...dataB);
+  }
+  if (dataC.length > 0) {
+    peakC = Math.max(...dataC);
+    valleyC = Math.min(...dataC);
+  }
 
   const maxVal = hasData ? Math.max(...allData, 0.01) : 10;
   const minVal = hasData ? Math.min(...allData, 0) : 0;
@@ -262,10 +289,17 @@ function buildThreePhaseChartOpt(
       const gh = chartHeight - G.top - G.bottom;
       const yRange = maxVal + padding - Math.max(0, minVal - padding) || 1;
       const yBase = Math.max(0, minVal - padding);
-      const toX = (i: number, len: number) => G.left + (len > 1 ? i / (len - 1) : 0) * gw;
+      const toX = (i: number, len: number) =>
+        G.left + (len > 1 ? i / (len - 1) : 0) * gw;
       const toY = (v: number) => G.top + (1 - (v - yBase) / yRange) * gh;
 
-      const mk = (idx: number, val: number, label: string, mkColor: string, len: number) => {
+      const mk = (
+        idx: number,
+        val: number,
+        label: string,
+        mkColor: string,
+        len: number,
+      ) => {
         if (len < 2) return;
         option.graphic.push(
           {
@@ -328,8 +362,8 @@ watch(
     const now = performance.now();
     if (!startTime.value) startTime.value = now;
     const elapsed = ((now - startTime.value) / 1000).toFixed(1);
-    history.value = [...history.value.slice(-MAX_POINTS + 1), current];
-    xLabels.value = [...xLabels.value.slice(-MAX_POINTS + 1), elapsed];
+    history.value = [...history.value.slice(-MAX_POINTS + 1), current!];
+    xLabels.value = [...xLabels.value.slice(-MAX_POINTS + 1), elapsed!];
   },
 );
 
@@ -380,10 +414,10 @@ watch(
     const now = performance.now();
     if (!startTime3.value) startTime3.value = now;
     const elapsed = ((now - startTime3.value) / 1000).toFixed(1);
-    historyA.value = [...historyA.value.slice(-MAX_POINTS + 1), a[0]];
+    historyA.value = [...historyA.value.slice(-MAX_POINTS + 1), a[0]!];
     historyB.value = [...historyB.value.slice(-MAX_POINTS + 1), b?.[0] ?? 0];
     historyC.value = [...historyC.value.slice(-MAX_POINTS + 1), c?.[0] ?? 0];
-    xLabels3.value = [...xLabels3.value.slice(-MAX_POINTS + 1), elapsed];
+    xLabels3.value = [...xLabels3.value.slice(-MAX_POINTS + 1), elapsed!];
   },
 );
 
@@ -433,7 +467,10 @@ function useChartSize(
     watch(
       container,
       (el) => {
-        if (obs) { obs.disconnect(); obs = null; }
+        if (obs) {
+          obs.disconnect();
+          obs = null;
+        }
         if (!el) return;
         const fn = () => {
           sizeRef.value = { width: el.clientWidth, height: el.clientHeight };
@@ -479,12 +516,23 @@ const resetData = () => {
 };
 
 defineExpose({
-  peakA, valleyA, peakB, valleyB, peakC, valleyC,
-  peakSingle, valleySingle,
+  peakA,
+  valleyA,
+  peakB,
+  valleyB,
+  peakC,
+  valleyC,
+  peakSingle,
+  valleySingle,
   isThreePhase,
-  resetSingle, resetThree, resetData,
-  currentHistory: history, xLabels,
-  currentHistoryA: historyA, currentHistoryB: historyB, currentHistoryC: historyC,
+  resetSingle,
+  resetThree,
+  resetData,
+  currentHistory: history,
+  xLabels,
+  currentHistoryA: historyA,
+  currentHistoryB: historyB,
+  currentHistoryC: historyC,
   xLabels3,
 });
 </script>
@@ -601,7 +649,13 @@ defineExpose({
   color: #bccfde;
 }
 
-.param-value.a { color: #f04b4b; }
-.param-value.b { color: #4dabf7; }
-.param-value.c { color: #51cf66; }
+.param-value.a {
+  color: #f04b4b;
+}
+.param-value.b {
+  color: #4dabf7;
+}
+.param-value.c {
+  color: #51cf66;
+}
 </style>

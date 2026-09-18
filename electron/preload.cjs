@@ -3,13 +3,33 @@ const { contextBridge, ipcRenderer } = require("electron");
 contextBridge.exposeInMainWorld("electronAPI", {
   platform: process.platform,
   appVersion: () => ipcRenderer.invoke("get-app-version"),
-  onUpdateStatus: (cb) => ipcRenderer.on("update-status", (_e, status) => cb(status)),
-  onUpdateProgress: (cb) => ipcRenderer.on("update-download-progress", (_e, info) => cb(info)),
-  onUpdateDownloaded: (cb) => ipcRenderer.on("update-downloaded", (_e, version) => cb(version)),
+  onUpdateStatus: (cb) =>
+    ipcRenderer.on("update-status", (_e, status) => cb(status)),
+  onUpdateProgress: (cb) =>
+    ipcRenderer.on("update-download-progress", (_e, info) => cb(info)),
+  onUpdateDownloaded: (cb) =>
+    ipcRenderer.on("update-downloaded", (_e, version) => cb(version)),
   onUpdateError: (cb) => ipcRenderer.on("update-error", (_e, msg) => cb(msg)),
   installUpdate: () => ipcRenderer.invoke("install-update"),
   // 权限管理
   getAuthConfig: () => ipcRenderer.invoke("get-auth-config"),
-  verifyAuthPassword: (password) => ipcRenderer.invoke("verify-auth-password", password),
-  setAuthPassword: (oldPassword, newPassword) => ipcRenderer.invoke("set-auth-password", oldPassword, newPassword),
+  verifyAuthPassword: (password) =>
+    ipcRenderer.invoke("verify-auth-password", password),
+  setAuthPassword: (oldPassword, newPassword) =>
+    ipcRenderer.invoke("set-auth-password", oldPassword, newPassword),
+
+  // fetchConfig: (url, options) =>
+  //   ipcRenderer.invoke("fetch-config", url, options),
+  // fetchDevice: (url, options) =>
+  //   ipcRenderer.invoke("fetch-device", url, options),
+  // fetchCombination: (url, options) =>
+  //   ipcRenderer.invoke("fetch-combination", url, options),
+  // fetchConfigList: (url, options) =>
+  //   ipcRenderer.invoke("fetch-config-list", url, options),
+  // fetchChannelConfigs: (url, options) =>
+  //   ipcRenderer.invoke("fetch-channel-configs", url, options),
+  // fetchResistanceThresholds: (url, options) =>
+  //   ipcRenderer.invoke("fetch-resistance-thresholds", url, options),
+  // fetchCurveThresholds: (url, options) =>
+  //   ipcRenderer.invoke("fetch-curve-thresholds", url, options),
 });

@@ -25,48 +25,48 @@ const updateProgress = ref(0);
 const updateSpeed = ref("");
 const updateError = ref("");
 
-onMounted(async () => {
-  const api = window.electronAPI;
-  if (!api) return;
-  api.appVersion?.().then((v: string) => { currentVersion.value = v; });
+// onMounted(async () => {
+//   const api = window.electronAPI;
+//   if (!api) return;
+//   api.appVersion?.().then((v: string) => { currentVersion.value = v; });
 
-  api.onUpdateStatus?.((status) => {
-    if (status === "checking") {
-      updateChecking.value = true;
-      updateDownloading.value = false;
-      updateError.value = "";
-    } else if (status === "downloading") {
-      updateChecking.value = false;
-      updateDownloading.value = true;
-      updateProgress.value = 0;
-      updateSpeed.value = "";
-      updateError.value = "";
-    } else {
-      updateChecking.value = false;
-      updateDownloading.value = false;
-    }
-  });
-  api.onUpdateProgress?.((info) => {
-    updateProgress.value = info.percent;
-    const speed = info.bytesPerSecond / 1024;
-    updateSpeed.value =
-      speed >= 1024
-        ? `${(speed / 1024).toFixed(1)} MB/s`
-        : `${speed.toFixed(0)} KB/s`;
-  });
-  api.onUpdateDownloaded?.((version) => {
-    updateDownloading.value = false;
-    updateVersion.value = version;
-    updateReady.value = true;
-  });
-  api.onUpdateError?.((msg) => {
-    updateError.value = msg;
-  });
-});
+//   api.onUpdateStatus?.((status) => {
+//     if (status === "checking") {
+//       updateChecking.value = true;
+//       updateDownloading.value = false;
+//       updateError.value = "";
+//     } else if (status === "downloading") {
+//       updateChecking.value = false;
+//       updateDownloading.value = true;
+//       updateProgress.value = 0;
+//       updateSpeed.value = "";
+//       updateError.value = "";
+//     } else {
+//       updateChecking.value = false;
+//       updateDownloading.value = false;
+//     }
+//   });
+//   api.onUpdateProgress?.((info) => {
+//     updateProgress.value = info.percent;
+//     const speed = info.bytesPerSecond / 1024;
+//     updateSpeed.value =
+//       speed >= 1024
+//         ? `${(speed / 1024).toFixed(1)} MB/s`
+//         : `${speed.toFixed(0)} KB/s`;
+//   });
+//   api.onUpdateDownloaded?.((version) => {
+//     updateDownloading.value = false;
+//     updateVersion.value = version;
+//     updateReady.value = true;
+//   });
+//   api.onUpdateError?.((msg) => {
+//     updateError.value = msg;
+//   });
+// });
 
-function restartToUpdate() {
-  window.electronAPI?.installUpdate();
-}
+// function restartToUpdate() {
+//   window.electronAPI?.installUpdate();
+// }
 
 const homeRoutes = ["home", "station", "devices", "configure", "work"];
 const assetRoutes = [
@@ -133,7 +133,10 @@ watch(
 
 <template>
   <div class="app-shell">
-    <TopNav :active-menu="activeMenu" :app-version="currentVersion" @menu-click="onMenuClick" />
+    <TopNav
+      :active-menu="activeMenu"
+      :app-version="currentVersion"
+      @menu-click="onMenuClick" />
     <router-view />
     <GlobalToast />
     <AuthDialog
@@ -143,10 +146,15 @@ watch(
       @cancel="onDialogCancel" />
 
     <!-- 更新通知条 -->
-    <Transition name="update-slide">
-      <div v-if="!hideUpdateBar && (updateDownloading || updateReady)" class="update-bar">
+    <!-- <Transition name="update-slide">
+      <div
+        v-if="!hideUpdateBar && (updateDownloading || updateReady)"
+        class="update-bar">
         <template v-if="updateChecking">
-          <span class="update-text">正在检查更新... <span class="update-version-tag">v{{ currentVersion }}</span></span>
+          <span class="update-text"
+            >正在检查更新...
+            <span class="update-version-tag">v{{ currentVersion }}</span></span
+          >
         </template>
         <template v-else-if="updateDownloading">
           <span class="update-text">
@@ -177,7 +185,7 @@ watch(
           <button class="update-btn" @click="restartToUpdate">重启安装</button>
         </template>
       </div>
-    </Transition>
+    </Transition> -->
   </div>
 </template>
 

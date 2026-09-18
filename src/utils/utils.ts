@@ -283,7 +283,7 @@ export const startBeforeTestExpress = (
  */
 
 export const powerStatusJudgmen = (arr: number[], idxArr: number[]) => {
-  console.log(arr);
+  // console.log(arr);
   let allPullIn = true;
   for (const idx of idxArr) {
     if (idx < 0 || idx >= arr.length || arr[idx] !== 1) {
@@ -297,13 +297,28 @@ export const powerStatusJudgmen = (arr: number[], idxArr: number[]) => {
   };
 };
 
+/** collectConfig 中某型号的电路配置：img 为图片映射，其余键为电路路径字符串 */
+export interface CircuitConfig {
+  img: Record<string, string>;
+  [key: string]: string | Record<string, string>;
+}
+
+/** 取配置里某字段的电路路径字符串；该键非字符串（如 img）时返回空串 */
+export const circuitPath = (
+  cfg: CircuitConfig | undefined,
+  field: string,
+): string => {
+  const v = cfg?.[field];
+  return typeof v === "string" ? v : "";
+};
+
 export function getCircuits(
   selectedContactType: string,
   series: string,
   model: string,
   cfg: string,
   field: string,
-) {
+): CircuitConfig | undefined {
   if (!series || !model || !cfg) return;
   const ser = ZD6Serial[model as keyof typeof ZD6Serial];
   const mod = ModelConfig[cfg as keyof typeof ModelConfig];
@@ -321,7 +336,7 @@ export function getCircuits(
   if (!serialConfig) return;
 
   const modelConfig = mod !== undefined ? serialConfig[mod] : undefined;
-  return modelConfig;
+  return modelConfig as CircuitConfig | undefined;
 }
 
 export function mergeResistance(data: number[]) {

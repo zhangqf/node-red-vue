@@ -38,7 +38,30 @@
       "Bash(node /tmp/fix_status.mjs)",
       "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('/Users/zhangfeng/project/node-red-vue/switch-machine/nr/flows.json','utf8'\\)\\); console.log\\('valid JSON'\\)\")",
       "Bash(node *)",
-      "Bash(echo \"---exit:$?\")"
+      "Bash(echo \"---exit:$?\")",
+      "Bash(find node_modules/.pnpm/node-red@4.1.11* -type d -iname \"*websocket*\")",
+      "Bash(find node_modules/.pnpm/node-red@4.1.11* -path \"*websocket*\" -name \"*.js\")",
+      "Bash(find node_modules/.pnpm/node-red@4.1.11*/node_modules/node-red -maxdepth 4 -type d)",
+      "Bash(find node_modules/.pnpm/node-red@4.1.11_typescript@6.0.3/node_modules/node-red -maxdepth 3 -type d -iname *websocket*)",
+      "Bash(find node_modules/.pnpm/node-red@4.1.11_typescript@6.0.3/node_modules/node-red -maxdepth 4 -type f '\\(' -name *.js -o -name *.html '\\)')",
+      "Bash(find node_modules/.pnpm/@node-red+nodes@4.1.11/node_modules/@node-red/nodes/core -iname *websocket* -o -iname *socket*)",
+      "Bash(git -C /Users/zhangfeng/project/node-red-vue/switch-machine diff --stat)",
+      "Bash(git -C /Users/zhangfeng/project/node-red-vue/switch-machine diff -- src)",
+      "Bash(sed -n '270,296p' src/views/BindingManager.vue)",
+      "Bash(sed -n '104,114p' src/views/CombinationManager.vue)",
+      "Bash(sed -n '100,110p' src/views/DeviceManager.vue)",
+      "Bash(sed -n '118,160p' src/views/ConfigManager.vue)",
+      "Bash(sed -n '355,366p' src/views/ConfigManager.vue)",
+      "Bash(sed -n '155,185p' src/views/Station.vue)",
+      "Bash(sed -n '275,330p' src/views/Station.vue)",
+      "Bash(sed -n '340,365p' src/views/Station.vue)",
+      "Bash(sed -n '424,432p' src/views/Station.vue)",
+      "Bash(npx vite *)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(curl -s \"http://localhost:5199/src/views/work.vue\" -o /tmp/work.compiled.js)",
+      "Bash(pkill -f \"vite --port 5199\")",
+      "Bash(lsof -nP -iTCP:1880 -sTCP:LISTEN)",
+      "Bash(lsof -nP -iTCP:1881 -sTCP:LISTEN)"
     ]
   }
 }

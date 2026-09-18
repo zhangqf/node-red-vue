@@ -4,8 +4,9 @@ const isDev = process.env.NODE_ENV === "development";
 const nrDir = isDev ? __dirname : path.join(process.resourcesPath, "nr");
 
 module.exports = {
-  uiHost: "127.0.0.1",
-  uiPort: 1880,
+  // uiHost: "127.0.0.1",
+  uiHost: "0.0.0.0",
+  uiPort: "1880",
   flowFile: path.join(nrDir, "flows.json"),
   flowFilePretty: true,
   httpAdminRoot: "/",

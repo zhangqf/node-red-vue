@@ -1,10 +1,19 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, toRaw, toRef, watch } from "vue";
+import {
+  computed,
+  onMounted,
+  onUnmounted,
+  ref,
+  toRaw,
+  toRef,
+  watch,
+} from "vue";
 import { useSocket } from "@/composables/useSocket";
 import DeviceBar from "@/components/DeviceBar.vue";
 import CurrentCurve from "@/components/CurrentCurve.vue";
 import PowerCurve from "@/components/PowerCurve.vue";
 import TestResults from "@/components/TestResults.vue";
+import { buttonTips, buttonTitle } from "@/utils/button";
 
 import { HTTP_URL, WEBSOCKET_URL } from "@/config/config";
 import { useRoute, useRouter } from "vue-router";
@@ -12,7 +21,8 @@ import { useToast } from "@/composables/useToast";
 import { useDeviceLoad } from "@/composables/useDeviceLoad";
 import { useModbus } from "@/composables/useModbus";
 import { useMessageHandler } from "@/composables/useMessageHandler";
-import { useSendCmd } from "@/composables/useSendCmd";
+import { useTestFlow } from "@/composables/useTestFlow";
+import { useOperationLog } from "@/composables/useOperationLog";
 import {
   gen32BitArray,
   handleCalculate,
@@ -21,6 +31,7 @@ import {
   startBeforeTestExpress,
   powerStatusJudgmen,
   getCircuits,
+  circuitPath,
   mergeResistance,
 } from "@/utils/utils";
 import type {
@@ -45,10 +56,14 @@ import type {
 } from "@/utils/config";
 
 import { speak } from "@/utils/speech";
+import { useButton } from "@/composables/useButton";
 
 const route = useRoute();
 const router = useRouter();
 const { withLoading, showToast } = useToast();
+
+/* ws消息处理 */
+const ws = useSocket(WEBSOCKET_URL);
 const {
   active,
   device,
@@ -68,23 +83,103 @@ const {
   configId,
   codeName,
   routeCloseType,
-} = useDeviceLoad();
+} = useDeviceLoad(ws);
 
-/* ws消息处理 */
-const ws = useSocket(WEBSOCKET_URL);
-ws.connect();
+const flow = useTestFlow(ws);
+
+const { coilUnitId, handleCheckType } = useButton(flow);
+
+/* 操作日志抽屉 */
+const {
+  entries: logEntries,
+  clear: clearLog,
+  snapshot: snapshotLog,
+} = useOperationLog();
+const logDrawerOpen = ref(false);
+/** 单条日志的逐位展示数据：发送/响应各一排 0/1 格子，diff 位标红 */
+interface LogBit {
+  v: number;
+  diff: boolean;
+  missing: boolean;
+}
+const normalizeBits = (v: any): number[] | null =>
+  Array.isArray(v) ? v.map((x) => (x ? 1 : 0)) : null;
+
+/** 最新在前，每条记录展开为发送/响应两排位网格 */
+const logDisplay = computed(() => {
+  return logEntries.value
+    .slice()
+    .reverse()
+    .map((e) => {
+      const send = normalizeBits(e.detail?.sendValue);
+      const recv = normalizeBits(e.detail?.execValue);
+      const len = Math.max(send?.length ?? 0, recv?.length ?? 0);
+      const sendBits: LogBit[] = [];
+      const recvBits: LogBit[] = [];
+      for (let i = 0; i < len; i++) {
+        const s = send?.[i];
+        const r = recv?.[i];
+        const sMissing = s === undefined;
+        const rMissing = r === undefined;
+        const diff = !sMissing && !rMissing && s !== r;
+        sendBits.push({ v: s ?? 0, diff, missing: sMissing });
+        recvBits.push({ v: r ?? 0, diff, missing: rMissing });
+      }
+      const diffIndices: number[] = [];
+      for (let i = 0; i < len; i++) if (sendBits[i]?.diff) diffIndices.push(i);
+      return {
+        e,
+        sendBits,
+        recvBits,
+        hasSend: !!send,
+        hasRecv: !!recv,
+        diffIndices,
+      };
+    });
+});
+const bitClass = (b: LogBit) => {
+  if (b.missing) return "log-bit-missing";
+  if (b.diff) return "log-bit-diff";
+  return b.v ? "log-bit-on" : "log-bit-off";
+};
+const diffText = (indices: number[]) =>
+  indices.length ? `差异位:${indices.map((i) => i + 1).join(",")}` : "";
+const formatLogTime = (ts: number) =>
+  new Date(ts).toLocaleTimeString("zh-CN", { hour12: false });
+const logStatusText = (s: string) =>
+  s === "success"
+    ? "成功"
+    : s === "error"
+      ? "失败"
+      : s === "pending"
+        ? "待确认"
+        : "无读回";
+const onLogKeydown = (e: KeyboardEvent) => {
+  if (e.key === "Escape") logDrawerOpen.value = false;
+};
+onMounted(() => window.addEventListener("keydown", onLogKeydown));
+onUnmounted(() => window.removeEventListener("keydown", onLogKeydown));
 
 const { registerEvent } = useMessageHandler({
   ws,
   maxHistory: 400,
 });
 
+registerEvent("cmdAck", (data: any) => {
+  console.log(data);
+  flow.handleAck(data);
+});
+
 registerEvent("modbusStatus", (data: Record<string, string>) => {
   funWsStatus(data);
 });
 
-registerEvent("modbusRealData", (data: Record<string, string>) => {
-  funWsRealData(data);
+registerEvent("modbusRealData", (data: Record<string, any>) => {
+  console.log("modbusRealData", data);
+  flow.handleModbusRealData(data as any);
+  if (flow.isOk) {
+    funWsRealData(data);
+  }
 });
 
 registerEvent("ThreePhaseACCollector", (data: Record<string, number[]>) => {
@@ -188,14 +283,14 @@ const handleStartBeforeTestExpress = (data: Record<string, any>) => {
 
   if (proceed) {
     startBeforeLoading.value = false;
-    startBeforeTestFinshed.value = true;
+    flow.pass(); // START_BEFORE_TEST → POWER_ON
     availableDirections.value = { DC: dcAvailable, FC: fcAvailable };
     diagnosisMessages.value = result.direction.diagnosis;
     completedDirections.value = new Set();
     initTestResults();
   } else {
     // 未通过：保持 startBeforeLoading=true，继续接收实时电阻数据反复判断
-    startBeforeTestFinshed.value = false;
+    flow.fail(); // 停留 START_BEFORE_TEST
     availableDirections.value = { DC: false, FC: false };
     diagnosisMessages.value = result.direction.diagnosis;
   }
@@ -209,6 +304,7 @@ const {
   phaseBCurrent,
   phaseCCurrent,
   phasePower,
+  powerArr,
   lastCoilArr,
   funThreePhaseACCollector,
   funWsRealData,
@@ -226,11 +322,7 @@ const {
   handleCalculate,
 });
 
-/* 发送命令 */
-
-const { sendCmd } = useSendCmd({
-  ws,
-});
+/* 发送命令统一走 flow.sendCommand */
 
 // 原始websocket消息
 const rawWsMsg = ref<string | null>(null);
@@ -316,7 +408,11 @@ routeCloseType.value = route.query.closeType as string;
 console.log(routeCloseType.value, "routeCloseType.value");
 const indicationRelay = ref<any[]>([]);
 
-const startBeforeTestFinshed = ref(false);
+// 启动前测试是否完成：由状态机当前步骤推导，越过 START_BEFORE_TEST 即视为已完成
+const startBeforeTestFinshed = computed(() => {
+  const s = flow.currentStep.value;
+  return s !== "SETUP" && s !== "START_BEFORE_TEST";
+});
 const availableDirections = ref<{ DC: boolean; FC: boolean }>({
   DC: false,
   FC: false,
@@ -444,13 +540,21 @@ const handleWsRelayData = (data: number[]) => {
                   closed,
                 });
               }
-              relayTips.push({ name: v, path: resCollect[v], closed });
+              relayTips.push({
+                name: v,
+                path: circuitPath(resCollect, v),
+                closed,
+              });
               break;
             default:
-              relayTips.push({ name: v, path: resCollect[v], closed });
+              relayTips.push({
+                name: v,
+                path: circuitPath(resCollect, v),
+                closed,
+              });
           }
         } else {
-          relayTips.push({ name: v, path: resCollect?.[v] || "", closed });
+          relayTips.push({ name: v, path: circuitPath(resCollect, v), closed });
         }
       });
     }
@@ -631,14 +735,18 @@ const handleContactDialogSelect = (type: string) => {
   handleContactConfigClick(type);
   showContactDialog.value = false;
 };
-const handleBack = () => {
+const handleBack = async () => {
   const result = terminals.value.map(() => 0);
   wsSendData.value = gen32BitArray(result, []);
-  // sendCmd(wsSendData.value, "relays", deviceType.value);
-  sendCmd("relays", {
-    value: wsSendData.value,
-    deviceType: deviceType.value,
-  });
+  // 离开页面前尽力复位端子：等 ack 确认（最多 0.8s），不重发
+  await flow.sendCommand(
+    "relays",
+    {
+      value: wsSendData.value,
+      deviceType: deviceType.value,
+    },
+    { label: "复位端子状态", timeout: 800, retries: 0 },
+  );
   ws.close();
   router.back();
 };
@@ -657,11 +765,7 @@ async function getConfig(itemType: string) {
     // WS 连上后先发端子默认状态（不带电源），电源等用户点击"开启动作电源"时再发
     const initResult = terminals.value.map((item) => item.default_status);
     wsSendData.value = gen32BitArray(initResult, []);
-    // sendCmd(, "relays", deviceType.value);
-    sendCmd("relays", {
-      value: wsSendData.value,
-      deviceType: deviceType.value,
-    });
+    handleCheckType(wsSendData.value, deviceType.value);
   } catch (e) {
     console.error("加载配置失败:", e);
     terminals.value = [];
@@ -679,9 +783,10 @@ watch(
   (newKey) => {
     if (newKey) {
       initTestResults();
+      if (flow.currentStep.value === "POWER_ON") flow.pass(); // POWER_ON → READY
     } else {
       startBeforeLoading.value = false;
-      startBeforeTestFinshed.value = false;
+      flow.transition("SETUP");
       availableDirections.value = { DC: false, FC: false };
       diagnosisMessages.value = [];
       startBeforeTestTips.value = null;
@@ -713,7 +818,7 @@ const resetToStartBeforeTest = () => {
 
   // 复位启动前测试相关状态
   startBeforeLoading.value = false;
-  startBeforeTestFinshed.value = false;
+  flow.transition("SETUP");
   availableDirections.value = { DC: false, FC: false };
   diagnosisMessages.value = [];
   startBeforeTestTips.value = null;
@@ -744,9 +849,7 @@ const handleStart = () => {
 
 /* 启动前测试 */
 const handleStartBeforeTest = () => {
-  // availableDirections.value = { DC: false, FC: false };
-  // startBeforeTestTips.value = null
-  // testResults.value = []
+  flow.transition("START_BEFORE_TEST");
   startBeforeLoading.value = true;
   startBeforeTestTips.value = null;
   diagnosisMessages.value = [];
@@ -757,12 +860,41 @@ const handleStartBeforeTest = () => {
     StartBeforeTestConfig[
       deviceType.value as keyof typeof StartBeforeTestConfig
     ];
-  const powerArr =
-    StartPowerConfig[deviceType.value as keyof typeof StartPowerConfig];
 
   const result = gen32BitArray([], [...idxArr]);
 
-  // sendCmd(result, "startBeforeTestRelays", deviceType.value);
+  flow
+    .sendCommand(
+      "startBeforeTestRelays",
+      {
+        value: result,
+        deviceType: deviceType.value,
+      },
+      // 读回比对：继电器线圈真正回显到 result 才算指令已执行
+      {
+        label: "启动前测试",
+        expect: { unitId: coilUnitId(deviceType.value), value: result },
+      },
+    )
+    .then((ok) => {
+      if (!ok) {
+        showToast("启动前测试指令未确认，请重试", "error");
+        startBeforeLoading.value = false;
+        flow.fail();
+      }
+    });
+};
+
+const handleButtonAction = () => {
+  console.log(flow.currentStep);
+  switch (flow.currentStep.value) {
+    case "SETUP":
+      handleCheckType(wsSendData.value, deviceType.value);
+      break;
+    case "START_BEFORE_TEST":
+      handleStartBeforeTest();
+      break;
+  }
 };
 
 // 单个更新
@@ -804,14 +936,15 @@ function initTestResults(direction?: "DC" | "FC") {
       // }
       console.log(field);
       const resCollect = field ? handleFindCollect(field) : undefined;
-      console.log(resCollect?.img?.[field]);
+      // console.log(resCollect?.img?.[field ?? ""]);
+
       return {
         type: item.type,
         name: item.name,
         status: "NT" as const,
         realCheck: false,
         relayName: relayData[item.field],
-        img: resCollect?.img?.[field] || "",
+        img: field ? (resCollect?.img?.[field] ?? "") : "",
       };
     });
 
@@ -859,7 +992,7 @@ const handleContactConfigClick = (type: string) => {
   selectedContactType.value = type;
   // 切换闭合方式后，原启动前测试结果失效，需重新测试
   startBeforeLoading.value = false;
-  startBeforeTestFinshed.value = false;
+  flow.transition("SETUP");
   availableDirections.value = { DC: false, FC: false };
   diagnosisMessages.value = [];
   startBeforeTestTips.value = null;
@@ -932,8 +1065,11 @@ const finalizeAction = async (key: keyof ActionRelays) => {
 
   const bothAvailable =
     availableDirections.value.DC && availableDirections.value.FC;
+
+  let lastStatus = "success";
   if (bothAvailable) {
     const currentData = buildRecordData(key);
+    lastStatus = currentData.status;
     if (!pendingSaveData.value) {
       // 第一个方向完成，暂存数据，不提交
       pendingSaveData.value = currentData;
@@ -944,7 +1080,7 @@ const finalizeAction = async (key: keyof ActionRelays) => {
       pendingSaveData.value = null;
     }
   } else {
-    saveRecord(key);
+    lastStatus = await saveRecord(key);
   }
 
   // 操动结束
@@ -953,15 +1089,25 @@ const finalizeAction = async (key: keyof ActionRelays) => {
   butItemStatus.value = "";
   completedDirections.value.add(finishedDir);
 
+  // 判定不合格 → 跳回启动前测试（需求：跳转到指定操作）
+  if (lastStatus === "error") {
+    showToast("操动判定不合格，返回启动前测试", "error");
+    flow.fail(); // OPERATING → START_BEFORE_TEST
+    return;
+  }
+
+  // 判定合格 → 回到待操作，等待下一个方向或复位
+  flow.pass(); // OPERATING → READY
+
   if (
     bothAvailable &&
     completedDirections.value.has("DC") &&
     completedDirections.value.has("FC")
   ) {
-    startBeforeTestFinshed.value = false;
+    flow.transition("START_BEFORE_TEST");
     completedDirections.value = new Set();
   } else if (!bothAvailable) {
-    startBeforeTestFinshed.value = false;
+    flow.transition("START_BEFORE_TEST");
   }
 };
 
@@ -995,14 +1141,26 @@ const handleFC = () => {
   handleRelayAction(key);
 };
 
-/* 操作处理 */
-const handleDo = () => {
+/* 操作处理：下发继电器指令并等待回执确认 */
+const handleDo = async () => {
   let result = terminals.value.map((item) => item.default_status);
   let idxArr =
     StartPowerConfig[deviceType.value as keyof typeof StartPowerConfig];
   wsSendData.value = gen32BitArray(result, idxArr);
 
-  // sendCmd(wsSendData.value, "relays", deviceType.value);
+  const ok = await flow.sendCommand(
+    "relays",
+    {
+      value: wsSendData.value,
+      deviceType: deviceType.value,
+    },
+    // 读回比对：继电器线圈真正回显到发送值才算指令已执行
+    {
+      label: "下发继电器",
+      expect: { unitId: coilUnitId(deviceType.value), value: wsSendData.value },
+    },
+  );
+  if (!ok) showToast("继电器指令未确认，请重试", "error");
 };
 
 /* 发送命令 */
@@ -1014,9 +1172,9 @@ const handleDo = () => {
 //   ws.send({ type: type, value: data, deviceType: deviceType });
 // }
 
-const updateConfigData = () => {
-  wsSendData.value = result;
-};
+// const updateConfigData = () => {
+//   wsSendData.value = result;
+// };
 
 const butItemIsDisable = ref(false);
 
@@ -1036,6 +1194,7 @@ const handleOpe = (type: string) => {
   initTestResults(type as "DC" | "FC");
   butItemStatus.value = type;
   butItemIsDisable.value = true;
+  flow.transition("OPERATING");
 
   // 关闭启动前测试继电器，恢复原有吸合状态，等2s后执行
   handleDo();
@@ -1314,7 +1473,8 @@ const postRecord = async (tempData: Record<string, any>) => {
     await fetch(HTTP_URL + "/saveRecord", {
       method: "post",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(tempData),
+      // 操作日志搭现有这次写入库，不新增接口调用
+      body: JSON.stringify({ ...tempData, operationLog: snapshotLog() }),
     });
   } catch (error) {
     console.error(error);
@@ -1322,10 +1482,11 @@ const postRecord = async (tempData: Record<string, any>) => {
   }
 };
 
-/* 保存记录 */
+/* 保存记录，返回本次操动判定结果 success/error */
 const saveRecord = async (relay: keyof ActionRelays) => {
   const tempData = buildRecordData(relay);
   await postRecord(tempData);
+  return tempData.status as string;
 };
 
 // 通用模式：加载数据后弹出闭合方式选择
@@ -1361,11 +1522,22 @@ onMounted(async () => {
     switch (opeModel) {
       case "code":
         await getCodeDeviceList(handleContactConfigClick);
-        sendCmd("setDeviceType", { deviceType: deviceType.value, seq: 1 });
+        // setDeviceType 在 Node-RED 侧只是改 flow 变量，无 Modbus 读回，发一次即可不重试
+        console.log("切换机型", deviceType.value);
+        flow.sendCommand(
+          "setDeviceType",
+          { deviceType: deviceType.value },
+          { timeout: 1000, retries: 0, label: "切换机型" },
+        );
         break;
       default:
         await getList();
-        sendCmd("setDeviceType", { deviceType: deviceType.value, seq: 2 });
+        console.log("切换机型", deviceType.value);
+        flow.sendCommand(
+          "setDeviceType",
+          { deviceType: deviceType.value },
+          { timeout: 1000, retries: 0, label: "切换机型" },
+        );
         break;
     }
   }, "数据加载成功");
@@ -1449,6 +1621,12 @@ onMounted(async () => {
 
     <div class="button-rows">
       <!-- 启动前测试 - 最先显示，不需要通电 -->
+      <!-- <button
+        v-if="!startBeforeLoading"
+        class="action-btn test-btn"
+        @click="handleCheckType(wsSendData, deviceType)">
+        选型 {{ flow.currentStep }}
+      </button> -->
       <div
         v-if="isShowButtons && !startBeforeTestFinshed"
         style="
@@ -1460,12 +1638,12 @@ onMounted(async () => {
         <button
           v-if="!startBeforeLoading"
           class="action-btn test-btn"
-          @click="handleStartBeforeTest()">
-          启动前测试
+          @click="handleButtonAction()">
+          {{ buttonTitle[flow.currentStep.value] ?? "下一步" }}
         </button>
-        <span v-if="startBeforeLoading" class="action-tips"
-          >启动前测试中...</span
-        >
+        <span v-if="startBeforeLoading" class="action-tips">{{
+          buttonTips[flow.currentStep.value]
+        }}</span>
       </div>
 
       <!-- 开启动作电源/紧急停止 - 测试通过后显示 -->
@@ -1553,10 +1731,343 @@ onMounted(async () => {
       <span>{{ statusDesc }}</span>
       <!-- <span v-if="temperature">{{ temperature }}℃</span> -->
     </div>
+
+    <button
+      v-show="!logDrawerOpen"
+      class="log-toggle"
+      @click="logDrawerOpen = true">
+      操作日志
+      <span v-if="logEntries.length" class="log-toggle-count">{{
+        logEntries.length
+      }}</span>
+    </button>
+
+    <div
+      v-if="logDrawerOpen"
+      class="log-backdrop"
+      @click="logDrawerOpen = false"></div>
+
+    <div class="log-drawer" :class="{ open: logDrawerOpen }">
+      <div class="log-drawer-header">
+        <span>操作日志</span>
+        <div class="log-drawer-actions">
+          <button class="log-clear-btn" @click="clearLog()">清空</button>
+          <button class="log-close-btn" @click="logDrawerOpen = false">
+            ×
+          </button>
+        </div>
+      </div>
+      <div class="log-drawer-list">
+        <div v-if="!logDisplay.length" class="log-empty">暂无操作记录</div>
+        <div
+          v-for="item in logDisplay"
+          :key="item.e.id"
+          class="log-item"
+          :class="{
+            'log-item-error':
+              item.e.exec === 'error' || item.e.send === 'error',
+          }">
+          <div class="log-item-top">
+            <span class="log-time">{{ formatLogTime(item.e.time) }}</span>
+            <span class="log-label">{{ item.e.label }}</span>
+            <span class="log-cmd">{{ item.e.cmd }}</span>
+          </div>
+          <div class="log-item-badges">
+            <span class="log-badge" :class="'log-' + item.e.send"
+              >发送:{{ logStatusText(item.e.send) }}</span
+            >
+            <span
+              v-if="item.e.exec !== 'none'"
+              class="log-badge"
+              :class="'log-' + item.e.exec"
+              >响应:{{ logStatusText(item.e.exec) }}</span
+            >
+            <span v-else class="log-badge log-none">无读回</span>
+            <span v-if="item.diffIndices.length" class="log-badge log-diff">{{
+              diffText(item.diffIndices)
+            }}</span>
+          </div>
+          <div v-if="item.hasSend || item.hasRecv" class="log-bits">
+            <div v-if="item.hasSend" class="log-bit-row">
+              <span class="log-bit-row-label">发送</span>
+              <span
+                v-for="(b, i) in item.sendBits"
+                :key="'s' + i"
+                class="log-bit"
+                :class="bitClass(b)"></span>
+            </div>
+            <div v-if="item.hasRecv" class="log-bit-row">
+              <span class="log-bit-row-label">响应</span>
+              <span
+                v-for="(b, i) in item.recvBits"
+                :key="'r' + i"
+                class="log-bit"
+                :class="bitClass(b)"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
+.log-toggle {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000;
+  writing-mode: vertical-rl;
+  letter-spacing: 2px;
+  background: #0b1d33;
+  border: 1px solid #2a4a68;
+  border-right: none;
+  color: #7fb0e0;
+  font-size: 12px;
+  padding: 10px 6px;
+  border-radius: 4px 0 0 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.log-toggle:hover {
+  background: #16324f;
+  color: #a9d0f5;
+}
+
+.log-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.log-toggle-count {
+  display: inline-block;
+  margin-top: 8px;
+  background: #2a4a68;
+  color: #cfe3f7;
+  border-radius: 8px;
+  padding: 0 4px;
+  font-size: 10px;
+  letter-spacing: 0;
+}
+
+.log-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 420px;
+  background: #0b1d33;
+  border-left: 1px solid #1a2d44;
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.4);
+}
+
+.log-drawer.open {
+  transform: translateX(0);
+}
+
+.log-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #1a2d44;
+  color: #a9d0f5;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.log-drawer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.log-clear-btn,
+.log-close-btn {
+  background: rgba(90, 146, 208, 0.1);
+  border: 1px solid #2a4a68;
+  color: #7a8fa0;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.log-clear-btn {
+  font-size: 12px;
+  padding: 2px 8px;
+}
+
+.log-close-btn {
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 8px;
+}
+
+.log-clear-btn:hover,
+.log-close-btn:hover {
+  border-color: #3f6a95;
+  color: #a9d0f5;
+}
+
+.log-drawer-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #1a3350 transparent;
+}
+
+.log-drawer-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.log-drawer-list::-webkit-scrollbar-thumb {
+  background: #1a3350;
+  border-radius: 2px;
+}
+
+.log-empty {
+  color: #4c637a;
+  font-size: 13px;
+  text-align: center;
+  padding: 24px 0;
+}
+
+.log-item {
+  background: #0e2138;
+  border: 1px solid #1a2d44;
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+}
+
+.log-item-error {
+  border-color: rgba(255, 107, 107, 0.45);
+}
+
+.log-item-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.log-time {
+  color: #4c637a;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.log-label {
+  color: #cfe3f7;
+  font-size: 13px;
+}
+
+.log-cmd {
+  margin-left: auto;
+  color: #4c637a;
+  font-size: 11px;
+  font-family: "SF Mono", "Monaco", "Menlo", monospace;
+}
+
+.log-item-badges {
+  display: flex;
+  gap: 6px;
+}
+
+.log-badge {
+  font-size: 11px;
+  padding: 1px 8px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+}
+
+.log-success {
+  color: #4fd18b;
+  background: rgba(79, 209, 139, 0.12);
+  border-color: rgba(79, 209, 139, 0.4);
+}
+
+.log-error {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.12);
+  border-color: rgba(255, 107, 107, 0.4);
+}
+
+.log-pending {
+  color: #e0b34f;
+  background: rgba(224, 179, 79, 0.12);
+  border-color: rgba(224, 179, 79, 0.4);
+}
+
+.log-none {
+  color: #566b7f;
+  background: rgba(86, 107, 127, 0.12);
+  border-color: rgba(86, 107, 127, 0.35);
+}
+
+.log-diff {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.12);
+  border-color: rgba(255, 107, 107, 0.4);
+}
+
+.log-bits {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.log-bit-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.log-bit-row-label {
+  color: #4c637a;
+  font-size: 10px;
+  flex-shrink: 0;
+  width: 26px;
+  text-align: right;
+  margin-right: 4px;
+}
+
+.log-bit {
+  width: 7px;
+  height: 7px;
+  border-radius: 1px;
+  background: #1c3350;
+  flex-shrink: 0;
+}
+
+.log-bit-on {
+  background: #34d399;
+}
+
+.log-bit-off {
+  background: #2a4a68;
+}
+
+.log-bit-diff {
+  background: #ff6b6b;
+  box-shadow: 0 0 3px rgba(255, 107, 107, 0.8);
+}
+
+.log-bit-missing {
+  background: #16263a;
+}
+
 .dashboard {
   display: flex;
   flex-direction: column;

@@ -105,7 +105,7 @@ async function startNodeRED() {
         reject(err);
       }
     });
-    nrServer.listen(nrSettings.uiPort, "127.0.0.1", () => {
+    nrServer.listen(nrSettings.uiPort, nrSettings.uiHost, () => {
       RED.start()
         .then(() => {
           console.log(`[Node-RED] started on port ${nrSettings.uiPort}`);
@@ -136,7 +136,7 @@ function createWindow() {
       responseHeaders: {
         ...details.responseHeaders,
         "Content-Security-Policy": [
-          "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: file:; font-src 'self' data:; connect-src 'self' http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:* https://cdn.jsdelivr.net; worker-src 'self';",
+          "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: file:; font-src 'self' data:; connect-src 'self' http://localhost:* http://127.0.0.1:* http://192.168.*:* ws://localhost:* ws://192.168.*:* ws://127.0.0.1:* https://cdn.jsdelivr.net; worker-src 'self';",
         ],
       },
     });

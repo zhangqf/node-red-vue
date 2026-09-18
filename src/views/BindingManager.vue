@@ -231,7 +231,7 @@ async function fetchConfigs() {
   }
 }
 
-const BindData = ref([]);
+const BindData = ref<any[]>([]);
 
 async function fetchBindings() {
   try {
@@ -264,7 +264,7 @@ const filteredCombinations = computed(() => {
     (c) => c.deviceType === selectedDeviceType.value,
   );
 });
-const getInnerText = (text) => {
+const getInnerText = (text: string) => {
   const match = text.match(/【([^】]+)】/);
   return match ? match[1] : null;
 };
@@ -289,7 +289,7 @@ onMounted(async () => {
       if (preferId && devices.value.some((d) => d.id === preferId)) {
         selectedDeviceId.value = preferId;
       } else {
-        selectedDeviceId.value = devices.value[0].id;
+        selectedDeviceId.value = devices.value[0]!.id;
       }
     }
   }, "数据加载成功");

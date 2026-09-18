@@ -76,23 +76,20 @@
         "nodes": [
             "b23876d9dc0184f1",
             "5f829c6a2cbec815",
-            "54cf7476d7f4cf15",
             "8e5bb841558f7674",
-            "ad803c27d1464a2e",
             "6c73b535266f1f23",
             "f6e9d7e097e60402",
             "eba6249e5628396f",
-            "010538068717c445",
             "bd98acdecbf1659f",
-            "ca862f075ce41d0c",
-            "b9fa938bcac61576",
-            "de8f9e07acb965ab",
-            "dc2ec8f1fb892576"
+            "setDeviceTypeHandler",
+            "writeAckBuilder",
+            "ed481224ddb28acf",
+            "f10274f409d9bc5d"
         ],
         "x": 74,
         "y": 599,
-        "w": 1112,
-        "h": 282
+        "w": 1392,
+        "h": 362
     },
     {
         "id": "a78c98a47184b2fa",
@@ -428,13 +425,17 @@
             "d54c3d24b64be8a2",
             "ceab28bdc14f368c",
             "069b66a93b3c85a9",
-            "2be3e27f199091c5",
-            "9a0e41ec6b4f676c"
+            "9a0e41ec6b4f676c",
+            "d133823ad135213c",
+            "aa2e03230b1782bf",
+            "mockCmdAckHandler",
+            "e2524b41be3e6236",
+            "95c153d839c9b3d5"
         ],
-        "x": 1194,
-        "y": 599,
-        "w": 912,
-        "h": 342
+        "x": 1574,
+        "y": 379,
+        "w": 932,
+        "h": 562
     },
     {
         "id": "cf823ce89da7f786",
@@ -983,6 +984,27 @@
         ]
     },
     {
+        "id": "mockCmdAckHandler",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "264be9ece447ca9d",
+        "name": "模拟指令响应(切换机型/复位端子状态)",
+        "func": "// 开发态 mock：直接回成功 cmdAck，模拟后端已响应前端指令。\n// 覆盖前端以「无 Modbus 读回」方式确认的两条指令：\n//   切换机型 = setDeviceType，复位端子状态 = relays 写线圈。\nconst type = msg.type;\nif (type !== \"setDeviceType\" && type !== \"relays\") return null;\n\nmsg.sendData = {\n    type: \"cmdAck\",\n    msgId: msg.msgId,\n    echoType: type,\n    ok: true,\n    value:msg.payload.value\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1830,
+        "y": 740,
+        "wires": [
+            [
+                "7410291c8a0585e6"
+            ]
+        ]
+    },
+    {
         "id": "b23876d9dc0184f1",
         "type": "websocket in",
         "z": "e4bbd3713100fe17",
@@ -994,8 +1016,7 @@
         "y": 720,
         "wires": [
             [
-                "f6e9d7e097e60402",
-                "de8f9e07acb965ab"
+                "f6e9d7e097e60402"
             ]
         ]
     },
@@ -1035,20 +1056,21 @@
         "type": "function",
         "z": "e4bbd3713100fe17",
         "g": "9e2d670578adbe41",
-        "name": "function 1",
-        "func": "// 取出前端传来的线圈数组\nconst coilArr = msg.value || [];\n// 初始化32个0的数组\nconst rawData = new Array(32).fill(0);\n// 从下标0开始，覆盖对应长度，剩余保持0\nrawData.splice(0, coilArr.length, ...coilArr);\n\nconst unitId = msg.deviceType === 'ZD6' || msg.deviceType === 'ZD9' ? 1 : 2\n\n// msg.payload = {\n//   \"fc\":1,\n//     \"unitid\":2,\n//     \"address\":0,\n//     \"quantity\":32,\n//     \"name\":\"继电器状态\",\n//   \"value\": msg.value\n// };\n\n \n\n  msg.payload = {\n    \"fc\":15,\n    \"unitid\":unitId,\n    \"address\":0,\n    \"quantity\":32,\n    \"value\": rawData\n  };\nreturn msg;",
+        "name": "relays",
+        "func": "// 取出前端传来的线圈数组\nconst coilArr = msg.payload.value || [];\n// 初始化32个0的数组\nconst rawData = new Array(32).fill(0);\n// 从下标0开始，覆盖对应长度，剩余保持0\nrawData.splice(0, coilArr.length, ...coilArr);\n\nconst unitId = msg.payload.deviceType === \"ZD6\" || msg.payload.deviceType === \"ZD9\" ? 1 : 2\n\n// msg.payload = {\n//   \"fc\":1,\n//     \"unitid\":2,\n//     \"address\":0,\n//     \"quantity\":32,\n//     \"name\":\"继电器状态\",\n//   \"value\": msg.value\n// };\n\n \n\n  msg.payload = {\n    \"fc\":15,\n    \"unitid\":unitId,\n    \"address\":0,\n    \"quantity\":32,\n    \"value\": rawData\n  };\nflow.set(\"coilWrite_\" + unitId, rawData);\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 500,
+        "x": 490,
         "y": 680,
         "wires": [
             [
-                "54cf7476d7f4cf15",
-                "8e5bb841558f7674"
+                "8e5bb841558f7674",
+                "writeAckBuilder",
+                "ed481224ddb28acf"
             ]
         ]
     },
@@ -1175,7 +1197,7 @@
         "z": "e4bbd3713100fe17",
         "g": "a78c98a47184b2fa",
         "name": "1236",
-        "func": "const deviceType = flow.get(\"deviceType\") || \"\";\nconst isZYJ7orZDJ9 = deviceType === \"ZYJ7\" || deviceType === \"ZDJ9\";\n\nconst allDevices = [\n  { fc:1, unitid:1, address:0, quantity:32, name:\"ZD6\" },\n  { fc:1, unitid:2, address:0, quantity:32, name:\"ZYJ7\" },\n  { fc:2, unitid:3, address:0, quantity:16, name:\"表示\" },\n  { fc:3, unitid:6, address:0, quantity:16, name:\"电阻\" }\n];\n\nconst deviceList = allDevices.filter(d => {\n    if (isZYJ7orZDJ9 && d.unitid === 1) return false;\n    if (!isZYJ7orZDJ9 && d.unitid === 2) return false;\n    return true;\n});\n\nlet idx = context.get(\"idx\") || 0;\nif (idx >= deviceList.length) idx = 0;\nconst dev = deviceList[idx];\nmsg.modbus = {};\nmsg.payload = {\n    fc: dev.fc,\n    seq:flow.get('seq'),\n    unitid: dev.unitid,\n    address: dev.address,\n    quantity: dev.quantity\n};\nmsg.deviceName = dev.name;\nidx = idx + 1;\nif (idx >= deviceList.length) idx = 0;\ncontext.set(\"idx\", idx);\nreturn msg;",
+        "func": "const deviceType = flow.get(\"deviceType\") || \"\";\nconst isZYJ7orZDJ9 = deviceType === \"ZYJ7\" || deviceType === \"ZDJ9\";\n\nconst allDevices = [\n  { fc:1, unitid:1, address:0, quantity:32, name:\"ZD6\" },\n  { fc:1, unitid:2, address:0, quantity:32, name:\"ZYJ7\" },\n  { fc:2, unitid:3, address:0, quantity:16, name:\"表示\" },\n  { fc:3, unitid:6, address:0, quantity:16, name:\"电阻\" }\n];\n\nconst deviceList = allDevices.filter(d => {\n    if (isZYJ7orZDJ9 && d.unitid === 1) return false;\n    if (!isZYJ7orZDJ9 && d.unitid === 2) return false;\n    return true;\n});\n\nlet idx = context.get(\"idx\") || 0;\nif (idx >= deviceList.length) idx = 0;\nconst dev = deviceList[idx];\nmsg.modbus = {};\nmsg.payload = {\n    fc: dev.fc,\n    unitid: dev.unitid,\n    address: dev.address,\n    quantity: dev.quantity\n};\nmsg.deviceName = dev.name;\nidx = idx + 1;\nif (idx >= deviceList.length) idx = 0;\ncontext.set(\"idx\", idx);\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -1284,24 +1306,6 @@
         ]
     },
     {
-        "id": "54cf7476d7f4cf15",
-        "type": "debug",
-        "z": "e4bbd3713100fe17",
-        "g": "9e2d670578adbe41",
-        "name": "debug 10",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 680,
-        "y": 640,
-        "wires": []
-    },
-    {
         "id": "8e5bb841558f7674",
         "type": "modbus-flex-write",
         "z": "e4bbd3713100fe17",
@@ -1315,12 +1319,10 @@
         "keepMsgProperties": true,
         "delayOnStart": false,
         "startDelayTime": "",
-        "x": 890,
-        "y": 700,
+        "x": 1070,
+        "y": 800,
         "wires": [
-            [
-                "ad803c27d1464a2e"
-            ],
+            [],
             []
         ]
     },
@@ -2417,24 +2419,6 @@
         ]
     },
     {
-        "id": "ad803c27d1464a2e",
-        "type": "debug",
-        "z": "e4bbd3713100fe17",
-        "g": "9e2d670578adbe41",
-        "name": "debug 16",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1080,
-        "y": 700,
-        "wires": []
-    },
-    {
         "id": "a6b0007bc85dc551",
         "type": "function",
         "z": "e4bbd3713100fe17",
@@ -3235,7 +3219,7 @@
         "z": "e4bbd3713100fe17",
         "g": "8f47e2e3400d33b2",
         "name": "写入JSON",
-        "func": " const fs = global.get('fs');\n  const path = global.get('path');\n  const rootPath = global.get('rootPath');\n\n  const payload = msg.payload;\n\n  // 生成文件名\n  const now = new Date();\n  const month = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;\n  const timestamp =\n  `${month}-${String(now.getDate()).padStart(2,'0')}${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;\n  \n   const safeDeviceName = payload.device_name.replace(/[ #]/g, '-');\n  const fileName = `${timestamp}-${payload.op_type}-${safeDeviceName}.json`;\n  // const fileName = `${timestamp}-${payload.op_type}-${payload.device_name}.json`;\n\n  // 目录：records/2025-01/\n  const dir = path.join(rootPath, '/data/records', month);\n  if (!fs.existsSync(dir)) {\n      fs.mkdirSync(dir, { recursive: true });\n  }\n\n  const data = {\n    data:payload.curve_data,\n    time:payload.time_data\n  }\n\n  // 如果存在功率数据，也写入\n  if (payload.phasePower && payload.phasePower.length) {\n    data.phasePower = payload.phasePower;\n    data.power_time = payload.power_time;\n  }\n\n  // 前端已综合表示继电器 + 电流曲线 + 功率曲线判定，这里直接采用\n  payload.status = payload.status || \"success\"\n\n  // 写曲线数据\n  const filePath = path.join(dir, fileName);\n  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));\n\n  // 把路径和参数传给下一个节点\n  msg.curve_file = path.join('records', month, fileName);\n  msg.params = [\n      payload.device_name,\n      payload.combination_name,\n      payload.config_name,\n      payload.op_type,\n      payload.status,\n      payload.peak_current,\n      payload.valley_current,\n      msg.curve_file,\n      JSON.stringify(payload.result),\n      JSON.stringify(payload.pre_test || null),\n      payload.fail_reason || \"\",\n  ];\n  return msg;",
+        "func": " const fs = global.get('fs');\n  const path = global.get('path');\n  const rootPath = global.get('rootPath');\n\n  const payload = msg.payload;\n\n  // 生成文件名\n  const now = new Date();\n  const month = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;\n  const timestamp =\n  `${month}-${String(now.getDate()).padStart(2,'0')}${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;\n  \n   const safeDeviceName = payload.device_name.replace(/[ #]/g, '-');\n  const fileName = `${timestamp}-${payload.op_type}-${safeDeviceName}.json`;\n  // const fileName = `${timestamp}-${payload.op_type}-${payload.device_name}.json`;\n\n  // 目录：records/2025-01/\n  const dir = path.join(rootPath, '/data/records', month);\n  if (!fs.existsSync(dir)) {\n      fs.mkdirSync(dir, { recursive: true });\n  }\n\n  const data = {\n    data:payload.curve_data,\n    time:payload.time_data\n  }\n\n  // 如果存在功率数据，也写入\n  if (payload.phasePower && payload.phasePower.length) {\n    data.phasePower = payload.phasePower;\n    data.power_time = payload.power_time;\n  }\n\n  // 操作日志一并归档\n  if (payload.operationLog && payload.operationLog.length) {\n    data.operationLog = payload.operationLog;\n  }\n\n  // 前端已综合表示继电器 + 电流曲线 + 功率曲线判定，这里直接采用\n  payload.status = payload.status || \"success\"\n\n  // 写曲线数据\n  const filePath = path.join(dir, fileName);\n  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));\n\n  // 把路径和参数传给下一个节点\n  msg.curve_file = path.join('records', month, fileName);\n  msg.params = [\n      payload.device_name,\n      payload.combination_name,\n      payload.config_name,\n      payload.op_type,\n      payload.status,\n      payload.peak_current,\n      payload.valley_current,\n      msg.curve_file,\n      JSON.stringify(payload.result),\n      JSON.stringify(payload.pre_test || null),\n      payload.fail_reason || \"\",\n  ];\n  return msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -3997,12 +3981,12 @@
         "checkall": "true",
         "repair": false,
         "outputs": 4,
-        "x": 330,
-        "y": 720,
+        "x": 310,
+        "y": 780,
         "wires": [
             [
                 "5f829c6a2cbec815",
-                "b9fa938bcac61576"
+                "mockCmdAckHandler"
             ],
             [
                 "eba6249e5628396f"
@@ -4012,7 +3996,7 @@
             ],
             [
                 "setDeviceTypeHandler",
-                "dc2ec8f1fb892576"
+                "mockCmdAckHandler"
             ]
         ]
     },
@@ -4022,7 +4006,7 @@
         "z": "e4bbd3713100fe17",
         "g": "9e2d670578adbe41",
         "name": "设置设备类型",
-        "func": "if (msg.payload.deviceType) {\n    flow.set(\"deviceType\", msg.payload.deviceType);\n    flow.set(\"seq\",msg.payload.seq)\n}\nreturn msg;",
+        "func": "if (msg.payload.deviceType) {\n    flow.set(\"deviceType\", msg.payload.deviceType);\n}\n\nif (msg.error || msg.payload === \"\" || msg.payload === undefined) {\n    msg.sendData = { type: \"cmdAck\", msgId: msg.msgId, echoType: msg.type, ok: false,value:msg.payload.value };\n} else {\n    msg.sendData = { type: \"cmdAck\", msgId: msg.msgId, echoType: msg.type, ok: true, value: msg.payload.value };\n}\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -4030,9 +4014,12 @@
         "finalize": "",
         "libs": [],
         "x": 500,
-        "y": 860,
+        "y": 920,
         "wires": [
-            []
+            [
+                "d50b53f9cf0907c2",
+                "f10274f409d9bc5d"
+            ]
         ]
     },
     {
@@ -4051,28 +4038,8 @@
         "x": 510,
         "y": 720,
         "wires": [
-            [
-                "010538068717c445"
-            ]
+            []
         ]
-    },
-    {
-        "id": "010538068717c445",
-        "type": "debug",
-        "z": "e4bbd3713100fe17",
-        "g": "9e2d670578adbe41",
-        "name": "debug 24",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 660,
-        "y": 720,
-        "wires": []
     },
     {
         "id": "46556195a075bb2a",
@@ -4130,7 +4097,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1770,
+        "x": 2130,
         "y": 900,
         "wires": [
             [
@@ -4152,8 +4119,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 2000,
-        "y": 880,
+        "x": 2380,
+        "y": 900,
         "wires": []
     },
     {
@@ -4164,8 +4131,8 @@
         "name": "三相交流采集器",
         "server": "4b736505764b58bb",
         "client": "",
-        "x": 1980,
-        "y": 800,
+        "x": 2400,
+        "y": 820,
         "wires": []
     },
     {
@@ -5042,6 +5009,7 @@
         "id": "831991aa359dd546",
         "type": "inject",
         "z": "e4bbd3713100fe17",
+        "d": true,
         "g": "264be9ece447ca9d",
         "name": "",
         "props": [
@@ -5060,8 +5028,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1320,
-        "y": 820,
+        "x": 1680,
+        "y": 800,
         "wires": [
             [
                 "5002b56175b0e267"
@@ -5081,8 +5049,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1580,
-        "y": 820,
+        "x": 1900,
+        "y": 800,
         "wires": [
             [
                 "7410291c8a0585e6"
@@ -5107,39 +5075,21 @@
         "z": "e4bbd3713100fe17",
         "g": "9e2d670578adbe41",
         "name": "启动前测试",
-        "func": "\nconst coilArr = msg.value || [];\n\nconst unitid = msg.deviceType === \"ZD6\" || msg.deviceType === \"ZD9\" ? 1:2 \n\n\n  msg.payload = {\n    \"fc\":15,\n    \"unitid\":unitid,\n    \"address\":0,\n    \"quantity\":32,\n    \"value\": coilArr\n  };\nreturn msg;\n",
+        "func": "\nconst coilArr = msg.payload.value || [];\n\nconst unitid = msg.payload.deviceType === \"ZD6\" || msg.payload.deviceType === \"ZD9\" ? 1:2 \n\n\n  msg.payload = {\n    \"fc\":15,\n    \"unitid\":unitid,\n    \"address\":0,\n    \"quantity\":32,\n    \"value\": coilArr\n  };\nflow.set(\"coilWrite_\" + unitid, coilArr);\nreturn msg;\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 670,
-        "y": 800,
+        "x": 510,
+        "y": 840,
         "wires": [
             [
-                "ca862f075ce41d0c",
-                "8e5bb841558f7674"
+                "8e5bb841558f7674",
+                "e2524b41be3e6236"
             ]
         ]
-    },
-    {
-        "id": "ca862f075ce41d0c",
-        "type": "debug",
-        "z": "e4bbd3713100fe17",
-        "g": "9e2d670578adbe41",
-        "name": "debug 3",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 860,
-        "y": 840,
-        "wires": []
     },
     {
         "id": "30151d7bd9eec3f3",
@@ -5154,8 +5104,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1550,
-        "y": 720,
+        "x": 1950,
+        "y": 540,
         "wires": [
             [
                 "7410291c8a0585e6"
@@ -5177,15 +5127,15 @@
                 "vt": "str"
             }
         ],
-        "repeat": "1",
+        "repeat": "",
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1320,
-        "y": 720,
+        "x": 1690,
+        "y": 480,
         "wires": [
             [
                 "30151d7bd9eec3f3",
@@ -5206,8 +5156,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1560,
-        "y": 760,
+        "x": 1900,
+        "y": 660,
         "wires": [
             [
                 "7410291c8a0585e6"
@@ -5218,6 +5168,7 @@
         "id": "bc4417b23d6b2293",
         "type": "inject",
         "z": "e4bbd3713100fe17",
+        "d": true,
         "g": "264be9ece447ca9d",
         "name": "",
         "props": [
@@ -5236,8 +5187,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1290,
-        "y": 760,
+        "x": 1670,
+        "y": 660,
         "wires": [
             [
                 "7e26b810a0a911ef"
@@ -5406,24 +5357,6 @@
         ]
     },
     {
-        "id": "b9fa938bcac61576",
-        "type": "debug",
-        "z": "e4bbd3713100fe17",
-        "g": "9e2d670578adbe41",
-        "name": "debug 6",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 480,
-        "y": 640,
-        "wires": []
-    },
-    {
         "id": "2554bbfae63dc703",
         "type": "debug",
         "z": "e4bbd3713100fe17",
@@ -5472,8 +5405,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1530,
-        "y": 880,
+        "x": 1890,
+        "y": 900,
         "wires": [
             [
                 "148b8a45e307ace5"
@@ -5503,8 +5436,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1320,
-        "y": 880,
+        "x": 1700,
+        "y": 900,
         "wires": [
             [
                 "b1dce3197decb5c8"
@@ -5524,12 +5457,11 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1530,
-        "y": 680,
+        "x": 1870,
+        "y": 600,
         "wires": [
             [
-                "7410291c8a0585e6",
-                "2be3e27f199091c5"
+                "7410291c8a0585e6"
             ]
         ]
     },
@@ -5556,31 +5488,13 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1320,
-        "y": 680,
+        "x": 1680,
+        "y": 600,
         "wires": [
             [
                 "ceab28bdc14f368c"
             ]
         ]
-    },
-    {
-        "id": "2be3e27f199091c5",
-        "type": "debug",
-        "z": "e4bbd3713100fe17",
-        "g": "264be9ece447ca9d",
-        "name": "debug 12",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1710,
-        "y": 660,
-        "wires": []
     },
     {
         "id": "cc00000000000001",
@@ -6715,59 +6629,183 @@
         "wires": []
     },
     {
-        "id": "de8f9e07acb965ab",
-        "type": "debug",
-        "z": "e4bbd3713100fe17",
-        "g": "9e2d670578adbe41",
-        "name": "debug 9",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 250,
-        "y": 800,
-        "wires": []
-    },
-    {
-        "id": "dc2ec8f1fb892576",
-        "type": "debug",
-        "z": "e4bbd3713100fe17",
-        "g": "9e2d670578adbe41",
-        "name": "debug 11",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 390,
-        "y": 780,
-        "wires": []
-    },
-    {
         "id": "9a0e41ec6b4f676c",
         "type": "function",
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
         "name": "32路继电器",
-        "func": "\nconst data = new Array(32).fill(0)\n\ndata[0] = 1\ndata[3] = 1\ndata[4] = 1\ndata[5] = 1\ndata[6] = 1\ndata[7] = 1\n\nmsg.sendData = {\n    data,\n    type:\"modbusRealData\",\n    seq:flow.get('seq'),\n    unitId: 2,\n\tfc: 3,\n\taddress:1,\n\tquantity:32,\n}\n\n\nreturn msg",
+        "func": "\n// 开发态 mock：回显最近一次写入该 unitId 的线圈值\nconst unitid = (flow.get(\"deviceType\") === \"ZD6\" || flow.get(\"deviceType\") === \"ZD9\") ? 1 : 2;\nlet last = flow.get(\"coilWrite_\" + unitid);\nif (!Array.isArray(last)) {\n    // 尚无写入时，保留原有固定模拟值\n    last = new Array(32).fill(0);\n    last[0] = 1; last[3] = 1; last[4] = 1; last[5] = 1; last[6] = 1; last[7] = 1;\n}\nconst data32 = new Array(32).fill(0);\nfor (let i = 0; i < last.length && i < 32; i++) data32[i] = last[i] ? 1 : 0;\n\ndata32[18] = 1\n\nmsg.sendData = {\n    data: data32,\n    type: \"modbusRealData\",\n    unitId: unitid,\n    fc: 3,\n    address: 1,\n    quantity: 32,\n};\n\nreturn msg",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1550,
-        "y": 640,
+        "x": 1930,
+        "y": 460,
         "wires": [
             [
                 "7410291c8a0585e6"
+            ]
+        ]
+    },
+    {
+        "id": "writeAckBuilder",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "9e2d670578adbe41",
+        "name": "写应答(真·Modbus)",
+        "func": "// modbus-flex-write 输出：成功=设备已应答FC15写入；失败(emptyMsgOnFail)=空/带error\nif (msg.error || msg.payload === \"\" || msg.payload === undefined) {\n    msg.sendData = { type: \"cmdAck\", msgId: msg.msgId, echoType: msg.type, ok: false,value:msg.payload.value };\n} else {\n    msg.sendData = { type: \"cmdAck\", msgId: msg.msgId, echoType: msg.type, ok: true ,value:msg.payload.value};\n}\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1350,
+        "y": 680,
+        "wires": [
+            [
+                "d50b53f9cf0907c2"
+            ]
+        ]
+    },
+    {
+        "id": "d133823ad135213c",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "264be9ece447ca9d",
+        "name": "function 19",
+        "func": "msg.sendData = { type: \"cmdAck\", msgId: 1, echoType: \"l\", ok: true };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2350,
+        "y": 420,
+        "wires": [
+            [
+                "7410291c8a0585e6"
+            ]
+        ]
+    },
+    {
+        "id": "aa2e03230b1782bf",
+        "type": "inject",
+        "z": "e4bbd3713100fe17",
+        "d": true,
+        "g": "264be9ece447ca9d",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 2210,
+        "y": 420,
+        "wires": [
+            [
+                "d133823ad135213c"
+            ]
+        ]
+    },
+    {
+        "id": "ed481224ddb28acf",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "9e2d670578adbe41",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 640,
+        "y": 640,
+        "wires": []
+    },
+    {
+        "id": "f10274f409d9bc5d",
+        "type": "debug",
+        "z": "e4bbd3713100fe17",
+        "g": "9e2d670578adbe41",
+        "name": "debug 6",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 760,
+        "y": 920,
+        "wires": []
+    },
+    {
+        "id": "e2524b41be3e6236",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "264be9ece447ca9d",
+        "name": "启动前测试",
+        "func": "\n\n\n\n\n\nmsg.sendData = {\n    data:\n[0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],\n    type:\"modbusRealData\",\n    unitId: 2,\n\tfc: 3,\n\taddress:0,\n\tquantity:16,\n}\nmsg.msgid = 2\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1930,
+        "y": 420,
+        "wires": [
+            [
+                "7410291c8a0585e6"
+            ]
+        ]
+    },
+    {
+        "id": "95c153d839c9b3d5",
+        "type": "inject",
+        "z": "e4bbd3713100fe17",
+        "g": "264be9ece447ca9d",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 1720,
+        "y": 420,
+        "wires": [
+            [
+                "e2524b41be3e6236"
             ]
         ]
     }

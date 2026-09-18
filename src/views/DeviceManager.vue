@@ -96,12 +96,13 @@ const deleteList = async (id: string) => {
 
 async function remove(id: string) {
   // 包装loading
-  const delAction = withLoading(async () => {
-    const res = await deleteList(id);
-    // 接口成功后：1.本地过滤列表 2.成功提示
-    devices.value = devices.value.filter((c) => c.id !== id);
-    return res;
-  }, "正在删除...");
+  const delAction = () =>
+    withLoading(async () => {
+      const res = await deleteList(id);
+      // 接口成功后：1.本地过滤列表 2.成功提示
+      devices.value = devices.value.filter((c) => c.id !== id);
+      return res;
+    }, "正在删除...");
   try {
     await delAction();
   } catch (error: any) {

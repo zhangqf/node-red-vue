@@ -11,7 +11,10 @@ const loading = ref(false);
 let toastId = 0;
 
 export function useToast() {
-  function showToast(message: string, type: "success" | "error" = "success") {
+  function showToast(
+    message: string,
+    type: "success" | "error" | "warning" = "success",
+  ) {
     const id = ++toastId;
     toasts.value.push({ id, message, type });
     setTimeout(() => {
