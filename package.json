@@ -91,6 +91,9 @@
     }
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
     "@flowfuse/node-red-dashboard": "~1.30.2",
     "@stfi/node-red-contrib-mqtt-broker": "~0.5.0",
     "@vueuse/core": "^14.3.0",
