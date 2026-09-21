@@ -32,6 +32,7 @@ export const STEP_TABLE: Record<StepId, Step> = {
     onPass: "POWER_ON",
     onFail: "START_BEFORE_TEST",
   },
+
   POWER_ON: { id: "POWER_ON", onPass: "READY", onFail: "POWER_ON" },
   READY: { id: "READY", onPass: "OPERATING" },
   OPERATING: {

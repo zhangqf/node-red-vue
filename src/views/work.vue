@@ -87,7 +87,7 @@ const {
 
 const flow = useTestFlow(ws);
 
-const { coilUnitId, handleCheckType } = useButton(flow);
+const { loading, loadingText, coilUnitId, handleCheckType } = useButton(flow);
 
 /* 操作日志抽屉 */
 const {
@@ -1605,6 +1605,8 @@ onMounted(async () => {
         :power-arr="isThreePhase ? powerArr : undefined" />
 
       <TestResults
+        :loading="loading"
+        :loadingText="loadingText"
         :tests="displayedTestResults"
         :modbus-status="modbusStatus"
         :powerStatusIsRunning="powerStatus?.isRunning"
@@ -1636,12 +1638,12 @@ onMounted(async () => {
           align-items: center;
         ">
         <button
-          v-if="!startBeforeLoading"
+          v-if="!loading"
           class="action-btn test-btn"
           @click="handleButtonAction()">
           {{ buttonTitle[flow.currentStep.value] ?? "下一步" }}
         </button>
-        <span v-if="startBeforeLoading" class="action-tips">{{
+        <span v-if="loading" class="action-tips">{{
           buttonTips[flow.currentStep.value]
         }}</span>
       </div>

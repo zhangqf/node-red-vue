@@ -13,6 +13,8 @@ export interface TestItem {
 
 const props = withDefaults(
   defineProps<{
+    loading: Boolean;
+    loadingText: string;
     tests?: TestItem[];
     modbusStatus?: {
       connected?: boolean;
@@ -143,13 +145,10 @@ const groupedRows = computed<GroupRow[]>(() => {
     </div>
 
     <div v-else class="test-list">
-      <template
-        v-if="
-          !powerStatusIsRunning &&
-          !startBeforeTestFinshed &&
-          !startBeforeLoading
-        ">
-        <div class="modbusStatus-content">请先进行启动前测试</div>
+      <template v-if="loading">
+        <div class="modbusStatus-content">
+          {{ loadingText }}
+        </div>
       </template>
       <template v-if="!powerStatusIsRunning && startBeforeTestFinshed">
         <div class="modbusStatus-content">开启动作电源</div>
