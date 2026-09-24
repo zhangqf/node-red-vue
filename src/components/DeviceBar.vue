@@ -9,7 +9,7 @@ interface ItemConfigItem {
 const emit = defineEmits<{
   "update:active": [val: string];
   back: [];
-  contactConfigClick: [type: string];
+  contactConfigClick: [type: string, nonInitialPageTransition?: boolean];
 }>();
 
 const props = defineProps<{
@@ -40,7 +40,7 @@ const contactConfigActive = ref("");
 // 触点点击事件
 const handleContactConfigClick = (type: string) => {
   contactConfigActive.value = type;
-  emit("contactConfigClick", type);
+  emit("contactConfigClick", type, true);
 };
 
 const handleButtonClick = (id: string) => {

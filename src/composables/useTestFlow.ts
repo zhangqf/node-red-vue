@@ -1,3 +1,11 @@
+/*
+ * @Author: error: error: git config user.name & please set dead value or install git && error: git config user.email & please set dead value or install git & please set dead value or install git
+ * @Date: 2026-09-09 16:32:15
+ * @LastEditors: error: error: git config user.name & please set dead value or install git && error: git config user.email & please set dead value or install git & please set dead value or install git
+ * @LastEditTime: 2026-09-23 10:43:20
+ * @FilePath: /switch-machine/src/composables/useTestFlow.ts
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
 import { ref } from "vue";
 import { STEP_TABLE, type StepId } from "@/utils/flow";
 import { useCommand, type AckData, type ModbusRealData } from "./useCommand";
@@ -17,7 +25,10 @@ export function useTestFlow(ws: UseSocketReturn) {
   };
 
   /** 当前步骤判定合格，跳到 onPass */
-  const pass = () => transition(STEP_TABLE[currentStep.value].onPass);
+  const pass = () => {
+    console.log(STEP_TABLE[currentStep.value].onPass);
+    transition(STEP_TABLE[currentStep.value].onPass);
+  };
 
   /** 当前步骤判定不合格，跳到 onFail（未配置则停留） */
   const fail = () => {

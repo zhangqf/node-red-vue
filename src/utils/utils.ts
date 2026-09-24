@@ -349,3 +349,7 @@ export function mergeResistance(data: number[]) {
   }
   return mergeData;
 }
+
+// 延时函数
+export const sleep = (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms));

@@ -11,11 +11,13 @@ import { HTTP_URL, WEBSOCKET_URL } from "@/config/config";
 import type { ActionRelays } from "@/utils/interface";
 import { ref } from "vue";
 
+type SwitchModel = "ZD6" | "ZD9" | "ZYJ7" | "ZDJ9";
+
 export function useDeviceLoad(ws: { connect: () => void }) {
   const active = ref<string>("");
   const device = ref<{ name: string }>({ name: "" });
   const combinationName = ref<string>("");
-  const deviceType = ref<string>("");
+  const deviceType = ref<SwitchModel | "">("");
   const configName = ref<string>("");
 
   const contact13Closed = ref<ActionRelays>({

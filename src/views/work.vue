@@ -23,6 +23,7 @@ import { useModbus } from "@/composables/useModbus";
 import { useMessageHandler } from "@/composables/useMessageHandler";
 import { useTestFlow } from "@/composables/useTestFlow";
 import { useOperationLog } from "@/composables/useOperationLog";
+import { useStartBeforeTest } from "@/composables/useStartBeforeTest";
 import {
   gen32BitArray,
   handleCalculate,
@@ -33,6 +34,7 @@ import {
   getCircuits,
   circuitPath,
   mergeResistance,
+  sleep,
 } from "@/utils/utils";
 import type {
   WSSTATUS,
@@ -48,6 +50,8 @@ import {
   // contact13Closed,
   DEFAULT_THRESHOLD,
   DEFAULT_CURVE_THRESHOLD,
+  startBeforeTestConfigTypeSetup,
+  Step,
 } from "@/utils/config";
 import type {
   ChannelExpect,
@@ -57,6 +61,7 @@ import type {
 
 import { speak } from "@/utils/speech";
 import { useButton } from "@/composables/useButton";
+import { error } from "console";
 
 const route = useRoute();
 const router = useRouter();
@@ -87,7 +92,14 @@ const {
 
 const flow = useTestFlow(ws);
 
-const { loading, loadingText, coilUnitId, handleCheckType } = useButton(flow);
+const {
+  msgError,
+  msgErrorText,
+  loading,
+  loadingText,
+  coilUnitId,
+  handleCheckType,
+} = useButton(flow);
 
 /* 操作日志抽屉 */
 const {
@@ -175,15 +187,44 @@ registerEvent("modbusStatus", (data: Record<string, string>) => {
 });
 
 registerEvent("modbusRealData", (data: Record<string, any>) => {
-  console.log("modbusRealData", data);
   flow.handleModbusRealData(data as any);
-  if (flow.isOk) {
+  console.log(flow.isOk.value);
+  if (flow.isOk.value) {
     funWsRealData(data);
   }
 });
 
 registerEvent("ThreePhaseACCollector", (data: Record<string, number[]>) => {
   funThreePhaseACCollector(data.value as number[]);
+});
+
+const handleFindCollect = (field: string) => {
+  const cfg = configName.value.replace(/(【.+?】)$/, "");
+  return getCircuits(
+    selectedContactType.value,
+    deviceType.value,
+    combinationName.value,
+    cfg,
+    field,
+  );
+};
+
+/* 启动前测试表示 */
+
+const {
+  startBeforeLoading,
+  startBeforeTestTips,
+  diagnosisMessages,
+  pendingSaveData,
+  currentResistanceChannle,
+  handleStartBeforeTest,
+  handleStartBeforeTestExpress,
+} = useStartBeforeTest({
+  flow,
+  deviceType,
+  channelConfigs,
+  resistanceThresholds,
+  handleFindCollect,
 });
 
 const isThreePhase = ref(false);
@@ -229,6 +270,7 @@ const handleActionRelays = (data: Record<string, any>) => {
 /* 表示继电器 */
 const handleExpressRelays = (data: Record<string, any>) => {
   //  if (isAction.value) {
+
   return handleWsRelayData(data.data);
   // }
 };
@@ -253,48 +295,49 @@ const handleCollectDCCurve = (data: Record<string, any>) => {
 /*
   启动前测试表示
   */
-const handleStartBeforeTestExpress = (data: Record<string, any>) => {
-  if (!startBeforeLoading.value) return;
-  const r = mergeResistance(data.data);
-  const result = startBeforeTestExpress(
-    r,
-    deviceType.value,
-    currentChannelConfig.value,
-    currentThreshold.value,
-  );
-  // 解析电路图 URL
-  const resolveImg = (field: string) => {
-    const circuits = handleFindCollect(field);
-    return circuits?.img?.[field] || "";
-  };
-  result.dcResult.forEach((r) => {
-    r.circuitImg = resolveImg(r.circuitField);
-  });
-  result.fcResult.forEach((r) => {
-    r.circuitImg = resolveImg(r.circuitField);
-  });
-  startBeforeTestTips.value = result;
+// const handleStartBeforeTestExpress = (data: Record<string, any>) => {
+//   console.log(data);
+//   if (!startBeforeLoading.value) return;
+//   const r = mergeResistance(data.data);
+//   const result = startBeforeTestExpress(
+//     r,
+//     deviceType.value,
+//     currentChannelConfig.value,
+//     currentThreshold.value,
+//   );
+//   // 解析电路图 URL
+//   const resolveImg = (field: string) => {
+//     const circuits = handleFindCollect(field);
+//     return circuits?.img?.[field] || "";
+//   };
+//   result.dcResult.forEach((r) => {
+//     r.circuitImg = resolveImg(r.circuitField);
+//   });
+//   result.fcResult.forEach((r) => {
+//     r.circuitImg = resolveImg(r.circuitField);
+//   });
+//   startBeforeTestTips.value = result;
 
-  // 放行判断：完全由电阻判定结果决定，与定位/反位表示无关，
-  // 定操(DC)或反操(FC)任一方向电阻判定通过即可进入下一步
-  const dcAvailable = result.direction.DC;
-  const fcAvailable = result.direction.FC;
-  const proceed = dcAvailable || fcAvailable;
+//   // 放行判断：完全由电阻判定结果决定，与定位/反位表示无关，
+//   // 定操(DC)或反操(FC)任一方向电阻判定通过即可进入下一步
+//   const dcAvailable = result.direction.DC;
+//   const fcAvailable = result.direction.FC;
+//   const proceed = dcAvailable || fcAvailable;
 
-  if (proceed) {
-    startBeforeLoading.value = false;
-    flow.pass(); // START_BEFORE_TEST → POWER_ON
-    availableDirections.value = { DC: dcAvailable, FC: fcAvailable };
-    diagnosisMessages.value = result.direction.diagnosis;
-    completedDirections.value = new Set();
-    initTestResults();
-  } else {
-    // 未通过：保持 startBeforeLoading=true，继续接收实时电阻数据反复判断
-    flow.fail(); // 停留 START_BEFORE_TEST
-    availableDirections.value = { DC: false, FC: false };
-    diagnosisMessages.value = result.direction.diagnosis;
-  }
-};
+//   if (proceed) {
+//     startBeforeLoading.value = false;
+//     flow.pass(); // START_BEFORE_TEST → POWER_ON
+//     availableDirections.value = { DC: dcAvailable, FC: fcAvailable };
+//     diagnosisMessages.value = result.direction.diagnosis;
+//     completedDirections.value = new Set();
+//     initTestResults();
+//   } else {
+//     // 未通过：保持 startBeforeLoading=true，继续接收实时电阻数据反复判断
+//     flow.fail(); // 停留 START_BEFORE_TEST
+//     availableDirections.value = { DC: false, FC: false };
+//     diagnosisMessages.value = result.direction.diagnosis;
+//   }
+// };
 
 /* useModbus */
 const {
@@ -350,7 +393,7 @@ const lockStatus = ref<Record<string, boolean>>({
 
 const testResults = ref<TestItem[]>([]);
 
-const startBeforeLoading = ref(false);
+// const startBeforeLoading = ref(false);
 
 let tempDate: number[][] = [];
 
@@ -417,9 +460,9 @@ const availableDirections = ref<{ DC: boolean; FC: boolean }>({
   DC: false,
   FC: false,
 });
-const diagnosisMessages = ref<string[]>([]);
+// const diagnosisMessages = ref<string[]>([]);
 const completedDirections = ref<Set<string>>(new Set());
-const pendingSaveData = ref<Record<string, any> | null>(null);
+// const pendingSaveData = ref<Record<string, any> | null>(null);
 
 const typeToFieldMap: Record<string, keyof ActionRelays> = {};
 relayConfigList.forEach((item) => {
@@ -488,17 +531,6 @@ const resetAllLock = () => {
   Object.keys(lockStatus.value).forEach((key) => {
     lockStatus.value[key] = false;
   });
-};
-
-const handleFindCollect = (field: string) => {
-  const cfg = configName.value.replace(/(【.+?】)$/, "");
-  return getCircuits(
-    selectedContactType.value,
-    deviceType.value,
-    combinationName.value,
-    cfg,
-    field,
-  );
 };
 
 /* 表示数据处理 */
@@ -575,11 +607,11 @@ const powerStatus = ref({
   desc: "",
 });
 
-const startBeforeTestTips = ref<{
-  dcResult: any[];
-  fcResult: any[];
-  direction: { DC: boolean; FC: boolean; diagnosis: string[] };
-} | null>(null);
+// const startBeforeTestTips = ref<{
+//   dcResult: any[];
+//   fcResult: any[];
+//   direction: { DC: boolean; FC: boolean; diagnosis: string[] };
+// } | null>(null);
 
 // /*
 //   启动前测试表示
@@ -848,42 +880,53 @@ const handleStart = () => {
 };
 
 /* 启动前测试 */
-const handleStartBeforeTest = () => {
-  flow.transition("START_BEFORE_TEST");
-  startBeforeLoading.value = true;
-  startBeforeTestTips.value = null;
-  diagnosisMessages.value = [];
-  pendingSaveData.value = null;
+// const handleStartBeforeTest = async () => {
+//   flow.transition("START_BEFORE_TEST");
+//   startBeforeLoading.value = true;
+//   startBeforeTestTips.value = null;
+//   diagnosisMessages.value = [];
+//   pendingSaveData.value = null;
 
-  availableDirections.value = { DC: false, FC: false };
-  const idxArr =
-    StartBeforeTestConfig[
-      deviceType.value as keyof typeof StartBeforeTestConfig
-    ];
+//   availableDirections.value = { DC: false, FC: false };
+//   const idxArr =
+//     StartBeforeTestConfig[
+//       deviceType.value as keyof typeof StartBeforeTestConfig
+//     ];
+//   const resistanceValue =
+//     Step[
+//       startBeforeTestConfigTypeSetup[
+//         deviceType.value as keyof typeof StartBeforeTestConfig
+//       ] as keyof typeof Step
+//     ];
 
-  const result = gen32BitArray([], [...idxArr]);
+//   console.log("resistance", resistanceValue);
 
-  flow
-    .sendCommand(
-      "startBeforeTestRelays",
-      {
-        value: result,
-        deviceType: deviceType.value,
-      },
-      // 读回比对：继电器线圈真正回显到 result 才算指令已执行
-      {
-        label: "启动前测试",
-        expect: { unitId: coilUnitId(deviceType.value), value: result },
-      },
-    )
-    .then((ok) => {
-      if (!ok) {
-        showToast("启动前测试指令未确认，请重试", "error");
-        startBeforeLoading.value = false;
-        flow.fail();
-      }
-    });
-};
+//   for (const [key, value] of Object.entries(resistanceValue)) {
+//     const result = gen32BitArray([], [...idxArr, ...value]);
+//     currentResistanceChannle.value = key
+//     const ok = await flow.sendCommand(
+//       "startBeforeTestRelays",
+//       {
+//         value: result,
+//         deviceType: deviceType.value,
+//       },
+//       // 读回比对：继电器线圈真正回显到 result 才算指令已执行
+//       {
+//         label: "启动前测试",
+//         expect: { unitId: coilUnitId(deviceType.value), value: result },
+//       },
+//     );
+
+//     if (!ok) {
+//       showToast("启动前测试指令未确认，请重试", "error");
+//       startBeforeLoading.value = false;
+//       flow.fail();
+//       return;
+//     }
+
+//     await sleep(2000);
+//   }
+// };
 
 const handleButtonAction = () => {
   console.log(flow.currentStep);
@@ -987,12 +1030,18 @@ const persistCloseType = async (type: string) => {
   }
 };
 
-const handleContactConfigClick = (type: string) => {
+const handleContactConfigClick = (
+  type: string,
+  nonInitialPageTransition?: boolean,
+) => {
   resetAllLock();
+  console.log(type);
   selectedContactType.value = type;
   // 切换闭合方式后，原启动前测试结果失效，需重新测试
   startBeforeLoading.value = false;
-  flow.transition("SETUP");
+  if (nonInitialPageTransition) {
+    flow.transition("SETUP");
+  }
   availableDirections.value = { DC: false, FC: false };
   diagnosisMessages.value = [];
   startBeforeTestTips.value = null;
@@ -1605,6 +1654,9 @@ onMounted(async () => {
         :power-arr="isThreePhase ? powerArr : undefined" />
 
       <TestResults
+        :currentStep="flow.currentStep"
+        :msgError="msgError"
+        :msgErrorText="msgErrorText"
         :loading="loading"
         :loadingText="loadingText"
         :tests="displayedTestResults"

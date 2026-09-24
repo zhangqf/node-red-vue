@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { onMounted, ref, watch, computed } from "vue";
+import { onMounted, ref, watch, computed, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import TopNav from "@/components/TopNav.vue";
 import GlobalToast from "@/components/GlobalToast.vue";
 import AuthDialog from "@/components/AuthDialog.vue";
 import { useAuth } from "@/composables/useAuth";
+import { AndroidSystemBars } from "capacitor-android-system-bars";
 
 const route = useRoute();
 const router = useRouter();
@@ -129,6 +130,19 @@ watch(
   },
   { immediate: true },
 );
+
+const enterImmersive = async () => {
+  await AndroidSystemBars.enterFullscreen({ mode: "IMMERSIVE" });
+};
+
+onMounted(async () => {
+  await enterImmersive();
+  document.addEventListener("resume", enterImmersive);
+});
+
+onUnmounted(() => {
+  document.removeEventListener("resume", enterImmersive);
+});
 </script>
 
 <template>

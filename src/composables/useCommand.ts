@@ -1,5 +1,6 @@
 import type { UseSocketReturn } from "./useSocket";
 import { useOperationLog } from "./useOperationLog";
+import { ref } from "vue";
 
 /** Node-RED 回执的 cmdAck 消息结构 */
 export interface AckData {
@@ -62,7 +63,7 @@ export function useCommand(ws: UseSocketReturn) {
   const opLog = useOperationLog();
   let msgId = 0;
   const pending = new Map<number, PendingCommand>();
-  let isOk = false;
+  let isOk = ref(false);
   const sendCommand = (
     cmd: string,
     payload: Record<string, any> = {},
@@ -81,11 +82,13 @@ export function useCommand(ws: UseSocketReturn) {
         pending.delete(id);
         if (!ok) {
           opLog.timeout(logId);
-          isOk = false;
+          isOk.value = false;
         } else {
-          isOk = true;
+          isOk.value = true;
         }
-        resolve(ok);
+        setTimeout(() => {
+          resolve(ok);
+        }, 1000);
       };
 
       const doSend = () => {

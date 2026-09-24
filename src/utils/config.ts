@@ -62,12 +62,35 @@ export const StartPowerConfig = {
   ZDJ9: [29, 30, 31],
 };
 
-export const StartBeforeTestConfig = {
-  ZD6: [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
-  ZD9: [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
-  ZYJ7: [13, 14, 15, 16, 17, 18, 19, 20, 23, 24, 25, 26, 27],
-  ZDJ9: [13, 14, 15, 16, 17, 18, 19, 20, 23, 24, 25, 26, 27],
+export const startBeforeTestConfigTypeSetup: Record<
+  "ZD6" | "ZD9" | "ZYJ7" | "ZDJ9",
+  string
+> = {
+  ZD6: "step2",
+  ZD9: "step2",
+  ZYJ7: "step4",
+  ZDJ9: "step4",
 };
+
+export const StartBeforeTestConfig = {
+  ZD6: [13, 14, 15, 16, 17, 18, 23],
+  ZD9: [13, 14, 15, 16, 17, 18, 23],
+  ZYJ7: [13, 14, 15, 16, 17, 18, 19, 20],
+  ZDJ9: [13, 14, 15, 16, 17, 18, 19, 20],
+};
+
+export const Step = {
+  step2: {
+    1: [21, 19],
+    2: [21, 20],
+  },
+  step4: {
+    3: [23, 24],
+    4: [23, 25],
+    5: [23, 26],
+    6: [23, 27],
+  },
+} as const;
 
 // ===== 4路阻值合并配置 =====
 // dcExpect / fcExpect: 该方向时期望的阻值状态

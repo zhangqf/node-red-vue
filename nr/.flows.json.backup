@@ -1,13 +1,5 @@
 [
     {
-        "id": "5be343417955c941",
-        "type": "tab",
-        "label": "流程 1",
-        "disabled": false,
-        "info": "",
-        "env": []
-    },
-    {
         "id": "e4bbd3713100fe17",
         "type": "tab",
         "label": "流程 3",
@@ -56,7 +48,7 @@
             "62fc6c706b4a34a3"
         ],
         "x": 74,
-        "y": 1019,
+        "y": 1099,
         "w": 1692,
         "h": 442
     },
@@ -87,7 +79,7 @@
             "f10274f409d9bc5d"
         ],
         "x": 74,
-        "y": 599,
+        "y": 699,
         "w": 1392,
         "h": 362
     },
@@ -117,21 +109,31 @@
             "8e1b1384a53df828",
             "7f34b1f515817ece",
             "15c676bbf274830b",
-            "a6eba4a98e4c70a4",
-            "21064522229bf4f0",
-            "a8c64df65bf7ad9e",
-            "d97db479c068a5c3",
-            "8905897a612fecba",
             "d6e3f9de70144c49",
             "50538159a7121897",
             "46556195a075bb2a",
             "4642e91abc419f31",
             "2554bbfae63dc703",
-            "ffc0d70102bcad37"
+            "ffc0d70102bcad37",
+            "5e60e4472d9abaf5",
+            "c3133bf8d2e0b6db",
+            "96071e297ddef409",
+            "d42c1886fcd7490e",
+            "30af2cd1b1206d58",
+            "5c80373e5d346889",
+            "3178317162fd48b9",
+            "f1df8e90c05ac6fd",
+            "8eda8e2cebf6b535",
+            "4050d3a4091ff3c5",
+            "90e44811ec5b111a",
+            "bd6fef35b99294e0",
+            "bcbde87494527b42",
+            "6987a4440629b13f",
+            "9b315d3387dcbe1e"
         ],
-        "x": 74,
-        "y": 59,
-        "w": 1472,
+        "x": 54,
+        "y": 19,
+        "w": 1512,
         "h": 522
     },
     {
@@ -971,19 +973,6 @@
         "showLogs": true
     },
     {
-        "id": "33892c68efc7c072",
-        "type": "ui-control",
-        "z": "5be343417955c941",
-        "name": "1",
-        "ui": "6030307041b868b9",
-        "events": "change",
-        "x": 290,
-        "y": 480,
-        "wires": [
-            []
-        ]
-    },
-    {
         "id": "mockCmdAckHandler",
         "type": "function",
         "z": "e4bbd3713100fe17",
@@ -1013,7 +1002,7 @@
         "server": "4b736505764b58bb",
         "client": "",
         "x": 160,
-        "y": 720,
+        "y": 820,
         "wires": [
             [
                 "f6e9d7e097e60402"
@@ -1032,7 +1021,7 @@
         "skipBodyParsing": false,
         "swaggerDoc": "",
         "x": 170,
-        "y": 1120,
+        "y": 1200,
         "wires": [
             [
                 "bbd68333fe91be2f"
@@ -1048,7 +1037,7 @@
         "statusCode": "200",
         "headers": {},
         "x": 1660,
-        "y": 1080,
+        "y": 1160,
         "wires": []
     },
     {
@@ -1065,7 +1054,7 @@
         "finalize": "",
         "libs": [],
         "x": 490,
-        "y": 680,
+        "y": 780,
         "wires": [
             [
                 "8e5bb841558f7674",
@@ -1088,7 +1077,7 @@
         "finalize": "",
         "libs": [],
         "x": 410,
-        "y": 1120,
+        "y": 1200,
         "wires": [
             [
                 "ad4ad9c54e05a5b8"
@@ -1108,7 +1097,7 @@
         "field": "uuid",
         "fieldType": "msg",
         "x": 830,
-        "y": 1140,
+        "y": 1220,
         "wires": [
             [
                 "e2434463005bea31"
@@ -1139,7 +1128,7 @@
         "repair": false,
         "outputs": 2,
         "x": 620,
-        "y": 1120,
+        "y": 1200,
         "wires": [
             [
                 "d1b0dd844c3d8c13"
@@ -1163,7 +1152,7 @@
         "finalize": "",
         "libs": [],
         "x": 860,
-        "y": 1080,
+        "y": 1160,
         "wires": [
             [
                 "a4647c8903d39b44"
@@ -1184,7 +1173,7 @@
         "finalize": "",
         "libs": [],
         "x": 1010,
-        "y": 1140,
+        "y": 1220,
         "wires": [
             [
                 "a4647c8903d39b44"
@@ -1205,11 +1194,10 @@
         "finalize": "",
         "libs": [],
         "x": 370,
-        "y": 200,
+        "y": 120,
         "wires": [
             [
-                "2cede691de602618",
-                "a6eba4a98e4c70a4"
+                "2cede691de602618"
             ]
         ]
     },
@@ -1232,7 +1220,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 180,
-        "y": 220,
+        "y": 120,
         "wires": [
             [
                 "24528c2f1d2587f6"
@@ -1244,7 +1232,7 @@
         "type": "modbus-flex-getter",
         "z": "e4bbd3713100fe17",
         "g": "a78c98a47184b2fa",
-        "name": "",
+        "name": "继电器",
         "showStatusActivities": true,
         "showErrors": true,
         "showWarnings": true,
@@ -1258,13 +1246,12 @@
         "delayOnStart": false,
         "enableDeformedMessages": false,
         "startDelayTime": "2",
-        "x": 640,
-        "y": 200,
+        "x": 550,
+        "y": 100,
         "wires": [
             [
                 "be1d62f199409815",
-                "8e1b1384a53df828",
-                "8905897a612fecba"
+                "8e1b1384a53df828"
             ],
             [
                 "8ce3da23a457bf4e"
@@ -1279,8 +1266,8 @@
         "name": "ws 发送数据",
         "server": "4b736505764b58bb",
         "client": "",
-        "x": 1450,
-        "y": 180,
+        "x": 1470,
+        "y": 220,
         "wires": []
     },
     {
@@ -1296,12 +1283,11 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 900,
-        "y": 180,
+        "x": 860,
+        "y": 100,
         "wires": [
             [
-                "d50b53f9cf0907c2",
-                "d97db479c068a5c3"
+                "d50b53f9cf0907c2"
             ]
         ]
     },
@@ -1320,7 +1306,7 @@
         "delayOnStart": false,
         "startDelayTime": "",
         "x": 1070,
-        "y": 800,
+        "y": 900,
         "wires": [
             [],
             []
@@ -1337,7 +1323,7 @@
         "sql": "CREATE TABLE IF NOT EXISTS device (\n    id TEXT PRIMARY KEY,\n    name TEXT,\n    typeName TEXT,\n    location TEXT,\n    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n)",
         "name": "CreateDeviceDB",
         "x": 480,
-        "y": 1420,
+        "y": 1500,
         "wires": [
             []
         ]
@@ -1352,7 +1338,7 @@
         "sql": "INSERT OR REPLACE INTO device (id, name,typeName, location) VALUES ($id, $name, $typeName,$location)",
         "name": "deviceDB",
         "x": 1180,
-        "y": 1080,
+        "y": 1160,
         "wires": [
             [
                 "5e1af7db10d7b9e4"
@@ -1382,7 +1368,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 220,
-        "y": 1420,
+        "y": 1500,
         "wires": [
             [
                 "6ab05986b5d67ea4"
@@ -1399,7 +1385,7 @@
         "sql": "\n\nSELECT * FROM device ORDER BY updated_at DESC",
         "name": "获取device",
         "x": 410,
-        "y": 1220,
+        "y": 1300,
         "wires": [
             [
                 "4fd8e73a29131ee8"
@@ -1418,7 +1404,7 @@
         "skipBodyParsing": false,
         "swaggerDoc": "",
         "x": 160,
-        "y": 1220,
+        "y": 1300,
         "wires": [
             [
                 "953e9c4eb9758f73"
@@ -1434,7 +1420,7 @@
         "statusCode": "200",
         "headers": {},
         "x": 1650,
-        "y": 1220,
+        "y": 1300,
         "wires": []
     },
     {
@@ -1451,7 +1437,7 @@
         "finalize": "",
         "libs": [],
         "x": 1360,
-        "y": 1080,
+        "y": 1160,
         "wires": [
             [
                 "1b29b8c8846873d6"
@@ -2549,7 +2535,7 @@
         "name": "机型资产管理",
         "info": "",
         "x": 170,
-        "y": 1060,
+        "y": 1140,
         "wires": []
     },
     {
@@ -2625,8 +2611,8 @@
         "g": "a78c98a47184b2fa",
         "name": "modbus读取",
         "info": "",
-        "x": 170,
-        "y": 160,
+        "x": 150,
+        "y": 60,
         "wires": []
     },
     {
@@ -2637,7 +2623,7 @@
         "name": "modbus 写入",
         "info": "",
         "x": 290,
-        "y": 680,
+        "y": 780,
         "wires": []
     },
     {
@@ -2872,7 +2858,7 @@
         "sql": "\n\n",
         "name": "获取device",
         "x": 970,
-        "y": 1300,
+        "y": 1380,
         "wires": [
             [
                 "13bd6c3aed222bb4"
@@ -2891,7 +2877,7 @@
         "skipBodyParsing": false,
         "swaggerDoc": "",
         "x": 170,
-        "y": 1300,
+        "y": 1380,
         "wires": [
             [
                 "af69ccc6c4f50f0f"
@@ -2907,7 +2893,7 @@
         "statusCode": "200",
         "headers": {},
         "x": 1650,
-        "y": 1300,
+        "y": 1380,
         "wires": []
     },
     {
@@ -2924,7 +2910,7 @@
         "finalize": "",
         "libs": [],
         "x": 620,
-        "y": 1300,
+        "y": 1380,
         "wires": [
             [
                 "888665f10992f316"
@@ -2945,7 +2931,7 @@
         "finalize": "",
         "libs": [],
         "x": 1260,
-        "y": 1300,
+        "y": 1380,
         "wires": [
             [
                 "f40fdbba500c4671"
@@ -3411,7 +3397,7 @@
         "scope": "group",
         "uncaught": false,
         "x": 1150,
-        "y": 540,
+        "y": 500,
         "wires": [
             [
                 "cd2082966920c8aa"
@@ -3433,7 +3419,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 1380,
-        "y": 540,
+        "y": 500,
         "wires": []
     },
     {
@@ -3718,7 +3704,7 @@
         "sql": "\n\nSELECT * FROM device ORDER BY updated_at DESC",
         "name": "获取device",
         "x": 790,
-        "y": 1360,
+        "y": 1440,
         "wires": [
             [
                 "738abefbb2957d43"
@@ -3737,7 +3723,7 @@
         "skipBodyParsing": false,
         "swaggerDoc": "",
         "x": 170,
-        "y": 1360,
+        "y": 1440,
         "wires": [
             [
                 "caea35e23c8b331a"
@@ -3753,7 +3739,7 @@
         "statusCode": "200",
         "headers": {},
         "x": 1650,
-        "y": 1360,
+        "y": 1440,
         "wires": []
     },
     {
@@ -3770,7 +3756,7 @@
         "finalize": "",
         "libs": [],
         "x": 450,
-        "y": 1360,
+        "y": 1440,
         "wires": [
             [
                 "c194d4594844291b"
@@ -3791,7 +3777,7 @@
         "finalize": "",
         "libs": [],
         "x": 1150,
-        "y": 1360,
+        "y": 1440,
         "wires": [
             [
                 "8a559de294823de1"
@@ -3811,8 +3797,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 810,
-        "y": 280,
+        "x": 730,
+        "y": 140,
         "wires": [
             []
         ]
@@ -3831,7 +3817,7 @@
         "finalize": "",
         "libs": [],
         "x": 820,
-        "y": 100,
+        "y": 60,
         "wires": [
             []
         ]
@@ -3858,8 +3844,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 200,
-        "y": 360,
+        "x": 1080,
+        "y": 60,
         "wires": [
             [
                 "15c676bbf274830b"
@@ -3879,8 +3865,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 760,
-        "y": 340,
+        "x": 1360,
+        "y": 80,
         "wires": [
             [
                 "d50b53f9cf0907c2"
@@ -3907,7 +3893,7 @@
         "enableDeformedMessages": false,
         "startDelayTime": "",
         "x": 560,
-        "y": 480,
+        "y": 440,
         "wires": [
             [
                 "6669ca4a265245c5",
@@ -3941,7 +3927,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 200,
-        "y": 480,
+        "y": 440,
         "wires": [
             [
                 "46556195a075bb2a"
@@ -3982,7 +3968,7 @@
         "repair": false,
         "outputs": 4,
         "x": 310,
-        "y": 780,
+        "y": 880,
         "wires": [
             [
                 "5f829c6a2cbec815",
@@ -4014,7 +4000,7 @@
         "finalize": "",
         "libs": [],
         "x": 500,
-        "y": 920,
+        "y": 1020,
         "wires": [
             [
                 "d50b53f9cf0907c2",
@@ -4036,7 +4022,7 @@
         "finalize": "",
         "libs": [],
         "x": 510,
-        "y": 720,
+        "y": 820,
         "wires": [
             []
         ]
@@ -4055,7 +4041,7 @@
         "finalize": "",
         "libs": [],
         "x": 330,
-        "y": 480,
+        "y": 440,
         "wires": [
             [
                 "50538159a7121897",
@@ -4134,69 +4120,6 @@
         "x": 2400,
         "y": 820,
         "wires": []
-    },
-    {
-        "id": "a6eba4a98e4c70a4",
-        "type": "debug",
-        "z": "e4bbd3713100fe17",
-        "g": "a78c98a47184b2fa",
-        "name": "debug 22",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 510,
-        "y": 260,
-        "wires": []
-    },
-    {
-        "id": "21064522229bf4f0",
-        "type": "inject",
-        "z": "e4bbd3713100fe17",
-        "g": "a78c98a47184b2fa",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            }
-        ],
-        "repeat": "0.2",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 1200,
-        "y": 100,
-        "wires": [
-            [
-                "a8c64df65bf7ad9e"
-            ]
-        ]
-    },
-    {
-        "id": "a8c64df65bf7ad9e",
-        "type": "function",
-        "z": "e4bbd3713100fe17",
-        "g": "a78c98a47184b2fa",
-        "name": "mock电流",
-        "func": "\n\n// msg.sendData = \n//   {\n//     \"fc\":1,\n//     \"unitId\":3,\n//     \"address\":0,\n//     \"quantity\":32,\n//     \"data\":[0,0,1,0,0,0],\n//     \"type\":\"modbusRealData\"\n\n//   }\nconst currentData = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]\n\n// const currentData = [\n//     2.5,\n//     5.4,\n//     8.1,\n//     10.6,\n//     12.9,\n//     15,\n//     16.9,\n//     18.6,\n//     20.1,\n//     21.4,\n//     22.5,\n//     23.4,\n//     24.1,\n//     24.6,\n//     24.9,\n//     25,\n//     24.9,\n//     24.6,\n//     24.1,\n//     23.4,\n//     22.5,\n//     21.4,\n//     20.1,\n//     18.6,\n//     16.9,\n//     15,\n//     12.9,\n//     10.6,\n//     8.1,\n//     5.4,\n//     2.5,\n//     5.00,\n//     5.02,\n//     5.035,\n//     5.048,\n//     5.056,\n//     5.062,\n//     5.067,\n//     5.070,\n//     5.072,\n//     5.0735,\n//     5.0745,\n//     5.0752,\n//     5.0758,\n//     5.0762,\n//     5.0765,\n//     5.0767,\n//     5.0768,\n//     5.0769,\n//     5.07695,\n//     5.0770,\n//     5.0770,\n//     5.0770,\n//     5.0770,\n//     5.0770,\n//     5.0770,\n//     2,2,2,2,2,2,2,2,\n//     6,6,6,6,6,6,6,6,\n//     2,2,2,2,2,2,2,2,\n//     6,6,6,6,6,6,6,6,\n//     2,2,2,2,2,2,2,2\n// ]\n\n\nconst len = currentData.length;\nlet idx = context.get('idx')||0;\n\n\nmsg.payload = currentData[idx];\n\n\n\nmsg.sendData = {\n    data:msg.payload,\n    type:\"modbusRealData\",\n    unitId: 4,\n\tfc: 3,\n\taddress:14,\n\tquantity: 1,\n}\n\nidx = idx + 1;\nif(idx >= currentData.length){\n    idx = 0;\n}\ncontext.set(\"idx\", idx);\n\n\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 1360,
-        "y": 100,
-        "wires": [
-            []
-        ]
     },
     {
         "id": "2094fe2a8608dfa4",
@@ -5083,7 +5006,7 @@
         "finalize": "",
         "libs": [],
         "x": 510,
-        "y": 840,
+        "y": 940,
         "wires": [
             [
                 "8e5bb841558f7674",
@@ -5214,42 +5137,6 @@
         "wires": []
     },
     {
-        "id": "d97db479c068a5c3",
-        "type": "debug",
-        "z": "e4bbd3713100fe17",
-        "g": "a78c98a47184b2fa",
-        "name": "debug 2",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1040,
-        "y": 120,
-        "wires": []
-    },
-    {
-        "id": "8905897a612fecba",
-        "type": "debug",
-        "z": "e4bbd3713100fe17",
-        "g": "a78c98a47184b2fa",
-        "name": "debug 5",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 970,
-        "y": 220,
-        "wires": []
-    },
-    {
         "id": "6669ca4a265245c5",
         "type": "function",
         "z": "e4bbd3713100fe17",
@@ -5300,8 +5187,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 760,
-        "y": 380,
+        "x": 1300,
+        "y": 120,
         "wires": [
             [
                 "d50b53f9cf0907c2"
@@ -5327,8 +5214,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 200,
-        "y": 400,
+        "x": 1100,
+        "y": 100,
         "wires": [
             [
                 "7d3e40787d644849"
@@ -5349,7 +5236,7 @@
         "finalize": "",
         "libs": [],
         "x": 1000,
-        "y": 460,
+        "y": 420,
         "wires": [
             [
                 "d50b53f9cf0907c2"
@@ -5371,7 +5258,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 900,
-        "y": 520,
+        "y": 480,
         "wires": []
     },
     {
@@ -5389,7 +5276,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 470,
-        "y": 540,
+        "y": 500,
         "wires": []
     },
     {
@@ -6634,7 +6521,7 @@
         "z": "e4bbd3713100fe17",
         "g": "264be9ece447ca9d",
         "name": "32路继电器",
-        "func": "\n// 开发态 mock：回显最近一次写入该 unitId 的线圈值\nconst unitid = (flow.get(\"deviceType\") === \"ZD6\" || flow.get(\"deviceType\") === \"ZD9\") ? 1 : 2;\nlet last = flow.get(\"coilWrite_\" + unitid);\nif (!Array.isArray(last)) {\n    // 尚无写入时，保留原有固定模拟值\n    last = new Array(32).fill(0);\n    last[0] = 1; last[3] = 1; last[4] = 1; last[5] = 1; last[6] = 1; last[7] = 1;\n}\nconst data32 = new Array(32).fill(0);\nfor (let i = 0; i < last.length && i < 32; i++) data32[i] = last[i] ? 1 : 0;\n\ndata32[18] = 1\n\nmsg.sendData = {\n    data: data32,\n    type: \"modbusRealData\",\n    unitId: unitid,\n    fc: 3,\n    address: 1,\n    quantity: 32,\n};\n\nreturn msg",
+        "func": "\n// 开发态 mock：回显最近一次写入该 unitId 的线圈值\nconst unitid = (flow.get(\"deviceType\") === \"ZD6\" || flow.get(\"deviceType\") === \"ZD9\") ? 1 : 2;\nlet last = flow.get(\"coilWrite_\" + unitid);\nif (!Array.isArray(last)) {\n    // 尚无写入时，保留原有固定模拟值\n    last = new Array(32).fill(0);\n    last[0] = 1; last[3] = 1; last[4] = 1; last[5] = 1; last[6] = 1; last[7] = 1;\n}\nconst data32 = new Array(32).fill(0);\nfor (let i = 0; i < last.length && i < 32; i++) data32[i] = last[i] ? 1 : 0;\n\n// data32[18] = 1\n\nmsg.sendData = {\n    data: data32,\n    type: \"modbusRealData\",\n    unitId: unitid,\n    fc: 3,\n    address: 1,\n    quantity: 32,\n};\n\nreturn msg",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -6663,7 +6550,7 @@
         "finalize": "",
         "libs": [],
         "x": 1350,
-        "y": 680,
+        "y": 780,
         "wires": [
             [
                 "d50b53f9cf0907c2"
@@ -6737,7 +6624,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 640,
-        "y": 640,
+        "y": 740,
         "wires": []
     },
     {
@@ -6755,7 +6642,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 760,
-        "y": 920,
+        "y": 1020,
         "wires": []
     },
     {
@@ -6807,6 +6694,371 @@
             [
                 "e2524b41be3e6236"
             ]
+        ]
+    },
+    {
+        "id": "5e60e4472d9abaf5",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "1236",
+        "func": "const deviceType = flow.get(\"deviceType\") || \"\";\nconst isZYJ7orZDJ9 = deviceType === \"ZYJ7\" || deviceType === \"ZDJ9\";\n\nconst allDevices = [\n  { fc:1, unitid:1, address:0, quantity:32, name:\"ZD6\" },\n  { fc:1, unitid:2, address:0, quantity:32, name:\"ZYJ7\" },\n  { fc:2, unitid:3, address:0, quantity:16, name:\"表示\" },\n  { fc:3, unitid:6, address:0, quantity:16, name:\"电阻\" }\n];\n\nconst deviceList = allDevices.filter(d => {\n    if (isZYJ7orZDJ9 && d.unitid === 1) return false;\n    if (!isZYJ7orZDJ9 && d.unitid === 2) return false;\n    return true;\n});\n\nlet idx = context.get(\"idx\") || 0;\nif (idx >= deviceList.length) idx = 0;\nconst dev = deviceList[idx];\nmsg.modbus = {};\nmsg.payload = {\n    fc: dev.fc,\n    unitid: dev.unitid,\n    address: dev.address,\n    quantity: dev.quantity\n};\nmsg.deviceName = dev.name;\nidx = idx + 1;\nif (idx >= deviceList.length) idx = 0;\ncontext.set(\"idx\", idx);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 370,
+        "y": 200,
+        "wires": [
+            [
+                "96071e297ddef409"
+            ]
+        ]
+    },
+    {
+        "id": "c3133bf8d2e0b6db",
+        "type": "inject",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "0.2",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 180,
+        "y": 200,
+        "wires": [
+            [
+                "5e60e4472d9abaf5"
+            ]
+        ]
+    },
+    {
+        "id": "96071e297ddef409",
+        "type": "modbus-flex-getter",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "表示",
+        "showStatusActivities": true,
+        "showErrors": true,
+        "showWarnings": true,
+        "logIOActivities": true,
+        "server": "6c4ec5576cf2e20d",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": true,
+        "emptyMsgOnFail": true,
+        "keepMsgProperties": true,
+        "delayOnStart": false,
+        "enableDeformedMessages": false,
+        "startDelayTime": "2",
+        "x": 550,
+        "y": 200,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "d42c1886fcd7490e",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "1236",
+        "func": "const deviceType = flow.get(\"deviceType\") || \"\";\nconst isZYJ7orZDJ9 = deviceType === \"ZYJ7\" || deviceType === \"ZDJ9\";\n\nconst allDevices = [\n  { fc:1, unitid:1, address:0, quantity:32, name:\"ZD6\" },\n  { fc:1, unitid:2, address:0, quantity:32, name:\"ZYJ7\" },\n  { fc:2, unitid:3, address:0, quantity:16, name:\"表示\" },\n  { fc:3, unitid:6, address:0, quantity:16, name:\"电阻\" }\n];\n\nconst deviceList = allDevices.filter(d => {\n    if (isZYJ7orZDJ9 && d.unitid === 1) return false;\n    if (!isZYJ7orZDJ9 && d.unitid === 2) return false;\n    return true;\n});\n\nlet idx = context.get(\"idx\") || 0;\nif (idx >= deviceList.length) idx = 0;\nconst dev = deviceList[idx];\nmsg.modbus = {};\nmsg.payload = {\n    fc: dev.fc,\n    unitid: dev.unitid,\n    address: dev.address,\n    quantity: dev.quantity\n};\nmsg.deviceName = dev.name;\nidx = idx + 1;\nif (idx >= deviceList.length) idx = 0;\ncontext.set(\"idx\", idx);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 370,
+        "y": 240,
+        "wires": [
+            [
+                "5c80373e5d346889"
+            ]
+        ]
+    },
+    {
+        "id": "30af2cd1b1206d58",
+        "type": "inject",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "0.2",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 180,
+        "y": 240,
+        "wires": [
+            [
+                "d42c1886fcd7490e"
+            ]
+        ]
+    },
+    {
+        "id": "5c80373e5d346889",
+        "type": "modbus-flex-getter",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "电阻",
+        "showStatusActivities": true,
+        "showErrors": true,
+        "showWarnings": true,
+        "logIOActivities": true,
+        "server": "6c4ec5576cf2e20d",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": true,
+        "emptyMsgOnFail": true,
+        "keepMsgProperties": true,
+        "delayOnStart": false,
+        "enableDeformedMessages": false,
+        "startDelayTime": "2",
+        "x": 550,
+        "y": 240,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "3178317162fd48b9",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "1236",
+        "func": "const deviceType = flow.get(\"deviceType\") || \"\";\nconst isZYJ7orZDJ9 = deviceType === \"ZYJ7\" || deviceType === \"ZDJ9\";\n\nconst allDevices = [\n  { fc:1, unitid:1, address:0, quantity:32, name:\"ZD6\" },\n  { fc:1, unitid:2, address:0, quantity:32, name:\"ZYJ7\" },\n  { fc:2, unitid:3, address:0, quantity:16, name:\"表示\" },\n  { fc:3, unitid:6, address:0, quantity:16, name:\"电阻\" }\n];\n\nconst deviceList = allDevices.filter(d => {\n    if (isZYJ7orZDJ9 && d.unitid === 1) return false;\n    if (!isZYJ7orZDJ9 && d.unitid === 2) return false;\n    return true;\n});\n\nlet idx = context.get(\"idx\") || 0;\nif (idx >= deviceList.length) idx = 0;\nconst dev = deviceList[idx];\nmsg.modbus = {};\nmsg.payload = {\n    fc: dev.fc,\n    unitid: dev.unitid,\n    address: dev.address,\n    quantity: dev.quantity\n};\nmsg.deviceName = dev.name;\nidx = idx + 1;\nif (idx >= deviceList.length) idx = 0;\ncontext.set(\"idx\", idx);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 370,
+        "y": 280,
+        "wires": [
+            [
+                "8eda8e2cebf6b535"
+            ]
+        ]
+    },
+    {
+        "id": "f1df8e90c05ac6fd",
+        "type": "inject",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "0.2",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 180,
+        "y": 280,
+        "wires": [
+            [
+                "3178317162fd48b9"
+            ]
+        ]
+    },
+    {
+        "id": "8eda8e2cebf6b535",
+        "type": "modbus-flex-getter",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "直流电流",
+        "showStatusActivities": true,
+        "showErrors": true,
+        "showWarnings": true,
+        "logIOActivities": true,
+        "server": "6c4ec5576cf2e20d",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": true,
+        "emptyMsgOnFail": true,
+        "keepMsgProperties": true,
+        "delayOnStart": false,
+        "enableDeformedMessages": false,
+        "startDelayTime": "2",
+        "x": 560,
+        "y": 280,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "4050d3a4091ff3c5",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "1236",
+        "func": "const deviceType = flow.get(\"deviceType\") || \"\";\nconst isZYJ7orZDJ9 = deviceType === \"ZYJ7\" || deviceType === \"ZDJ9\";\n\nconst allDevices = [\n  { fc:1, unitid:1, address:0, quantity:32, name:\"ZD6\" },\n  { fc:1, unitid:2, address:0, quantity:32, name:\"ZYJ7\" },\n  { fc:2, unitid:3, address:0, quantity:16, name:\"表示\" },\n  { fc:3, unitid:6, address:0, quantity:16, name:\"电阻\" }\n];\n\nconst deviceList = allDevices.filter(d => {\n    if (isZYJ7orZDJ9 && d.unitid === 1) return false;\n    if (!isZYJ7orZDJ9 && d.unitid === 2) return false;\n    return true;\n});\n\nlet idx = context.get(\"idx\") || 0;\nif (idx >= deviceList.length) idx = 0;\nconst dev = deviceList[idx];\nmsg.modbus = {};\nmsg.payload = {\n    fc: dev.fc,\n    unitid: dev.unitid,\n    address: dev.address,\n    quantity: dev.quantity\n};\nmsg.deviceName = dev.name;\nidx = idx + 1;\nif (idx >= deviceList.length) idx = 0;\ncontext.set(\"idx\", idx);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 370,
+        "y": 320,
+        "wires": [
+            [
+                "bd6fef35b99294e0"
+            ]
+        ]
+    },
+    {
+        "id": "90e44811ec5b111a",
+        "type": "inject",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "0.2",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 180,
+        "y": 320,
+        "wires": [
+            [
+                "4050d3a4091ff3c5"
+            ]
+        ]
+    },
+    {
+        "id": "bd6fef35b99294e0",
+        "type": "modbus-flex-getter",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "变频器",
+        "showStatusActivities": true,
+        "showErrors": true,
+        "showWarnings": true,
+        "logIOActivities": true,
+        "server": "6c4ec5576cf2e20d",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": true,
+        "emptyMsgOnFail": true,
+        "keepMsgProperties": true,
+        "delayOnStart": false,
+        "enableDeformedMessages": false,
+        "startDelayTime": "2",
+        "x": 550,
+        "y": 320,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "bcbde87494527b42",
+        "type": "function",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "1236",
+        "func": "const deviceType = flow.get(\"deviceType\") || \"\";\nconst isZYJ7orZDJ9 = deviceType === \"ZYJ7\" || deviceType === \"ZDJ9\";\n\nconst allDevices = [\n  { fc:1, unitid:1, address:0, quantity:32, name:\"ZD6\" },\n  { fc:1, unitid:2, address:0, quantity:32, name:\"ZYJ7\" },\n  { fc:2, unitid:3, address:0, quantity:16, name:\"表示\" },\n  { fc:3, unitid:6, address:0, quantity:16, name:\"电阻\" }\n];\n\nconst deviceList = allDevices.filter(d => {\n    if (isZYJ7orZDJ9 && d.unitid === 1) return false;\n    if (!isZYJ7orZDJ9 && d.unitid === 2) return false;\n    return true;\n});\n\nlet idx = context.get(\"idx\") || 0;\nif (idx >= deviceList.length) idx = 0;\nconst dev = deviceList[idx];\nmsg.modbus = {};\nmsg.payload = {\n    fc: dev.fc,\n    unitid: dev.unitid,\n    address: dev.address,\n    quantity: dev.quantity\n};\nmsg.deviceName = dev.name;\nidx = idx + 1;\nif (idx >= deviceList.length) idx = 0;\ncontext.set(\"idx\", idx);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 370,
+        "y": 360,
+        "wires": [
+            [
+                "9b315d3387dcbe1e"
+            ]
+        ]
+    },
+    {
+        "id": "6987a4440629b13f",
+        "type": "inject",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "0.2",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 180,
+        "y": 360,
+        "wires": [
+            [
+                "bcbde87494527b42"
+            ]
+        ]
+    },
+    {
+        "id": "9b315d3387dcbe1e",
+        "type": "modbus-flex-getter",
+        "z": "e4bbd3713100fe17",
+        "g": "a78c98a47184b2fa",
+        "name": "交流电流",
+        "showStatusActivities": true,
+        "showErrors": true,
+        "showWarnings": true,
+        "logIOActivities": true,
+        "server": "6c4ec5576cf2e20d",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": true,
+        "emptyMsgOnFail": true,
+        "keepMsgProperties": true,
+        "delayOnStart": false,
+        "enableDeformedMessages": false,
+        "startDelayTime": "2",
+        "x": 560,
+        "y": 360,
+        "wires": [
+            [],
+            []
         ]
     }
 ]

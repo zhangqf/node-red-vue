@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, type Ref } from "vue";
+
+import { anctionTips } from "@/utils/button";
+import type { StepId } from "@/utils/flow";
 
 export interface TestItem {
   name: string;
@@ -13,7 +16,10 @@ export interface TestItem {
 
 const props = withDefaults(
   defineProps<{
-    loading: Boolean;
+    currentStep: Ref<StepId, StepId>;
+    msgError: boolean;
+    msgErrorText: string;
+    loading: boolean;
     loadingText: string;
     tests?: TestItem[];
     modbusStatus?: {
@@ -150,10 +156,21 @@ const groupedRows = computed<GroupRow[]>(() => {
           {{ loadingText }}
         </div>
       </template>
-      <template v-if="!powerStatusIsRunning && startBeforeTestFinshed">
-        <div class="modbusStatus-content">开启动作电源</div>
+      <template v-else-if="msgError">
+        <div class="modbusStatus-content">
+          {{ msgErrorText }}
+        </div>
       </template>
-      <template v-if="startBeforeLoading"> 启动前测试，等待结果中... </template>
+      <template v-else>
+        <div class="modbusStatus-content">
+          <!-- {{ currentStep }}
+          {{ anctionTips }} -->
+          <!-- {{ [currentStep] }} -->
+          {{ anctionTips[currentStep.value] }}
+        </div>
+      </template>
+
+      <!-- <template v-if="startBeforeLoading"> 启动前测试，等待结果中... </template> -->
       <!-- 启动前测试结果（始终显示，不隐藏） -->
       <template v-if="testResult">
         <!-- <div class="direction-banner">

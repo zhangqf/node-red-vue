@@ -67,17 +67,12 @@ export const useModbus = (option: useModbusOptions) => {
     modbusStatus.value = data;
   };
   const funWsRealData = (data: Record<string, string | number>) => {
-    let unitId = data.unitId;
-    switch (unitId) {
-      case 1:
-        if (deviceType.value === "ZYJ7" || deviceType.value === "ZDJ9") return;
+    let module = data.module;
+    switch (module) {
+      case "relay":
         handleActionRelays(data);
         break;
-      case 2:
-        if (deviceType.value === "ZD6" || deviceType.value === "ZD9") return;
-        handleActionRelays(data);
-        break;
-      case 3:
+      case "expressRelays":
         // 表示
         handleExpressRelays(data);
         break;
@@ -85,11 +80,11 @@ export const useModbus = (option: useModbusOptions) => {
         // 采集220曲线
         handleCollectDCCurve(data);
         break;
-      case 6:
+      case "resistance":
         handleStartBeforeTestExpress(data);
         break;
       default:
-        console.warn("未知 unitId:", unitId);
+        console.warn("未知 module:", module);
     }
   };
   /* 三相采集模块初级处理 */

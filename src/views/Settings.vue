@@ -100,27 +100,27 @@ onMounted(() => {
 <template>
   <div class="settings-page">
     <h2 class="page-title">系统设置</h2>
-
-    <div class="section">
-      <h3 class="section-title">服务器地址</h3>
-      <div class="network-form">
-        <div class="form-item">
-          <label class="form-label">HTTP 地址</label>
-          <input
-            v-model="httpUrl"
-            type="text"
-            class="form-input"
-            placeholder="例如: http://192.168.1.10:1880" />
-        </div>
-        <div class="form-item">
-          <label class="form-label">WebSocket 地址</label>
-          <input
-            v-model="websocketUrl"
-            type="text"
-            class="form-input"
-            placeholder="例如: ws://192.168.1.10:1880" />
-        </div>
-        <!-- <div class="form-item">
+    <div style="display: flex; width: 100%; justify-content: space-around">
+      <div class="section">
+        <h3 class="section-title">服务器地址</h3>
+        <div class="network-form">
+          <div class="form-item">
+            <label class="form-label">HTTP 地址</label>
+            <input
+              v-model="httpUrl"
+              type="text"
+              class="form-input"
+              placeholder="例如: http://192.168.1.10:1880" />
+          </div>
+          <div class="form-item">
+            <label class="form-label">WebSocket 地址</label>
+            <input
+              v-model="websocketUrl"
+              type="text"
+              class="form-input"
+              placeholder="例如: ws://192.168.1.10:1880" />
+          </div>
+          <!-- <div class="form-item">
           <label class="form-label">MQTT 地址</label>
           <input
             v-model="mqttUrl"
@@ -128,63 +128,64 @@ onMounted(() => {
             class="form-input"
             placeholder="例如: ws://192.168.1.10:8083" />
         </div> -->
-        <p v-if="messageUrl" :class="['form-msg', { error: isErrorUrl }]">
-          {{ messageUrl }}
-        </p>
-        <div class="config-actions">
-          <button type="button" class="form-btn" @click="onSaveNetworkConfig">
-            保存地址
-          </button>
-          <button
-            v-if="hasCustomConfig"
-            type="button"
-            class="reset-btn"
-            @click="
-              () => {
-                httpUrl = DEFAULT_CONFIG.httpUrl;
-                websocketUrl = DEFAULT_CONFIG.websocketUrl;
-                mqttUrl = DEFAULT_CONFIG.mqttUrl;
-                onSaveNetworkConfig();
-              }
-            ">
-            恢复默认
-          </button>
+          <p v-if="messageUrl" :class="['form-msg', { error: isErrorUrl }]">
+            {{ messageUrl }}
+          </p>
+          <div class="config-actions">
+            <button type="button" class="form-btn" @click="onSaveNetworkConfig">
+              保存地址
+            </button>
+            <button
+              v-if="hasCustomConfig"
+              type="button"
+              class="reset-btn"
+              @click="
+                () => {
+                  httpUrl = DEFAULT_CONFIG.httpUrl;
+                  websocketUrl = DEFAULT_CONFIG.websocketUrl;
+                  mqttUrl = DEFAULT_CONFIG.mqttUrl;
+                  onSaveNetworkConfig();
+                }
+              ">
+              恢复默认
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="section" style="margin-top: 24px">
-      <h3 class="section-title">修改资产操作密码</h3>
-      <form class="password-form" @submit.prevent="onSubmit">
-        <div class="form-item">
-          <label class="form-label">原密码</label>
-          <input
-            v-model="oldPassword"
-            type="password"
-            class="form-input"
-            placeholder="输入原密码" />
-        </div>
-        <div class="form-item">
-          <label class="form-label">新密码</label>
-          <input
-            v-model="newPassword"
-            type="password"
-            class="form-input"
-            placeholder="至少 6 位" />
-        </div>
-        <div class="form-item">
-          <label class="form-label">确认新密码</label>
-          <input
-            v-model="confirmPassword"
-            type="password"
-            class="form-input"
-            placeholder="再次输入新密码" />
-        </div>
-        <p v-if="message" :class="['form-msg', { error: isError }]">
-          {{ message }}
-        </p>
-        <button type="submit" class="form-btn">保存修改</button>
-      </form>
+      <div class="section">
+        <h3 class="section-title">修改资产操作密码</h3>
+        <form class="password-form" @submit.prevent="onSubmit">
+          <div class="form-item">
+            <label class="form-label">原密码</label>
+            <input
+              v-model="oldPassword"
+              type="password"
+              class="form-input"
+              placeholder="输入原密码" />
+          </div>
+          <div class="form-item">
+            <label class="form-label">新密码</label>
+            <input
+              v-model="newPassword"
+              type="password"
+              class="form-input"
+              placeholder="至少 6 位" />
+          </div>
+          <div class="form-item">
+            <label class="form-label">确认新密码</label>
+            <input
+              v-model="confirmPassword"
+              type="password"
+              class="form-input"
+              placeholder="再次输入新密码" />
+          </div>
+          <p v-if="message" :class="['form-msg', { error: isError }]">
+            {{ message }}
+          </p>
+          <button type="submit" class="form-btn">保存修改</button>
+        </form>
+      </div>
     </div>
   </div>
 </template>
@@ -192,7 +193,7 @@ onMounted(() => {
 <style scoped>
 .settings-page {
   padding: 24px 32px;
-  max-width: 620px;
+  /* max-width: 620px; */
 }
 
 .page-title {
@@ -207,6 +208,8 @@ onMounted(() => {
   border: 1px solid #1a2d44;
   border-radius: 6px;
   padding: 20px 24px;
+  flex: 1;
+  margin: 0 10px;
 }
 
 .section-title {
