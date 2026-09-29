@@ -2,6 +2,7 @@
 import { nextTick, onMounted, ref } from "vue";
 import { HTTP_URL } from "@/config/config";
 import { useToast } from "@/composables/useToast";
+import { fetchWithTimeout as fetch } from "@/utils/http";
 
 const { withLoading } = useToast();
 

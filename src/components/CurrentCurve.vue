@@ -36,7 +36,8 @@ function makeLineSeries(
     type: "line",
     data,
     smooth: false,
-    symbol: "none",
+    symbol: data.length === 1 ? "circle" : "none",
+    symbolSize: data.length === 1 ? 7 : 0,
     itemStyle: { color },
     lineStyle: {
       color,
@@ -550,7 +551,6 @@ defineExpose({
     <div v-else ref="containerThree" class="chart-container">
       <v-chart :option="chartOptThree" autoresize />
     </div>
-
     <div class="params-row" v-if="!isThreePhase">
       <div class="param">
         <span class="param-label">电流峰值</span>

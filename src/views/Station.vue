@@ -5,6 +5,7 @@ import { useRouter } from "vue-router";
 import { useToast } from "@/composables/useToast";
 import * as XLSX from "xlsx";
 import { Workbook } from "exceljs";
+import { fetchWithTimeout as fetch } from "@/utils/http";
 
 const { withLoading, showToast } = useToast();
 const router = useRouter();

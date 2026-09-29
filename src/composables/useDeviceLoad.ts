@@ -17,7 +17,7 @@ export function useDeviceLoad(ws: { connect: () => void }) {
   const active = ref<string>("");
   const device = ref<{ name: string }>({ name: "" });
   const combinationName = ref<string>("");
-  const deviceType = ref<SwitchModel | "">("");
+  const deviceType = ref<"ZD6" | "ZD9" | "ZYJ7" | "ZDJ9" | "">("");
   const configName = ref<string>("");
 
   const contact13Closed = ref<ActionRelays>({
@@ -127,13 +127,6 @@ export function useDeviceLoad(ws: { connect: () => void }) {
         fetchChannelConfigs(),
         fetchResistanceThresholds(),
         fetchCurveThresholds(),
-        // fetch(HTTP_URL + "/getConfig/" + deviceId + "/" + combinationId.value),
-        // fetch(HTTP_URL + "/getDevice/" + deviceId),
-        // fetch(HTTP_URL + "/getCombination/" + combinationId.value),
-        // fetch(HTTP_URL + "/getConfigList/" + configId.value),
-        // fetch(HTTP_URL + "/getChannelConfigs"),
-        // fetch(HTTP_URL + "/getResistanceThresholds"),
-        // fetch(HTTP_URL + "/getCurveThresholds"),
       ]);
 
       itemConfig.value = await itemRes.json();

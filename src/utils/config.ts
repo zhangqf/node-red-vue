@@ -92,6 +92,13 @@ export const Step = {
   },
 } as const;
 
+export const testExpress = {
+  ZD6: [13, 14, 15, 16, 17, 18],
+  ZD9: [13, 14, 15, 16, 17, 18],
+  ZYJ7: [5, 6, 7, 8, 9, 10, 11, 12],
+  ZDJ9: [5, 6, 7, 8, 9, 10, 11, 12],
+} as const;
+
 // ===== 4路阻值合并配置 =====
 // dcExpect / fcExpect: 该方向时期望的阻值状态
 // dcShortTip / fcShortTip: 定操/反操方向下混线(<0.5Ω)时的故障提示
@@ -175,12 +182,14 @@ export interface ChannelResult {
   isNormal: boolean;
   circuitField: string;
   circuitImg?: string;
+  completed?: boolean;
 }
 
 export interface DirectionResult {
   DC: boolean;
   FC: boolean;
   diagnosis: string[];
+  complete?: boolean;
 }
 
 export interface StartBeforeTestReturn {
@@ -294,30 +303,38 @@ export const ModelConfig = {
 } as const;
 
 // 图片生成函数
+function getPublicImagePath(directory: "img" | "img24", filename: string) {
+  const appRoot =
+    window.location.protocol === "file:"
+      ? new URL("./", window.location.href)
+      : new URL("/", window.location.origin);
+  return new URL(`${directory}/${filename}`, appRoot).href;
+}
+
 function getImgZD6(model: string, type: "DW" | "FW" | "DWC" | "FWC") {
   const prefix = model.includes("A") ? "ZD6E-A" : "ZD6J-B";
-  return `./img/${prefix}-${type}.png`;
+  return getPublicImagePath("img", `${prefix}-${type}.png`);
 }
 function getImgZD624(model: string, type: "DW" | "FW" | "DWC" | "FWC") {
   const prefix = model.includes("A") ? "ZD6E-A" : "ZD6J-B";
-  return `./img24/${prefix}-${type}.png`;
+  return getPublicImagePath("img24", `${prefix}-${type}.png`);
 }
 function getImgZDJ9(type: "DW" | "FW") {
   const prefix = "ZDJ9";
-  return `./img/${prefix}-${type}.png`;
+  return getPublicImagePath("img", `${prefix}-${type}.png`);
 }
 function getImgZDJ924(type: "DW" | "FW") {
   const prefix = "ZDJ9";
-  return `./img24/${prefix}-${type}.png`;
+  return getPublicImagePath("img24", `${prefix}-${type}.png`);
 }
 function getImgZYJ7(type: "DW" | "FW" | "FCB" | "FCC" | "DCB" | "DCC") {
   const prefix = "ZYJ7";
-  return `./img/${prefix}-${type}.png`;
+  return getPublicImagePath("img", `${prefix}-${type}.png`);
 }
 
 function getImgZYJ724(type: "DW" | "FW" | "FCB" | "FCC" | "DCB" | "DCC") {
   const prefix = "ZYJ7";
-  return `./img24/${prefix}-${type}.png`;
+  return getPublicImagePath("img24", `${prefix}-${type}.png`);
 }
 
 const generaZDJ9config = () => {

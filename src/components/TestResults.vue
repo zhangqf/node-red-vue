@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, type Ref } from "vue";
-
-import { anctionTips } from "@/utils/button";
-import type { StepId } from "@/utils/flow";
+import { ref, computed } from "vue";
 
 export interface TestItem {
   name: string;
@@ -16,11 +13,8 @@ export interface TestItem {
 
 const props = withDefaults(
   defineProps<{
-    currentStep: Ref<StepId, StepId>;
     msgError: boolean;
     msgErrorText: string;
-    loading: boolean;
-    loadingText: string;
     tests?: TestItem[];
     modbusStatus?: {
       connected?: boolean;
@@ -37,6 +31,7 @@ const props = withDefaults(
         value: number;
         tip: string;
         isNormal: boolean;
+        completed?: boolean;
       }[];
       fcResult: {
         circuitImg: string | null;
@@ -44,12 +39,17 @@ const props = withDefaults(
         value: number;
         tip: string;
         isNormal: boolean;
+        completed?: boolean;
       }[];
-      direction: { DC: boolean; FC: boolean; diagnosis: string[] };
+      direction: {
+        DC: boolean;
+        FC: boolean;
+        diagnosis: string[];
+        complete?: boolean;
+      };
     } | null;
     availableDirections: { DC: boolean; FC: boolean };
     diagnosisMessages: string[];
-    startBeforeLoading: boolean;
     startBeforeTestFinshed: boolean;
     /** 是否显示定操视角（电阻模块） */
     showDC?: boolean;
@@ -151,26 +151,11 @@ const groupedRows = computed<GroupRow[]>(() => {
     </div>
 
     <div v-else class="test-list">
-      <template v-if="loading">
-        <div class="modbusStatus-content">
-          {{ loadingText }}
-        </div>
-      </template>
-      <template v-else-if="msgError">
+      <template v-if="msgError">
         <div class="modbusStatus-content">
           {{ msgErrorText }}
         </div>
       </template>
-      <template v-else>
-        <div class="modbusStatus-content">
-          <!-- {{ currentStep }}
-          {{ anctionTips }} -->
-          <!-- {{ [currentStep] }} -->
-          {{ anctionTips[currentStep.value] }}
-        </div>
-      </template>
-
-      <!-- <template v-if="startBeforeLoading"> 启动前测试，等待结果中... </template> -->
       <!-- 启动前测试结果（始终显示，不隐藏） -->
       <template v-if="testResult">
         <!-- <div class="direction-banner">
@@ -203,7 +188,12 @@ const groupedRows = computed<GroupRow[]>(() => {
         <template v-if="showDC">
           <div class="section-label">
             定操视角
-            <span v-if="testResult.direction.DC" class="section-badge ok"
+            <span
+              v-if="testResult.direction.complete === false"
+              class="section-badge pending"
+              >测试中</span
+            >
+            <span v-else-if="testResult.direction.DC" class="section-badge ok"
               >通过</span
             >
             <span v-else class="section-badge ng">未通过</span>
@@ -215,11 +205,17 @@ const groupedRows = computed<GroupRow[]>(() => {
             <div class="test-header">
               <span
                 class="test-dot"
-                :class="test.isNormal ? 'ok' : 'ng'"></span>
+                :class="
+                  !test.completed ? 'pending' : test.isNormal ? 'ok' : 'ng'
+                "></span>
               <span class="test-name">{{ test.channelName }}</span>
               <span class="test-value">{{ test.value }}Ω</span>
             </div>
-            <div class="test-result" :class="test.isNormal ? 'ok' : 'ng'">
+            <div
+              class="test-result"
+              :class="
+                !test.completed ? 'pending' : test.isNormal ? 'ok' : 'ng'
+              ">
               {{ test.tip }}
               <!-- <button
                 v-if="!test.isNormal && test.circuitImg"
@@ -235,7 +231,12 @@ const groupedRows = computed<GroupRow[]>(() => {
         <template v-if="showFC">
           <div class="section-label section-divider">
             反操视角
-            <span v-if="testResult.direction.FC" class="section-badge ok"
+            <span
+              v-if="testResult.direction.complete === false"
+              class="section-badge pending"
+              >测试中</span
+            >
+            <span v-else-if="testResult.direction.FC" class="section-badge ok"
               >通过</span
             >
             <span v-else class="section-badge ng">未通过</span>
@@ -247,19 +248,18 @@ const groupedRows = computed<GroupRow[]>(() => {
             <div class="test-header">
               <span
                 class="test-dot"
-                :class="test.isNormal ? 'ok' : 'ng'"></span>
+                :class="
+                  !test.completed ? 'pending' : test.isNormal ? 'ok' : 'ng'
+                "></span>
               <span class="test-name">{{ test.channelName }}</span>
               <span class="test-value">{{ test.value }}Ω</span>
             </div>
-            <div class="test-result" :class="test.isNormal ? 'ok' : 'ng'">
+            <div
+              class="test-result"
+              :class="
+                !test.completed ? 'pending' : test.isNormal ? 'ok' : 'ng'
+              ">
               {{ test.tip }}
-              <button
-                v-if="!test.isNormal && test.circuitImg"
-                class="circuit-view-btn"
-                style="margin-left: 8px"
-                @click="handleView(test.circuitImg!)">
-                查看电路图
-              </button>
             </div>
           </div>
         </template>
@@ -529,6 +529,11 @@ const groupedRows = computed<GroupRow[]>(() => {
   box-shadow: 0 0 4px rgba(248, 113, 113, 0.4);
 }
 
+.test-dot.pending {
+  background: #fbbf24;
+  box-shadow: 0 0 4px rgba(251, 191, 36, 0.4);
+}
+
 .test-name {
   font-size: 18px;
   color: #bccfde;
@@ -554,6 +559,10 @@ const groupedRows = computed<GroupRow[]>(() => {
 }
 .test-result.ng {
   color: #f87171;
+}
+
+.test-result.pending {
+  color: #fbbf24;
 }
 
 .action-light {
@@ -749,6 +758,11 @@ const groupedRows = computed<GroupRow[]>(() => {
   background: rgba(248, 113, 113, 0.1);
 }
 
+.section-badge.pending {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -900,7 +914,7 @@ const groupedRows = computed<GroupRow[]>(() => {
 
 .circuit-toggle-icon {
   display: inline-block;
-  font-size: 18px;
+  font-size: 14px;
   transition: transform 0.2s ease;
 }
 
@@ -997,7 +1011,7 @@ const groupedRows = computed<GroupRow[]>(() => {
   border: 1px solid rgba(90, 146, 208, 0.2);
   border-radius: 4px;
   color: #5a92d0;
-  font-size: 18px;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
 }

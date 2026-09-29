@@ -13,7 +13,8 @@ import DeviceBar from "@/components/DeviceBar.vue";
 import CurrentCurve from "@/components/CurrentCurve.vue";
 import PowerCurve from "@/components/PowerCurve.vue";
 import TestResults from "@/components/TestResults.vue";
-import { buttonTips, buttonTitle } from "@/utils/button";
+import { anctionTips, buttonTips, buttonTitle } from "@/utils/button";
+import { fetchWithTimeout as fetch } from "@/utils/http";
 
 import { HTTP_URL, WEBSOCKET_URL } from "@/config/config";
 import { useRoute, useRouter } from "vue-router";
@@ -46,6 +47,7 @@ import {
   relayConfigList,
   StartPowerConfig,
   StartBeforeTestConfig,
+  testExpress,
   // contact24Closed,
   // contact13Closed,
   DEFAULT_THRESHOLD,
@@ -65,7 +67,7 @@ import { error } from "console";
 
 const route = useRoute();
 const router = useRouter();
-const { withLoading, showToast } = useToast();
+const { withLoading, showToast, showLoading, hideLoading } = useToast();
 
 /* ws消息处理 */
 const ws = useSocket(WEBSOCKET_URL);
@@ -91,6 +93,10 @@ const {
 } = useDeviceLoad(ws);
 
 const flow = useTestFlow(ws);
+let actionTimerId: ReturnType<typeof setTimeout> | null = null;
+let zeroSince: number | null = null;
+let currentActionKey: keyof ActionRelays | null = null;
+let operationRunId = 0;
 
 const {
   msgError,
@@ -149,6 +155,11 @@ const logDisplay = computed(() => {
       };
     });
 });
+const operationLogErrors = computed(() =>
+    logDisplay.value.filter(
+      ({ e }) => e.send === "error" || e.exec === "error",
+    ),
+);
 const bitClass = (b: LogBit) => {
   if (b.missing) return "log-bit-missing";
   if (b.diff) return "log-bit-diff";
@@ -170,32 +181,10 @@ const onLogKeydown = (e: KeyboardEvent) => {
   if (e.key === "Escape") logDrawerOpen.value = false;
 };
 onMounted(() => window.addEventListener("keydown", onLogKeydown));
-onUnmounted(() => window.removeEventListener("keydown", onLogKeydown));
-
-const { registerEvent } = useMessageHandler({
-  ws,
-  maxHistory: 400,
-});
-
-registerEvent("cmdAck", (data: any) => {
-  console.log(data);
-  flow.handleAck(data);
-});
-
-registerEvent("modbusStatus", (data: Record<string, string>) => {
-  funWsStatus(data);
-});
-
-registerEvent("modbusRealData", (data: Record<string, any>) => {
-  flow.handleModbusRealData(data as any);
-  console.log(flow.isOk.value);
-  if (flow.isOk.value) {
-    funWsRealData(data);
-  }
-});
-
-registerEvent("ThreePhaseACCollector", (data: Record<string, number[]>) => {
-  funThreePhaseACCollector(data.value as number[]);
+onUnmounted(() => {
+  window.removeEventListener("keydown", onLogKeydown);
+  operationRunId++;
+  if (actionTimerId) clearTimeout(actionTimerId);
 });
 
 const handleFindCollect = (field: string) => {
@@ -208,6 +197,96 @@ const handleFindCollect = (field: string) => {
     field,
   );
 };
+
+const availableDirections = ref<{ DC: boolean; FC: boolean }>({
+  DC: false,
+  FC: false,
+});
+
+async function restoreInitialRelayState(): Promise<boolean> {
+  const initialValue = gen32BitArray(
+    terminals.value.map((item) => item.default_status),
+    [],
+  );
+  const ok = await flow.sendCommand(
+    "relays",
+    {
+      value: initialValue,
+      deviceType: deviceType.value,
+    },
+    {
+      label: "恢复初始化继电器状态",
+      expect: {
+        unitId: coilUnitId(deviceType.value),
+        value: initialValue,
+      },
+    },
+  );
+  if (!ok) {
+    showToast("恢复初始化继电器状态指令未确认，请重试", "error");
+  }
+  return ok;
+}
+
+async function runExpressTest(): Promise<{
+  DC: boolean;
+  FC: boolean;
+  diagnosis: string[];
+}> {
+  initTestResults();
+  const indexes = testExpress[deviceType.value as keyof typeof testExpress];
+  const value = gen32BitArray([], [...indexes]);
+  const ok = await flow.sendCommand(
+    "startBeforeTestRelays",
+    {
+      value,
+      deviceType: deviceType.value,
+    },
+    {
+      label: "表示测试",
+      expect: {
+        unitId: coilUnitId(deviceType.value),
+        value,
+      },
+    },
+  );
+  if (!ok) {
+    showToast("表示测试指令未确认，请重试", "error");
+    return {
+      DC: false,
+      FC: false,
+      diagnosis: ["表示测试指令未确认"],
+    };
+  }
+
+  await sleep(2000);
+  const findItem = (type: string) =>
+    testResults.value.find((item) => item.type === type);
+  // 电阻与表示是交叉对应关系：
+  // 定操电阻对应反位表示/反操项，反操电阻对应定位表示/定操项。
+  const dcItems = testResults.value.filter((item) =>
+    FC_GROUP_TYPES.has(item.type),
+  );
+  const fcItems = testResults.value.filter((item) =>
+    DC_GROUP_TYPES.has(item.type),
+  );
+  const green = findItem("GreenLight");
+  const yellow = findItem("YellowLight");
+  const physicalDcPassed =
+    yellow?.status === true && dcItems.every((item) => item.status === true);
+  const physicalFcPassed =
+    green?.status === true && fcItems.every((item) => item.status === true);
+  const dcPassed =
+    selectedContactType.value === "contact24Closed"
+      ? physicalFcPassed
+      : physicalDcPassed;
+  const fcPassed =
+    selectedContactType.value === "contact24Closed"
+      ? physicalDcPassed
+      : physicalFcPassed;
+  return { DC: dcPassed, FC: fcPassed, diagnosis: [] };
+}
+const selectedContactType = ref("");
 
 /* 启动前测试表示 */
 
@@ -222,13 +301,28 @@ const {
 } = useStartBeforeTest({
   flow,
   deviceType,
+  selectedContactType,
   channelConfigs,
   resistanceThresholds,
+  availableDirections,
+  restoreInitialRelayState,
+  runExpressTest,
   handleFindCollect,
+});
+const stepPrompt = computed(() => {
+  if (loading.value) {
+    return buttonTips[flow.currentStep.value] ?? loadingText.value;
+  }
+  if (startBeforeLoading.value) return buttonTips.START_BEFORE_TEST ?? "";
+  return anctionTips[flow.currentStep.value] ?? "";
 });
 
 const isThreePhase = ref(false);
 const isAction = ref(false);
+/* 本次操动是否真正开始过（startRecord 触发），用于决定失败时是否落库 */
+const operationStarted = ref(false);
+/* 开关：是否保存「动作未真正开始就失败」的记录；false=不保存，true=全部保存 */
+const SAVE_ABORTED_RECORD = false;
 
 /* 电流归零检测：1.5s 内持续为 0 则立即结束动作 */
 const checkZeroCurrent = () => {
@@ -254,15 +348,15 @@ const checkZeroCurrent = () => {
 const handleActionRelays = (data: Record<string, any>) => {
   const rawCoil = Array.isArray(data.data) ? data.data : [];
   const coilArr = rawCoil.map((item: number) => (item ? 1 : 0));
-  let idxArr =
-    StartPowerConfig[deviceType.value as keyof typeof StartPowerConfig];
-  //  console.log(idxArr)
+  // let idxArr =
+  //   StartPowerConfig[deviceType.value as keyof typeof StartPowerConfig];
+  // //  console.log(idxArr)
 
-  // 模拟继电器状态
-  // const tempArr = new Array(32).fill(0)
-  // tempArr[31] = 1
-  // tempArr[30] = 1
-  powerStatus.value = powerStatusJudgmen(coilArr, idxArr);
+  // // 模拟继电器状态
+  // // const tempArr = new Array(32).fill(0)
+  // // tempArr[31] = 1
+  // // tempArr[30] = 1
+  // powerStatus.value = powerStatusJudgmen(coilArr, idxArr);
 
   lastCoilArr.value = coilArr.slice(0, terminals.value.length);
 };
@@ -348,6 +442,9 @@ const {
   phaseCCurrent,
   phasePower,
   powerArr,
+  registerArrA,
+  registerArrB,
+  registerArrC,
   lastCoilArr,
   funThreePhaseACCollector,
   funWsRealData,
@@ -363,6 +460,31 @@ const {
   handleStartBeforeTestExpress,
   speak,
   handleCalculate,
+});
+
+const { registerEvent } = useMessageHandler({
+  ws,
+  maxHistory: 400,
+});
+
+registerEvent("cmdAck", (data: any) => {
+  console.log(data);
+  flow.handleAck(data);
+});
+
+registerEvent("modbusStatus", (data: Record<string, string>) => {
+  funWsStatus(data);
+});
+
+registerEvent("modbusRealData", (data: Record<string, any>) => {
+  flow.handleModbusRealData(data as any);
+  if (flow.isOk.value) {
+    funWsRealData(data);
+  }
+});
+
+registerEvent("ThreePhaseACCollector", (data: Record<string, number[]>) => {
+  funThreePhaseACCollector(data.value as number[]);
 });
 
 /* 发送命令统一走 flow.sendCommand */
@@ -400,11 +522,6 @@ let tempDate: number[][] = [];
 // 寄存器计算属性：永远返回缓存的最新寄存器数据，不会清空
 const registerArr = computed(() => lastRegisterArr.value);
 
-// 三相电流寄存器数组（用 ref 而非 computed，确保每次赋值新数组引用，watch 才能检测到变化）
-const registerArrA = ref<number[]>([]);
-const registerArrB = ref<number[]>([]);
-const registerArrC = ref<number[]>([]);
-
 // 功率数组
 // const powerArr = ref<number[]>([]);
 
@@ -412,7 +529,6 @@ const showContactDialog = ref(
   route.query.opeModel !== "code" && route.query.universal !== "true",
 );
 const showWireDialog = ref(route.query.universal === "true");
-const selectedContactType = ref("");
 
 const currentData = ref({
   currentValue: 3.8,
@@ -456,10 +572,6 @@ const startBeforeTestFinshed = computed(() => {
   const s = flow.currentStep.value;
   return s !== "SETUP" && s !== "START_BEFORE_TEST";
 });
-const availableDirections = ref<{ DC: boolean; FC: boolean }>({
-  DC: false,
-  FC: false,
-});
 // const diagnosisMessages = ref<string[]>([]);
 const completedDirections = ref<Set<string>>(new Set());
 // const pendingSaveData = ref<Record<string, any> | null>(null);
@@ -487,7 +599,7 @@ const FC_GROUP_TYPES = new Set([
 const FC_RECORD_TYPES = new Set<string>(["GreenLight", ...DC_GROUP_TYPES]);
 const DC_RECORD_TYPES = new Set<string>(["YellowLight", ...FC_GROUP_TYPES]);
 
-// 定位表示 / 反位表示 实时状态
+// 定位表示 / 反位表示实时状态
 const positioningTrue = computed(() => {
   const item = testResults.value.find((t) => t.type === "GreenLight");
   return item?.status === true;
@@ -497,11 +609,7 @@ const reverseTrue = computed(() => {
   return item?.status === true;
 });
 
-// 定位/反位表示灯的显示：定位成功优先，只显示定位；反位仅在定位失败时显示
-const showPositioning = computed(() => positioningTrue.value);
-const showReverse = computed(() => !positioningTrue.value && reverseTrue.value);
-
-// 定操/反操视角始终显示，不再依赖定位/反位表示
+// 定位/反位表示本身始终显示；对应的传动/续操项目只有表示成功后显示。
 const showDCGroup = computed(() => true);
 const showFCGroup = computed(() => true);
 
@@ -514,11 +622,12 @@ const displayDiagnosisMessages = computed(() => {
   });
 });
 
-// 按定位/反位状态过滤后的表示项
+// 定位表示成功后显示定操组，反位表示成功后显示反操组。
 const displayedTestResults = computed(() => {
   return testResults.value.filter((item) => {
-    if (item.type === "GreenLight") return showPositioning.value;
-    if (item.type === "YellowLight") return showReverse.value;
+    if (item.type === "GreenLight" || item.type === "YellowLight") {
+      return true;
+    }
     if (DC_GROUP_TYPES.has(item.type)) return positioningTrue.value;
     if (FC_GROUP_TYPES.has(item.type)) return reverseTrue.value;
     return true;
@@ -767,20 +876,52 @@ const handleContactDialogSelect = (type: string) => {
   handleContactConfigClick(type);
   showContactDialog.value = false;
 };
+let isReturning = false;
 const handleBack = async () => {
-  const result = terminals.value.map(() => 0);
-  wsSendData.value = gen32BitArray(result, []);
-  // 离开页面前尽力复位端子：等 ack 确认（最多 0.8s），不重发
-  await flow.sendCommand(
-    "relays",
-    {
-      value: wsSendData.value,
-      deviceType: deviceType.value,
-    },
-    { label: "复位端子状态", timeout: 800, retries: 0 },
-  );
-  ws.close();
-  router.back();
+  if (isReturning) return;
+  isReturning = true;
+  showLoading("正在返回，请稍候...");
+  try {
+    const result = terminals.value.map(() => 0);
+    wsSendData.value = gen32BitArray(result, []);
+    // 离开页面前尽力复位端子：等 ack 确认（最多 0.8s），不重发
+    await flow.sendCommand(
+      "relays",
+      {
+        value: wsSendData.value,
+        deviceType: deviceType.value,
+      },
+      { label: "复位端子状态", timeout: 800, retries: 0 },
+    );
+    await flow.sendCommand(
+      "variableFrequencyDrive",
+      {
+        value: [5],
+        deviceType: deviceType.value,
+      },
+      {
+        label: "变频器停止确认",
+        timeout: 8000,
+        retries: 0,
+        expect: {
+          module: "variableFrequencyDrive",
+          matches: (data) =>
+            data.module === "variableFrequencyDrive" &&
+            typeof data.data[3] === "number" &&
+            Number.isFinite(data.data[3]) &&
+            data.data[3] < 20,
+        },
+      },
+    );
+    ws.close();
+    router.back();
+  } catch (error) {
+    console.error("返回页面前复位设备失败:", error);
+    showToast("返回失败，请检查设备状态后重试", "error");
+    isReturning = false;
+  } finally {
+    hideLoading();
+  }
 };
 
 async function getConfig(itemType: string) {
@@ -794,7 +935,7 @@ async function getConfig(itemType: string) {
     terminals.value = relays;
     indicationRelay.value = indicationRelays;
 
-    // WS 连上后先发端子默认状态（不带电源），电源等用户点击"开启动作电源"时再发
+    // WS 连上后先发端子默认状态，不自动开启动作电源。
     const initResult = terminals.value.map((item) => item.default_status);
     wsSendData.value = gen32BitArray(initResult, []);
     handleCheckType(wsSendData.value, deviceType.value);
@@ -809,75 +950,6 @@ watch(active, (newkey) => {
   if (!newkey) return;
   getConfig(newkey);
 });
-
-watch(
-  () => powerStatus.value.isRunning,
-  (newKey) => {
-    if (newKey) {
-      initTestResults();
-      if (flow.currentStep.value === "POWER_ON") flow.pass(); // POWER_ON → READY
-    } else {
-      startBeforeLoading.value = false;
-      flow.transition("SETUP");
-      availableDirections.value = { DC: false, FC: false };
-      diagnosisMessages.value = [];
-      startBeforeTestTips.value = null;
-    }
-  },
-);
-
-/* 回到启动前测试初始状态 */
-const resetToStartBeforeTest = () => {
-  // 停止记录与定时器
-  stopRecord();
-  if (actionTimerId) {
-    clearTimeout(actionTimerId);
-    actionTimerId = null;
-  }
-  if (finalizeTimerId) {
-    clearTimeout(finalizeTimerId);
-    finalizeTimerId = null;
-  }
-  zeroSince = null;
-  currentActionKey = null;
-  if (timerId) {
-    clearInterval(timerId);
-    timerId = null;
-  }
-  nextDoTime.value = 15;
-  butItemIsDisable.value = false;
-  butItemStatus.value = "";
-
-  // 复位启动前测试相关状态
-  startBeforeLoading.value = false;
-  flow.transition("SETUP");
-  availableDirections.value = { DC: false, FC: false };
-  diagnosisMessages.value = [];
-  startBeforeTestTips.value = null;
-  completedDirections.value = new Set();
-  pendingSaveData.value = null;
-
-  // 清空曲线，重置锁定状态并重建测试项
-  currentCurveRef.value?.resetData();
-  powerCurveRef.value?.resetData();
-  resetAllLock();
-  initTestResults();
-};
-
-/* 开启动作电源 / 紧急停止 */
-const handleStart = () => {
-  if (powerStatus.value?.isRunning) {
-    // 紧急停止：全关，不包含电源位
-    const result = terminals.value.map(() => 0);
-    wsSendData.value = gen32BitArray(result, []);
-    // sendCmd(wsSendData.value, "relays", deviceType.value);
-
-    // 回到启动前测试初始状态
-    resetToStartBeforeTest();
-  } else {
-    handleDo();
-  }
-};
 
 /* 启动前测试 */
 // const handleStartBeforeTest = async () => {
@@ -935,6 +1007,12 @@ const handleButtonAction = () => {
       handleCheckType(wsSendData.value, deviceType.value);
       break;
     case "START_BEFORE_TEST":
+      stopRecord();
+      initTestResults();
+      lastRegisterArr.value = [];
+      tempDate = [];
+      currentCurveRef.value?.resetData();
+      powerCurveRef.value?.resetData();
       handleStartBeforeTest();
       break;
   }
@@ -1061,6 +1139,7 @@ const handleContactConfigClick = (
 /* 开始记录 */
 const startRecord = () => {
   isAction.value = true;
+  operationStarted.value = true;
 };
 
 /* 停止记录 */
@@ -1071,146 +1150,147 @@ const stopRecord = () => {
 const currentCurveRef = ref<InstanceType<typeof CurrentCurve>>();
 const powerCurveRef = ref<InstanceType<typeof PowerCurve>>();
 
-/* 动作定时器与电流归零计时 */
-let actionTimerId: ReturnType<typeof setTimeout> | null = null;
-let zeroSince: number | null = null;
-let currentActionKey: keyof ActionRelays | null = null;
-let finalizeTimerId: number | null = null;
+async function sendRelayState(
+  value: number[],
+  label: string,
+): Promise<boolean> {
+  wsSendData.value = value;
+  return flow.sendCommand(
+    "relays",
+    {
+      value,
+      deviceType: deviceType.value,
+    },
+    {
+      label,
+      expect: {
+        unitId: coilUnitId(deviceType.value),
+        value,
+      },
+    },
+  );
+}
 
-/* 结束本次动作：立即关闭继电器；超时结束时继续采集 1s 电流尾段后再停止记录并保存 */
-const finishAction = (key: keyof ActionRelays, collectTail = false) => {
+/* 动作结束后依次关闭电源、延时开启表示，再返回启动前测试。 */
+const finishAction = async (key: keyof ActionRelays, collectTail = false) => {
   if (actionTimerId) {
     clearTimeout(actionTimerId);
     actionTimerId = null;
   }
   zeroSince = null;
   currentActionKey = null;
+  const runId = operationRunId;
 
-  // 先停倒计时，避免尾段采集期间被倒计时解锁
-  if (timerId) {
-    clearInterval(timerId);
-    timerId = null;
-  }
-  nextDoTime.value = 15;
+  try {
+    const relay = configActionRelays.value?.[key];
+    if (!relay?.length) {
+      throw new Error("当前操动方向没有配置对应继电器");
+    }
 
-  const relay = configActionRelays.value![key];
-  batchUpdateTerminal(relay, 0);
-  handleDo();
+    batchUpdateTerminal(relay, 0);
+    const offValue = gen32BitArray(
+      terminals.value.map((item) => item.default_status),
+      [],
+    );
+    offValue[31] = 0;
+    const powerOffOk = await sendRelayState(offValue, "关闭动作电源");
+    if (runId !== operationRunId) return;
+    if (!powerOffOk) {
+      throw new Error("动作电源关闭指令未确认");
+    }
 
-  if (collectTail) {
-    // 超时：关闭继电器后继续采集 1s 电流尾段，再停止记录并保存
-    finalizeTimerId = window.setTimeout(() => {
-      finalizeAction(key);
-    }, 1000);
-  } else {
-    // 正常归零：立即停止记录并保存
-    finalizeAction(key);
+    if (deviceType.value === "ZYJ7" || deviceType.value === "ZDJ9") {
+      const driveStopOk = await flow.sendCommand(
+        "variableFrequencyDrive",
+        {
+          value: [5],
+          deviceType: deviceType.value,
+        },
+        {
+          label: "变频器停止确认",
+          timeout: 8000,
+          retries: 0,
+          expect: {
+            module: "variableFrequencyDrive",
+            matches: (data) =>
+              data.module === "variableFrequencyDrive" &&
+              typeof data.data[3] === "number" &&
+              Number.isFinite(data.data[3]) &&
+              data.data[3] < 20,
+          },
+        },
+      );
+      if (runId !== operationRunId) return;
+      if (!driveStopOk) {
+        throw new Error("变频器停止回读值未小于 20");
+      }
+    }
+
+    if (collectTail) await sleep(1000);
+    if (runId !== operationRunId) return;
+    stopRecord();
+
+    await sleep(2000);
+    if (runId !== operationRunId) return;
+
+    const expressIndexes =
+      testExpress[deviceType.value as keyof typeof testExpress];
+    const expressValue = gen32BitArray([], [...expressIndexes]);
+    const expressOk = await flow.sendCommand(
+      "startBeforeTestRelays",
+      {
+        value: expressValue,
+        deviceType: deviceType.value,
+      },
+      {
+        label: "开启表示继电器",
+        expect: {
+          unitId: coilUnitId(deviceType.value),
+          value: expressValue,
+        },
+      },
+    );
+    if (runId !== operationRunId) return;
+    if (!expressOk) {
+      throw new Error("开启表示继电器指令未确认");
+    }
+    console.log(flow.currentStep.value);
+    await finalizeAction(key);
+  } catch (error) {
+    console.error("动作结束流程失败:", error);
+    const message = error instanceof Error ? error.message : "未知错误";
+    showToast(`动作结束流程未完成：${message}，请检查设备状态`, "error");
+    await finalizeAction(key);
   }
 };
 
+/* 收尾并返回启动前测试：保存记录 + 复位界面 + 跳转（所有回到 START_BEFORE_TEST 的路径统一走这里） */
 const finalizeAction = async (key: keyof ActionRelays) => {
-  finalizeTimerId = null;
-  stopRecord();
-
-  const bothAvailable =
-    availableDirections.value.DC && availableDirections.value.FC;
-
-  let lastStatus = "success";
-  if (bothAvailable) {
-    const currentData = buildRecordData(key);
-    lastStatus = currentData.status;
-    if (!pendingSaveData.value) {
-      // 第一个方向完成，暂存数据，不提交
-      pendingSaveData.value = currentData;
-    } else {
-      // 第二个方向完成，一起提交
-      await postRecord(pendingSaveData.value);
-      await postRecord(currentData);
-      pendingSaveData.value = null;
-    }
-  } else {
+  let lastStatus: string | null = null;
+  if (SAVE_ABORTED_RECORD || operationStarted.value) {
     lastStatus = await saveRecord(key);
   }
-
-  // 操动结束
+  operationStarted.value = false;
+  stopRecord();
+  pendingSaveData.value = null;
   butItemIsDisable.value = false;
-  const finishedDir = butItemStatus.value;
   butItemStatus.value = "";
-  completedDirections.value.add(finishedDir);
-
-  // 判定不合格 → 跳回启动前测试（需求：跳转到指定操作）
+  completedDirections.value = new Set();
+  flow.transition("START_BEFORE_TEST");
   if (lastStatus === "error") {
     showToast("操动判定不合格，返回启动前测试", "error");
-    flow.fail(); // OPERATING → START_BEFORE_TEST
-    return;
   }
-
-  // 判定合格 → 回到待操作，等待下一个方向或复位
-  flow.pass(); // OPERATING → READY
-
-  if (
-    bothAvailable &&
-    completedDirections.value.has("DC") &&
-    completedDirections.value.has("FC")
-  ) {
-    flow.transition("START_BEFORE_TEST");
-    completedDirections.value = new Set();
-  } else if (!bothAvailable) {
-    flow.transition("START_BEFORE_TEST");
-  }
-};
-
-/* 处理继电器动作 */
-const handleRelayAction = (key: keyof ActionRelays) => {
-  const relay = configActionRelays.value![key];
-  batchUpdateTerminal(relay, 1);
-  handleDo();
-  startRecord();
-  zeroSince = null;
-  currentActionKey = key;
-  actionTimerId = setTimeout(() => {
-    finishAction(key, true);
-  }, 15000);
 };
 
 /* 通讯链接状态，button根据这个链接状态显示 */
 const isShowButtons = computed(() => {
   return modbusStatus.value && modbusStatus.value.connected;
 });
-
-/* 定操处理 */
-const handleDC = () => {
-  const key = butItemStatus.value as keyof ActionRelays;
-  handleRelayAction(key);
-};
-
-/* 反操处理 */
-const handleFC = () => {
-  const key = butItemStatus.value as keyof ActionRelays;
-  handleRelayAction(key);
-};
-
-/* 操作处理：下发继电器指令并等待回执确认 */
-const handleDo = async () => {
-  let result = terminals.value.map((item) => item.default_status);
-  let idxArr =
-    StartPowerConfig[deviceType.value as keyof typeof StartPowerConfig];
-  wsSendData.value = gen32BitArray(result, idxArr);
-
-  const ok = await flow.sendCommand(
-    "relays",
-    {
-      value: wsSendData.value,
-      deviceType: deviceType.value,
-    },
-    // 读回比对：继电器线圈真正回显到发送值才算指令已执行
-    {
-      label: "下发继电器",
-      expect: { unitId: coilUnitId(deviceType.value), value: wsSendData.value },
-    },
-  );
-  if (!ok) showToast("继电器指令未确认，请重试", "error");
-};
+const isActionStep = computed(
+  () =>
+    flow.currentStep.value === "READY" ||
+    flow.currentStep.value === "OPERATING",
+);
 
 /* 发送命令 */
 // function sendCmd(data: number[] | null, type: string, deviceType?: string) {
@@ -1227,50 +1307,131 @@ const handleDo = async () => {
 
 const butItemIsDisable = ref(false);
 
-const nextDoTime = ref(15);
-let timerId: number | null = null;
+const operationWarningVisible = ref(false);
+const operationCountdown = ref(3);
 
-/* 操作处理 */
-const handleOpe = (type: string) => {
+const cancelPendingOperation = () => {
+  operationRunId++;
+  operationWarningVisible.value = false;
+  butItemIsDisable.value = false;
+  butItemStatus.value = "";
+  flow.transition("READY");
+};
+
+const sendOperationCommands = async (type: "DC" | "FC", runId: number) => {
+  const relay = configActionRelays.value?.[type];
+  if (!relay?.length) {
+    showToast(`${type === "DC" ? "定操" : "反操"}继电器未配置`, "error");
+    return false;
+  }
+
+  batchUpdateTerminal(relay, 1);
+  const baseValue = gen32BitArray(
+    terminals.value.map((item) => item.default_status),
+    [],
+  );
+
+  if (deviceType.value === "ZYJ7" || deviceType.value === "ZDJ9") {
+    const driveOk = await flow.sendCommand(
+      "variableFrequencyDrive",
+      {
+        value: [type === "DC" ? 1 : 2],
+        deviceType: deviceType.value,
+      },
+      {
+        label: type === "DC" ? "变频器定操指令确认" : "变频器反操指令确认",
+        timeout: 8000,
+        retries: 0,
+        expect: {
+          module: "variableFrequencyDrive",
+          matches: (data) =>
+            data.module === "variableFrequencyDrive" &&
+            typeof data.data[3] === "number" &&
+            Number.isFinite(data.data[3]) &&
+            Math.abs(data.data[3] - 380) <= 10,
+        },
+      },
+    );
+    if (runId !== operationRunId) return false;
+    if (!driveOk) {
+      showToast("变频器回读值未达到 380±10，已停止后续操动指令", "error");
+      return false;
+    }
+  }
+
+  const relaysOk = await sendRelayState(
+    baseValue,
+    `${type === "DC" ? "定操" : "反操"}继电器指令`,
+  );
+  if (runId !== operationRunId) return false;
+  if (!relaysOk) {
+    showToast("操动继电器指令未确认，已停止后续操动指令", "error");
+    return false;
+  }
+
+  const finalValue = [...baseValue];
+  finalValue[31] = 1;
+  startRecord();
+  const finalRelayOk = await sendRelayState(finalValue, "开启动作电源");
+  if (runId !== operationRunId) return false;
+  if (!finalRelayOk) {
+    stopRecord();
+    showToast("开启电源指令未确认，请检查设备状态", "error");
+    return false;
+  }
+  return true;
+};
+
+/* 按下定操/反操后先警示周围人员，倒计时结束后才执行继电器序列 */
+const handleOpe = async (type: string) => {
+  if (type !== "DC" && type !== "FC") return;
+  if (flow.currentStep.value !== "READY") return;
   if (!configActionRelays.value) {
     return showToast("请先选择闭合方式", "error");
   }
   if (butItemIsDisable.value) return;
 
+  const runId = ++operationRunId;
   const exposed = currentCurveRef.value;
   exposed?.resetData();
   powerCurveRef.value?.resetData();
-  initTestResults(type as "DC" | "FC");
+  operationStarted.value = false;
+  initTestResults(type);
   butItemStatus.value = type;
   butItemIsDisable.value = true;
   flow.transition("OPERATING");
+  operationCountdown.value = 3;
+  operationWarningVisible.value = true;
+  for (let remaining = 3; remaining > 0; remaining--) {
+    await sleep(1000);
+    if (runId !== operationRunId) return;
+    operationCountdown.value = remaining - 1;
+  }
+  operationWarningVisible.value = false;
 
-  // 关闭启动前测试继电器，恢复原有吸合状态，等2s后执行
-  handleDo();
-  nextDoTime.value = 2;
-
-  setTimeout(() => {
-    switch (type) {
-      case "DC":
-        handleDC();
-        break;
-      case "FC":
-        handleFC();
-        break;
+  try {
+    const commandsOk = await sendOperationCommands(type, runId);
+    if (runId !== operationRunId) return;
+    if (!commandsOk) {
+      const relay = configActionRelays.value[type];
+      batchUpdateTerminal(relay, 0);
+      await restoreInitialRelayState();
+      await finalizeAction(type as keyof ActionRelays);
+      return;
     }
-    nextDoTime.value = 15;
-    // 开启每秒递减
-    timerId = window.setInterval(() => {
-      nextDoTime.value--;
-      if (nextDoTime.value <= 0) {
-        nextDoTime.value = 15;
-        clearInterval(timerId!);
-        timerId = null;
-        butItemIsDisable.value = false;
-        butItemStatus.value = "";
-      }
-    }, 1000);
-  }, 2000);
+    zeroSince = null;
+    currentActionKey = type;
+    actionTimerId = setTimeout(() => {
+      finishAction(type, true);
+    }, 13000);
+  } catch (error) {
+    console.error("操动继电器序列执行失败:", error);
+    showToast("操动指令执行异常，已停止后续操作", "error");
+    const relay = configActionRelays.value[type];
+    batchUpdateTerminal(relay, 0);
+    await restoreInitialRelayState();
+    await finalizeAction(type as keyof ActionRelays);
+  }
 };
 
 /* 设备类型 */
@@ -1632,6 +1793,7 @@ onMounted(async () => {
       :config-name="isUniversalMode ? '通用模式' : configName"
       :item-config="itemConfig"
       :contact-active="selectedContactType"
+      :status-message="stepPrompt"
       v-model:active="active"
       @contactConfigClick="handleContactConfigClick"
       @back="handleBack()" />
@@ -1644,8 +1806,7 @@ onMounted(async () => {
         :register-arr-a="isThreePhase ? registerArrA : undefined"
         :register-arr-b="isThreePhase ? registerArrB : undefined"
         :register-arr-c="isThreePhase ? registerArrC : undefined"
-        ref="currentCurveRef"
-        @start="handleStart" />
+        ref="currentCurveRef" />
 
       <PowerCurve
         ref="powerCurveRef"
@@ -1654,17 +1815,13 @@ onMounted(async () => {
         :power-arr="isThreePhase ? powerArr : undefined" />
 
       <TestResults
-        :currentStep="flow.currentStep"
         :msgError="msgError"
         :msgErrorText="msgErrorText"
-        :loading="loading"
-        :loadingText="loadingText"
         :tests="displayedTestResults"
         :modbus-status="modbusStatus"
         :powerStatusIsRunning="powerStatus?.isRunning"
         :isAction="isAction"
         :test-result="startBeforeTestTips"
-        :start-before-loading="startBeforeLoading"
         :available-directions="availableDirections"
         :diagnosis-messages="displayDiagnosisMessages"
         :start-before-test-finshed="startBeforeTestFinshed"
@@ -1687,40 +1844,25 @@ onMounted(async () => {
           flex: 1;
           justify-content: center;
           display: flex;
+          flex-direction: column;
           align-items: center;
         ">
         <button
-          v-if="!loading"
+          v-if="!loading && !startBeforeLoading"
           class="action-btn test-btn"
           @click="handleButtonAction()">
           {{ buttonTitle[flow.currentStep.value] ?? "下一步" }}
         </button>
-        <span v-if="loading" class="action-tips">{{
+        <span v-if="loading || startBeforeLoading" class="action-tips">{{
           buttonTips[flow.currentStep.value]
         }}</span>
       </div>
 
-      <!-- 开启动作电源/紧急停止 - 测试通过后显示 -->
-      <div
-        v-if="isShowButtons && startBeforeTestFinshed"
-        style="
-          flex: 1;
-          justify-content: center;
-          display: flex;
-          align-items: center;
-        ">
-        <button class="emergency-btn" @click="handleStart()">
-          {{ powerStatus?.isRunning ? "紧急停止" : "开启动作电源" }}
-        </button>
-      </div>
-
-      <!-- 定操/反操 - 通电后显示 -->
+      <!-- 测试完成后直接显示可用的定操/反操方向 -->
       <div
         class="action-buttons"
         style="flex: 1"
-        v-if="
-          isShowButtons && startBeforeTestFinshed && powerStatus?.isRunning
-        ">
+        v-if="isShowButtons && startBeforeTestFinshed && isActionStep">
         <!-- <span class="action-light">
           <span v-if="butItemStatus === 'DC'" class="light light-green"></span>
           <span v-if="butItemStatus === 'FC'" class="light light-yellow"></span>
@@ -1742,11 +1884,69 @@ onMounted(async () => {
           反操
         </button>
         <span class="action-tips" v-if="butItemIsDisable">
-          {{ nextDoTime }}s后可以再次操作</span
+          {{
+            operationWarningVisible
+              ? `请周围人员注意，${operationCountdown} 秒后开始供强电操动`
+              : `正在执行${butItemStatus === "DC" ? "定操" : "反操"}，请勿操作`
+          }}</span
         >
       </div>
+      <div
+        v-if="isShowButtons && operationLogErrors.length"
+        class="start-before-error-message"
+        role="alert">
+        <div class="start-before-error-header">
+          <span class="start-before-error-indicator" aria-hidden="true">!</span>
+          <span>操作日志异常</span>
+        </div>
+        <div class="start-before-error-list">
+          <div
+            v-for="item in operationLogErrors"
+            :key="item.e.id"
+            class="start-before-error-item">
+            <span class="start-before-error-label">{{ item.e.label }}</span>
+            <span
+              v-if="item.e.send === 'error'"
+              class="start-before-error-status">
+              发送失败
+            </span>
+            <span
+              v-if="item.e.exec === 'error'"
+              class="start-before-error-status">
+              响应失败
+            </span>
+            <span
+              v-if="item.diffIndices.length"
+              class="start-before-error-diff">
+              {{ diffText(item.diffIndices) }}
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="terminal-bar">
+
+    <div
+      v-if="operationWarningVisible"
+      class="operation-warning-overlay"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="operation-warning-title">
+      <div class="operation-warning-dialog">
+        <h2 id="operation-warning-title">强电操动安全提示</h2>
+        <p>
+          即将进行{{
+            butItemStatus === "DC" ? "定操" : "反操"
+          }}。请通知周围人员注意安全， 确认现场安全并准备供强电。
+        </p>
+        <strong>{{ operationCountdown }} 秒后开始</strong>
+        <button
+          class="operation-warning-cancel"
+          @click="cancelPendingOperation">
+          取消操作
+        </button>
+      </div>
+    </div>
+    <!-- <div class="terminal-bar">
       <span class="terminal-bar-title">期望端子状态</span>
 
       <div
@@ -1773,7 +1973,7 @@ onMounted(async () => {
         }}</span>
         <span class="terminal-bar-dot" :class="{ ok: t, ng: !t }"></span>
       </div>
-    </div>
+    </div> -->
     <div class="status-bar">
       <span class="status-text">{{ ws.status }}</span>
       <span
@@ -1786,10 +1986,7 @@ onMounted(async () => {
       <!-- <span v-if="temperature">{{ temperature }}℃</span> -->
     </div>
 
-    <button
-      v-show="!logDrawerOpen"
-      class="log-toggle"
-      @click="logDrawerOpen = true">
+    <button class="log-toggle" @click="logDrawerOpen = true">
       操作日志
       <span v-if="logEntries.length" class="log-toggle-count">{{
         logEntries.length
@@ -2176,6 +2373,7 @@ onMounted(async () => {
 
 .action-buttons {
   display: flex;
+  justify-content: center;
   align-items: center;
   gap: 20px;
   flex-shrink: 0;
@@ -2256,6 +2454,7 @@ onMounted(async () => {
 
 .button-rows {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 16px;
   padding: 8px 12px;
@@ -2266,7 +2465,81 @@ onMounted(async () => {
 
 .action-tips {
   color: #e9c235;
-  align-self: flex-end;
+  align-self: center;
+}
+
+.start-before-error-message {
+  flex: 1 0 100%;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 12px;
+  color: #ffd7d7;
+  background: rgba(126, 35, 45, 0.2);
+  border: 1px solid rgba(255, 107, 107, 0.38);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.start-before-error-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  color: #ff8585;
+  font-weight: 700;
+}
+
+.start-before-error-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.start-before-error-list {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  min-width: 0;
+}
+
+.start-before-error-item {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-width: 0;
+}
+
+.start-before-error-label {
+  color: #ffe2e2;
+  font-weight: 600;
+}
+
+.start-before-error-status {
+  color: #ff8585;
+  white-space: nowrap;
+}
+
+.start-before-error-diff {
+  color: #ffc078;
+  font-size: 11px;
+}
+
+@media (max-width: 600px) {
+  .start-before-error-message {
+    flex-direction: column;
+    gap: 6px;
+  }
 }
 
 .action-btn:disabled:not(.active) {
@@ -2472,5 +2745,58 @@ onMounted(async () => {
   background: rgba(90, 146, 208, 0.25);
   border-color: #5a92d0;
   color: #fff;
+}
+
+.operation-warning-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(20, 8, 8, 0.82);
+  backdrop-filter: blur(5px);
+}
+
+.operation-warning-dialog {
+  width: min(560px, 100%);
+  padding: 32px;
+  border: 2px solid #ef4444;
+  border-radius: 12px;
+  background: #251014;
+  color: #fff;
+  text-align: center;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
+}
+
+.operation-warning-dialog h2 {
+  margin: 0 0 16px;
+  color: #fca5a5;
+  font-size: 26px;
+}
+
+.operation-warning-dialog p {
+  margin: 0 0 20px;
+  color: #fee2e2;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.operation-warning-dialog strong {
+  display: block;
+  margin-bottom: 24px;
+  color: #fbbf24;
+  font-size: 32px;
+}
+
+.operation-warning-cancel {
+  padding: 10px 28px;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  background: #7f1d1d;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
 }
 </style>

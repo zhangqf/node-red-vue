@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useToast } from "@/composables/useToast";
 
-const { toasts, loading } = useToast();
+const { toasts, loading, loadingMessage } = useToast();
 </script>
 
 <template>
@@ -9,7 +9,7 @@ const { toasts, loading } = useToast();
     <!-- Loading -->
     <div v-if="loading" class="loading-overlay">
       <div class="loading-spinner"></div>
-      <span class="loading-text">请稍候...</span>
+      <span class="loading-text">{{ loadingMessage }}</span>
     </div>
 
     <!-- Toasts -->

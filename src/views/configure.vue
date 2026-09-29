@@ -2,6 +2,7 @@
 import { HTTP_URL } from "@/config/config";
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { fetchWithTimeout as fetch } from "@/utils/http";
 
 const route = useRoute();
 const router = useRouter();

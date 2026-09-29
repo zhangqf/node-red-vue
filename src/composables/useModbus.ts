@@ -76,12 +76,14 @@ export const useModbus = (option: useModbusOptions) => {
         // 表示
         handleExpressRelays(data);
         break;
-      case 4:
+      case "‌DCCurrentSampling":
         // 采集220曲线
         handleCollectDCCurve(data);
         break;
       case "resistance":
         handleStartBeforeTestExpress(data);
+        break;
+      case "variableFrequencyDrive":
         break;
       default:
         console.warn("未知 module:", module);

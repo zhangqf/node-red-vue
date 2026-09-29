@@ -4,21 +4,22 @@ import { useToast } from "./useToast";
 const { withLoading, showToast } = useToast();
 type TestFlow = ReturnType<typeof useTestFlow>;
 
-let loading = ref(false);
-let loadingText = ref("等待响应中...");
-let msgError = ref(false);
-let msgErrorText = ref("");
-
-const resetLoading = () => {
-  ((loading.value = false), (loadingText.value = "等待响应中..."));
-};
+/** 线圈写入/读回所在 unitId，与 flows.json 的 deviceType 推导一致 */
+export const coilUnitId = (deviceType: string) =>
+  deviceType === "ZD6" || deviceType === "ZD9" ? 1 : 2;
 
 // 选型
-const handleCheckType = (flow: TestFlow, ws: any, device: string) => {
-  loading.value = true;
-  msgError.value = false;
-  flow
-    .sendCommand(
+export async function rawHandleCheckType(
+  flow: TestFlow,
+  ws: any,
+  device: string,
+  onLoading: (v: boolean) => void,
+  onError: (flag: boolean, text: string) => void,
+) {
+  onLoading(true);
+  onError(false, "");
+  try {
+    const ok = await flow.sendCommand(
       "relays",
       {
         value: ws,
@@ -31,35 +32,52 @@ const handleCheckType = (flow: TestFlow, ws: any, device: string) => {
           value: ws ?? [],
         },
       },
-    )
-    .then((ok) => {
-      console.log(1111111111111);
-      if (!ok) {
-        showToast("初始化端子状态指令未确认，请重试", "error");
-        msgErrorText.value = "初始化端子状态指令未确认，请重新初始化";
-        msgError.value = true;
-        loading.value = false;
-      } else {
-        flow.pass();
-        loading.value = false;
-      }
-    });
-};
-
-/** 线圈写入/读回所在 unitId，与 flows.json 的 deviceType 推导一致 */
-export const coilUnitId = (deviceType: string) =>
-  deviceType === "ZD6" || deviceType === "ZD9" ? 1 : 2;
+    );
+    if (!ok) {
+      showToast("初始化端子状态指令未确认，请重试", "error");
+      onError(true, "初始化端子状态指令未确认，请重新初始化");
+    } else {
+      flow.pass();
+    }
+  } finally {
+    onLoading(false);
+  }
+}
 
 export function useButton(flow: TestFlow) {
+  let loading = ref(false);
+  let loadingText = ref("等待响应中...");
+  let msgError = ref(false);
+  let msgErrorText = ref("");
+
+  const resetLoading = () => {
+    loading.value = false;
+    loadingText.value = "等待响应中...";
+    msgError.value = false;
+    msgErrorText.value = "";
+  };
+
+  const handleCheckType = async (ws: any, device: string) => {
+    resetLoading();
+    if (!flow) return;
+    await rawHandleCheckType(
+      flow,
+      ws,
+      device,
+      (v) => (loading.value = v),
+      (flag, text) => {
+        msgError.value = flag;
+        msgErrorText.value = text;
+      },
+    );
+  };
+
   return {
     loading,
     loadingText,
     msgError,
     msgErrorText,
-    handleCheckType: (ws: any, device: string) => {
-      resetLoading();
-      handleCheckType(flow, ws, device);
-    },
+    handleCheckType,
     coilUnitId,
   };
 }

@@ -20,6 +20,7 @@ const props = defineProps<{
   itemConfig: ItemConfigItem[];
   contactActive?: string;
   deviceType?: string;
+  statusMessage?: string;
 }>();
 
 const contactConfig = [
@@ -73,6 +74,9 @@ const handleButtonClick = (id: string) => {
           {{ item.name }}
         </button>
       </div>
+      <div v-if="statusMessage" class="info-status" :title="statusMessage">
+        {{ statusMessage }}
+      </div>
       <!-- <div class="nav-right">
         <button class="emergency-btn" @click="emit('menu-click', 'emergency')">
           开启动作电源/紧急停止
@@ -115,6 +119,52 @@ const handleButtonClick = (id: string) => {
   align-items: center;
   gap: 6px;
   font-size: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.info-status {
+  flex: 0 1 auto;
+  max-width: 45%;
+  margin-left: 20px;
+  padding: 10px;
+  border-radius: 3px;
+  background: rgba(248, 113, 113, 0.1);
+  color: #f87171;
+  font-size: 20px;
+  text-align: right;
+  overflow-wrap: anywhere;
+  animation: pulse 0.5s ease-in-out 0.2s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (max-width: 900px) {
+  .info-bar {
+    height: auto;
+    min-height: 66px;
+    flex-wrap: wrap;
+    gap: 8px 0;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .info-left {
+    flex-wrap: wrap;
+  }
+
+  .info-status {
+    max-width: 100%;
+    margin-left: auto;
+  }
 }
 
 .back-btn {

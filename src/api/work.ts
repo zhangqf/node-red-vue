@@ -1,4 +1,5 @@
 import { HTTP_URL, WEBSOCKET_URL } from "@/config/config";
+import { fetchWithTimeout as fetch } from "@/utils/http";
 
 export const fetchConfig = (deviceId: string, combinationId: string) => {
   return fetch(HTTP_URL + "/getConfig/" + deviceId + "/" + combinationId);

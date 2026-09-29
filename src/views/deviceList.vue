@@ -3,6 +3,7 @@ import { HTTP_URL } from "@/config/config";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useToast } from "@/composables/useToast";
+import { fetchWithTimeout as fetch } from "@/utils/http";
 
 const { withLoading } = useToast();
 

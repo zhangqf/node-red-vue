@@ -25,10 +25,23 @@ interface useStartBeforeTestOptions {
   flow: TestFlow;
   channelConfigs: Ref<any[]>;
   resistanceThresholds: Ref<any[]>;
+  availableDirections: Ref<{ DC: boolean; FC: boolean }>;
+  selectedContactType: Ref<string>;
+  restoreInitialRelayState: () => Promise<boolean>;
+  runExpressTest: () => Promise<{
+    DC: boolean;
+    FC: boolean;
+    diagnosis: string[];
+  }>;
   handleFindCollect: (field: string) => ReturnType<typeof getCircuits>;
 }
 
 const { withLoading, showToast } = useToast();
+
+interface ResistanceSnapshot {
+  values: number[];
+  receivedAt: number;
+}
 
 export function useStartBeforeTest(options: useStartBeforeTestOptions) {
   const {
@@ -36,6 +49,9 @@ export function useStartBeforeTest(options: useStartBeforeTestOptions) {
     deviceType,
     channelConfigs,
     resistanceThresholds,
+    availableDirections,
+    restoreInitialRelayState,
+    runExpressTest,
     handleFindCollect,
   } = options;
   const currentResistanceChannle = ref("");
@@ -47,6 +63,11 @@ export function useStartBeforeTest(options: useStartBeforeTestOptions) {
   } | null>(null);
   const diagnosisMessages = ref<string[]>([]);
   const pendingSaveData = ref<Record<string, any> | null>(null);
+  const latestResistance = ref<ResistanceSnapshot | null>(null);
+  const latestResistanceAt = ref<number | null>(null);
+  const resistanceSnapshots = ref<Record<string, ResistanceSnapshot>>({});
+  const collectingResistance = ref(false);
+  let testRunId = 0;
 
   const currentChannelConfig = computed<ChannelExpect[] | undefined>(() => {
     return channelConfigs.value.find((c) => c.device_type === deviceType.value)
@@ -67,41 +88,136 @@ export function useStartBeforeTest(options: useStartBeforeTestOptions) {
       : DEFAULT_THRESHOLD;
   });
 
-  /* 启动前测试表示 */
-  const handleStartBeforeTestExpress = (data: Record<string, any>) => {
-    console.log("==================");
-    console.log(currentResistanceChannle.value);
-    console.log(data);
-    if (!startBeforeLoading.value) return;
-    // 组合数据
-    const r = mergeResistance(data.data);
-    const result = startBeforeTestExpress(
-      r,
-      deviceType.value,
-      currentChannelConfig.value,
-      currentThreshold.value,
-    );
-    // 解析电路图 URL
+  const getStepMapping = () => {
+    if (deviceType.value === "ZD6" || deviceType.value === "ZD9") {
+      return [
+        { stepKey: "1", sourceIndex: 6 },
+        { stepKey: "2", sourceIndex: 7 },
+      ];
+    }
+    return [
+      { stepKey: "3", sourceIndex: 2 },
+      { stepKey: "4", sourceIndex: 3 },
+      { stepKey: "5", sourceIndex: 4 },
+      { stepKey: "6", sourceIndex: 5 },
+    ];
+  };
+
+  const resolveCircuitImages = (
+    result: ReturnType<typeof startBeforeTestExpress>,
+  ) => {
     const resolveImg = (field: string) => {
       const circuits = handleFindCollect(field);
       return circuits?.img?.[field] || "";
     };
-    result.dcResult.forEach((r) => {
-      r.circuitImg = resolveImg(r.circuitField);
+    result.dcResult.forEach((item) => {
+      item.circuitImg = resolveImg(item.circuitField);
     });
-    result.fcResult.forEach((r) => {
-      r.circuitImg = resolveImg(r.circuitField);
+    result.fcResult.forEach((item) => {
+      item.circuitImg = resolveImg(item.circuitField);
     });
-    startBeforeTestTips.value = result;
+    return result;
+  };
+
+  const buildDisplayedResult = () => {
+    const mapping = getStepMapping();
+    const rawValues: number[] = [];
+    const completedIndexes = new Set<number>();
+
+    mapping.forEach(({ stepKey, sourceIndex }, index) => {
+      const snapshot = resistanceSnapshots.value[stepKey];
+      if (snapshot) {
+        rawValues[sourceIndex] = snapshot.values[sourceIndex] ?? 0;
+        completedIndexes.add(index);
+      }
+    });
+
+    const result = resolveCircuitImages(
+      startBeforeTestExpress(
+        rawValues,
+        deviceType.value,
+        currentChannelConfig.value,
+        currentThreshold.value,
+      ),
+    );
+    const isComplete = completedIndexes.size === mapping.length;
+
+    result.dcResult.forEach((item, index) => {
+      item.completed = completedIndexes.has(index);
+      if (!item.completed) {
+        item.value = 0;
+        item.tip = "等待测试";
+        item.isNormal = false;
+      }
+    });
+    result.fcResult.forEach((item, index) => {
+      item.completed = completedIndexes.has(index);
+      if (!item.completed) {
+        item.value = 0;
+        item.tip = "等待测试";
+        item.isNormal = false;
+      }
+    });
+
+    if (!isComplete) {
+      result.direction = {
+        DC: false,
+        FC: false,
+        diagnosis: [],
+        complete: false,
+      };
+    } else {
+      result.direction.complete = true;
+    }
+    return result;
+  };
+
+  const captureCurrentStep = (stepKey: string, runId: number) => {
+    if (runId !== testRunId || !latestResistance.value) return false;
+    resistanceSnapshots.value[stepKey] = {
+      values: [...latestResistance.value.values],
+      receivedAt: latestResistance.value.receivedAt,
+    };
+    startBeforeTestTips.value = buildDisplayedResult();
+    return true;
+  };
+
+  /* 启动前测试表示：只缓存当前步骤最近一帧，不直接更新界面结果 */
+  const handleStartBeforeTestExpress = (data: Record<string, any>) => {
+    if (!startBeforeLoading.value || !collectingResistance.value) return;
+    const values = mergeResistance(data.data);
+    if (!values.length) return;
+    const receivedAt = Date.now();
+    latestResistance.value = {
+      values,
+      receivedAt,
+    };
+    latestResistanceAt.value = receivedAt;
   };
 
   /* 启动前测试 */
   const handleStartBeforeTest = async () => {
+    if (startBeforeLoading.value) return;
+    const runId = ++testRunId;
     flow.transition("START_BEFORE_TEST");
     startBeforeLoading.value = true;
     startBeforeTestTips.value = null;
     diagnosisMessages.value = [];
     pendingSaveData.value = null;
+    latestResistance.value = null;
+    latestResistanceAt.value = null;
+    resistanceSnapshots.value = {};
+    collectingResistance.value = false;
+    availableDirections.value = { DC: false, FC: false };
+    startBeforeTestTips.value = buildDisplayedResult();
+
+    const restoreRelays = async () => {
+      const restored = await restoreInitialRelayState();
+      if (!restored) {
+        showToast("启动前测试结束，但继电器恢复初始化状态失败，请重试", "error");
+      }
+      return restored;
+    };
 
     // availableDirections.value = { DC: false, FC: false };
     const idxArr =
@@ -135,12 +251,80 @@ export function useStartBeforeTest(options: useStartBeforeTestOptions) {
 
       if (!ok) {
         showToast("启动前测试指令未确认，请重试", "error");
-        // startBeforeLoading.value = false;
+        await restoreRelays();
+        startBeforeLoading.value = false;
         flow.fail();
         return;
       }
 
+      latestResistance.value = null;
+      latestResistanceAt.value = null;
+      collectingResistance.value = true;
+      const ackAt = Date.now();
       await sleep(2000);
+      collectingResistance.value = false;
+
+      if (runId !== testRunId || !startBeforeLoading.value) return;
+      const capturedAt = latestResistanceAt.value;
+      if (
+        capturedAt === undefined ||
+        capturedAt === null ||
+        capturedAt < ackAt ||
+        !captureCurrentStep(key, runId)
+      ) {
+        showToast(`启动前测试第${key}组未收到有效电阻数据，请重试`, "error");
+        await restoreRelays();
+        startBeforeLoading.value = false;
+        flow.fail();
+        return;
+      }
+    }
+
+    if (runId !== testRunId || !startBeforeLoading.value) return;
+    const result = buildDisplayedResult();
+    startBeforeTestTips.value = result;
+    collectingResistance.value = false;
+    if (!(await restoreRelays())) {
+      startBeforeLoading.value = false;
+      flow.fail();
+      return;
+    }
+    const expressResult = await runExpressTest();
+    if (runId !== testRunId || !startBeforeLoading.value) return;
+    if (!(await restoreRelays())) {
+      startBeforeLoading.value = false;
+      flow.fail();
+      return;
+    }
+    diagnosisMessages.value = result.direction.diagnosis;
+    diagnosisMessages.value.push(...expressResult.diagnosis);
+    const expressPassed = expressResult.DC || expressResult.FC;
+    const finalDirections = expressPassed
+      ? {
+          DC: result.direction.DC && expressResult.DC,
+          FC: result.direction.FC && expressResult.FC,
+        }
+      : {
+          DC: result.direction.DC,
+          FC: result.direction.FC,
+        };
+    availableDirections.value = {
+      DC: finalDirections.DC,
+      FC: finalDirections.FC,
+    };
+    result.direction = {
+      ...result.direction,
+      DC: finalDirections.DC,
+      FC: finalDirections.FC,
+      diagnosis: diagnosisMessages.value,
+      complete: true,
+    };
+    startBeforeLoading.value = false;
+
+    if (availableDirections.value.DC || availableDirections.value.FC) {
+      flow.pass();
+    } else {
+      flow.fail();
     }
   };
 

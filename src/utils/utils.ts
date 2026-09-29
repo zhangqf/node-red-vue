@@ -199,14 +199,26 @@ export const startBeforeTestExpress = (
   // console.log(arr);
   if (deviceType === "ZD6" || deviceType === "ZD9") {
     arr = arr.slice(6, 8);
-    states = arr.map((v) => classifyResistanceZD6(v, th));
+    states = arr.map((v, i) => {
+      // if (i == 1) {
+      //   v = 10;
+      // }
+
+      return classifyResistanceZD6(v, th);
+    });
     configOption = channelConfig ?? CHANNEL_CONFIGZD6;
   }
   if (deviceType === "ZYJ7" || deviceType === "ZDJ9") {
     // console.log(arr);
     arr = arr.slice(2);
-    states = arr.map((v) => classifyResistance(v, th));
+    states = arr.map((v, i) => {
+      // if (i == 1 || i == 2) {
+      //   v = 15;
+      // }
+      return classifyResistance(v, th);
+    });
     configOption = channelConfig ?? CHANNEL_CONFIG;
+    console.log(states, configOption);
   }
 
   const dcResult: ChannelResult[] = configOption.map((cfg, i) => {

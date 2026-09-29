@@ -8,6 +8,7 @@ export interface ToastItem {
 
 const toasts = ref<ToastItem[]>([]);
 const loading = ref(false);
+const loadingMessage = ref("请稍候...");
 let toastId = 0;
 
 export function useToast() {
@@ -22,12 +23,14 @@ export function useToast() {
     }, 3000);
   }
 
-  function showLoading() {
+  function showLoading(message = "请稍候...") {
+    loadingMessage.value = message;
     loading.value = true;
   }
 
   function hideLoading() {
     loading.value = false;
+    loadingMessage.value = "请稍候...";
   }
 
   async function withLoading<T>(fn: () => Promise<T>, okMsg?: string): Promise<T> {
@@ -44,5 +47,13 @@ export function useToast() {
     }
   }
 
-  return { toasts, loading, showToast, showLoading, hideLoading, withLoading };
+  return {
+    toasts,
+    loading,
+    loadingMessage,
+    showToast,
+    showLoading,
+    hideLoading,
+    withLoading,
+  };
 }

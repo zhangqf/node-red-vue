@@ -3,17 +3,14 @@
  *
  * 业务流：
  *   SETUP（选闭合方式/加载配置）
- *   → START_BEFORE_TEST（启动前测试，电阻判定）
- *   → POWER_ON（开启动作电源，比对线圈）
+ *   → START_BEFORE_TEST（启动前测试，电阻与表示判定）
  *   → READY（待操作）
  *   → OPERATING（定操/反操动作中）
- *   → DONE（一次操动完成，保存）
  */
 
 export type StepId =
   | "SETUP"
   | "START_BEFORE_TEST"
-  | "POWER_ON"
   | "READY"
   | "OPERATING";
 
@@ -29,11 +26,10 @@ export const STEP_TABLE: Record<StepId, Step> = {
   SETUP: { id: "SETUP", onPass: "START_BEFORE_TEST" },
   START_BEFORE_TEST: {
     id: "START_BEFORE_TEST",
-    onPass: "POWER_ON",
+    onPass: "READY",
     onFail: "START_BEFORE_TEST",
   },
 
-  POWER_ON: { id: "POWER_ON", onPass: "READY", onFail: "POWER_ON" },
   READY: { id: "READY", onPass: "OPERATING" },
   OPERATING: {
     id: "OPERATING",
