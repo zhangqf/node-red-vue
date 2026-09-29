@@ -22,7 +22,7 @@
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
     "generate-icon": "electron-icon-builder --input=./public/ico.png --output=./build",
-    "electron:dev": "NODE_ENV=development electron .",
+    "electron:dev": "cross-env NODE_ENV=development electron .",
     "electron:build": "vite build && electron-builder --publish never",
     "electron:build:win": "vite build && electron-builder --win --publish never",
     "electron:build:mac": "vite build && electron-builder --mac --publish never",

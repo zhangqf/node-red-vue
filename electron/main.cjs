@@ -120,9 +120,9 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
-    fullscreen: true,
+    fullscreen: false,
     icon: path.join(__dirname, "../png/512x512.png"),
-    autoHideMenuBar: true,
+    autoHideMenuBar: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
