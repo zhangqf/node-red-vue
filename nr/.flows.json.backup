@@ -82,7 +82,8 @@
             "32892255ade97c1c",
             "64fbc1bb8519cb23",
             "e8bc96125729ac3d",
-            "5256708a666c89fa"
+            "5256708a666c89fa",
+            "48e7b7fb4206aef0"
         ],
         "x": 74,
         "y": 599,
@@ -6456,7 +6457,7 @@
         "z": "616b0fbf58fc4465",
         "g": "f3bf070bfa71c273",
         "name": "debug 3",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -7070,7 +7071,7 @@
         "z": "616b0fbf58fc4465",
         "g": "f3bf070bfa71c273",
         "name": "debug 10",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -7109,7 +7110,7 @@
         "z": "616b0fbf58fc4465",
         "g": "f3bf070bfa71c273",
         "name": "function 30",
-        "func": "\n const DC = [\n      [19,20,21],\n      [13,14,15,16,17,18],\n      [31]\n ]\n\n const AC = [\n     [23,24,25,26,27],\n     [5,6,7,8,9,10,11,12],\n     [31]\n ]\n\n/**\n * 互锁校验函数\n * @param {number[]} arr 输入的0/1数组\n * @returns { {ok: boolean, activeGroups: number[], msg: string} }\n */\nfunction checkInterlock(arr,unitId) {\n  // 收集触发的组\n  const activeGroups = [];\n  let groups = []\n  if(unitId === 1) {\n    groups = DC\n    }\n    if(unitId === 2) {\n    groups = AC\n    }\n  groups.forEach((indexList, groupNo) => {\n    // 本组任意一个下标值等于1 → 本组触发\n    const isTrigger = indexList.some(idx => arr[idx] === 1);\n    if (isTrigger) {\n      activeGroups.push(groupNo + 1); // 组号 1/2/3\n    }\n  });\n\n  const ok = activeGroups.length <= 1;\n  let msginfo = ok ? \"校验通过\" : `互锁冲突！同时触发组：${activeGroups.join(',')}`;\n  return { ok, activeGroups, msginfo };\n}\n\n\nconst unitId = msg.payload.deviceType === \"ZD6\" || msg.payload.deviceType === \"ZD9\" ? 1 : 2\n\nconst { ok, activeGroups, msginfo} = checkInterlock(msg.payload.value,unitId)\n\nconsole.info(ok)\nnode.log(ok);\n\n\n\nif(ok) {\n    return msg;\n} else {\n    return false;\n}\n\n\n\nreturn msg;",
+        "func": "\n const DC = [\n      [19,20,21], //  电阻\n      [13,14,15,16,17,18], //表示\n      [31] // 电源\n ]\n\n const AC = [\n     [23,24,25,26,27],\n     [5,6,7,8,9,10,11,12],\n     [31]\n ]\n\n/**\n * 互锁校验函数\n * @param {number[]} arr 输入的0/1数组\n * @returns { {ok: boolean, activeGroups: number[], msg: string} }\n */\nfunction checkInterlock(arr,unitId) {\n  // 收集触发的组\n  const activeGroups = [];\n  let groups = []\n  if(unitId === 1) {\n    groups = DC\n    }\n    if(unitId === 2) {\n    groups = AC\n    }\n  groups.forEach((indexList, groupNo) => {\n    // 本组任意一个下标值等于1 → 本组触发\n    const isTrigger = indexList.some(idx => arr[idx] === 1);\n    if (isTrigger) {\n      activeGroups.push(groupNo + 1); // 组号 1/2/3\n    }\n  });\n\n  const ok = activeGroups.length <= 1;\n  let msginfo = ok ? \"校验通过\" : `互锁冲突！同时触发组：${activeGroups.join(',')}`;\n  return { ok, activeGroups, msginfo };\n}\n\n\nconst unitId = msg.payload.deviceType === \"ZD6\" || msg.payload.deviceType === \"ZD9\" ? 1 : 2\n\nconst { ok, activeGroups, msginfo} = checkInterlock(msg.payload.value,unitId)\n\nconsole.info(ok)\nnode.log(ok);\n\n\n\nif(ok) {\n    return msg;\n} else {\n    return false;\n}\n\n\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 4,
@@ -7120,7 +7121,8 @@
         "y": 760,
         "wires": [
             [
-                "775fac645c87ae36"
+                "775fac645c87ae36",
+                "48e7b7fb4206aef0"
             ]
         ]
     },
@@ -7229,6 +7231,24 @@
         "statusType": "auto",
         "x": 680,
         "y": 240,
+        "wires": []
+    },
+    {
+        "id": "48e7b7fb4206aef0",
+        "type": "debug",
+        "z": "616b0fbf58fc4465",
+        "g": "f3bf070bfa71c273",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 640,
+        "y": 700,
         "wires": []
     }
 ]

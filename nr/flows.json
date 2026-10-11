@@ -6544,7 +6544,7 @@
         "z": "616b0fbf58fc4465",
         "g": "1f78b039e01e6dfa",
         "name": "1236",
-        "func": "\nmsg.payload =  { fc:2, unitid:1, address:0, quantity:16, name:\"表示\" }\n\nreturn msg;",
+        "func": "const deviceType = flow.get(\"deviceType\") || \"\";\nconst isZYJ7orZDJ9 = deviceType === \"ZYJ7\" || deviceType === \"ZDJ9\";\n\nconst devices = isZYJ7orZDJ9 ? { fc:2, unitid:2, address:0, quantity:16, name:\"表示\" } : { fc:2, unitid:1, address:0, quantity:16, name:\"表示\" };\n  \n  \nmsg.payload = devices\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
