@@ -69,6 +69,8 @@ const route = useRoute();
 const router = useRouter();
 const { withLoading, showToast, showLoading, hideLoading } = useToast();
 
+let initResult = ref<any[]>([]);
+
 /* ws消息处理 */
 const ws = useSocket(WEBSOCKET_URL);
 const {
@@ -156,9 +158,7 @@ const logDisplay = computed(() => {
     });
 });
 const operationLogErrors = computed(() =>
-    logDisplay.value.filter(
-      ({ e }) => e.send === "error" || e.exec === "error",
-    ),
+  logDisplay.value.filter(({ e }) => e.send === "error" || e.exec === "error"),
 );
 const bitClass = (b: LogBit) => {
   if (b.missing) return "log-bit-missing";
@@ -235,7 +235,7 @@ async function runExpressTest(): Promise<{
 }> {
   initTestResults();
   const indexes = testExpress[deviceType.value as keyof typeof testExpress];
-  const value = gen32BitArray([], [...indexes]);
+  const value = gen32BitArray(initResult.value, [...indexes]);
   const ok = await flow.sendCommand(
     "startBeforeTestRelays",
     {
@@ -936,8 +936,8 @@ async function getConfig(itemType: string) {
     indicationRelay.value = indicationRelays;
 
     // WS 连上后先发端子默认状态，不自动开启动作电源。
-    const initResult = terminals.value.map((item) => item.default_status);
-    wsSendData.value = gen32BitArray(initResult, []);
+    initResult.value = terminals.value.map((item) => item.default_status);
+    wsSendData.value = gen32BitArray(initResult.value, []);
     handleCheckType(wsSendData.value, deviceType.value);
   } catch (e) {
     console.error("加载配置失败:", e);
@@ -1013,7 +1013,7 @@ const handleButtonAction = () => {
       tempDate = [];
       currentCurveRef.value?.resetData();
       powerCurveRef.value?.resetData();
-      handleStartBeforeTest();
+      handleStartBeforeTest(initResult.value);
       break;
   }
 };
@@ -1155,6 +1155,7 @@ async function sendRelayState(
   label: string,
 ): Promise<boolean> {
   wsSendData.value = value;
+  console.log(value);
   return flow.sendCommand(
     "relays",
     {
@@ -1235,7 +1236,7 @@ const finishAction = async (key: keyof ActionRelays, collectTail = false) => {
 
     const expressIndexes =
       testExpress[deviceType.value as keyof typeof testExpress];
-    const expressValue = gen32BitArray([], [...expressIndexes]);
+    const expressValue = gen32BitArray(initResult.value, [...expressIndexes]);
     const expressOk = await flow.sendCommand(
       "startBeforeTestRelays",
       {
@@ -1335,7 +1336,8 @@ const sendOperationCommands = async (type: "DC" | "FC", runId: number) => {
     const driveOk = await flow.sendCommand(
       "variableFrequencyDrive",
       {
-        value: [type === "DC" ? 1 : 2],
+        // value: [type === "DC" ? 1 : 2],
+        value: [2],
         deviceType: deviceType.value,
       },
       {
@@ -1368,7 +1370,7 @@ const sendOperationCommands = async (type: "DC" | "FC", runId: number) => {
     showToast("操动继电器指令未确认，已停止后续操动指令", "error");
     return false;
   }
-
+  console.log();
   const finalValue = [...baseValue];
   finalValue[31] = 1;
   startRecord();

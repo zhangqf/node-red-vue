@@ -196,7 +196,7 @@ export function useStartBeforeTest(options: useStartBeforeTestOptions) {
   };
 
   /* 启动前测试 */
-  const handleStartBeforeTest = async () => {
+  const handleStartBeforeTest = async (initResult: number[]) => {
     if (startBeforeLoading.value) return;
     const runId = ++testRunId;
     flow.transition("START_BEFORE_TEST");
@@ -214,7 +214,10 @@ export function useStartBeforeTest(options: useStartBeforeTestOptions) {
     const restoreRelays = async () => {
       const restored = await restoreInitialRelayState();
       if (!restored) {
-        showToast("启动前测试结束，但继电器恢复初始化状态失败，请重试", "error");
+        showToast(
+          "启动前测试结束，但继电器恢复初始化状态失败，请重试",
+          "error",
+        );
       }
       return restored;
     };
@@ -234,7 +237,7 @@ export function useStartBeforeTest(options: useStartBeforeTestOptions) {
     console.log("resistance", resistanceValue);
 
     for (const [key, value] of Object.entries(resistanceValue)) {
-      const result = gen32BitArray([], [...idxArr, ...value]);
+      const result = gen32BitArray(initResult, [...idxArr, ...value]);
       currentResistanceChannle.value = key;
       const ok = await flow.sendCommand(
         "startBeforeTestRelays",
