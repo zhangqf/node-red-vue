@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 import { HTTP_URL } from "@/config/config";
 import { useToast } from "@/composables/useToast";
 import { fetchWithTimeout as fetch } from "@/utils/http";
@@ -75,6 +75,51 @@ function cloneRelays(list: Relay[] | undefined | null): Relay[] {
 }
 
 const configs = ref<Config[]>([]);
+
+/**
+ * 同名配置按机型分组展示。
+ *
+ * ZD6 与 ZD9 的配置允许同名且各自独立（业务上两者继电器一致但分属不同机型），
+ * 直接平铺会出现两行同名条目、难以区分。这里按 name 归并为一行，
+ * 展开后逐条列出各自的机型与继电器数。
+ */
+interface ConfigGroup {
+  name: string;
+  /** 同名配置，按继电器数降序，便于优先看到配置完整的那条 */
+  items: Config[];
+  /** 是否存在多条同名 */
+  duplicated: boolean;
+}
+
+const groupedConfigs = computed<ConfigGroup[]>(() => {
+  const map = new Map<string, Config[]>();
+  for (const cfg of configs.value) {
+    const list = map.get(cfg.name);
+    if (list) list.push(cfg);
+    else map.set(cfg.name, [cfg]);
+  }
+  return Array.from(map.entries()).map(([name, items]) => ({
+    name,
+    items: [...items].sort(
+      (a, b) => (b.relaysNum ?? 0) - (a.relaysNum ?? 0),
+    ),
+    duplicated: items.length > 1,
+  }));
+});
+
+/** 同名配置下标：仅用于折叠状态与展开行的 key */
+const groupKey = (g: ConfigGroup, i: number) => `${g.name}#${i}`;
+
+/** 同名配置默认展开首个，便于直接查看；收起状态集中管理 */
+const collapsedGroups = ref<Record<string, boolean>>({});
+
+function isGroupCollapsed(key: string): boolean {
+  return collapsedGroups.value[key] ?? false;
+}
+
+function toggleGroupCollapsed(key: string) {
+  collapsedGroups.value[key] = !collapsedGroups.value[key];
+}
 
 const showModal = ref(false);
 const isEdit = ref(false);
@@ -403,34 +448,84 @@ onMounted(async () => {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="cfg in configs" :key="cfg.id">
-          <td>
-            <span>
-              {{ cfg.name }}
+        <template v-for="g in groupedConfigs" :key="g.name">
+          <!-- 同名配置：首行代表该组，其余条目的字段留空避免视觉重复 -->
+          <tr>
+            <td>
+              <span class="group-name-cell">
+                <button
+                  v-if="g.duplicated"
+                  class="group-toggle"
+                  :title="isGroupCollapsed(groupKey(g, 0)) ? '展开' : '收起'"
+                  @click="toggleGroupCollapsed(groupKey(g, 0))">
+                  {{ isGroupCollapsed(groupKey(g, 0)) ? "▸" : "▾" }}
+                </button>
+                <span>{{ g.name }}</span>
+                <em v-if="g.duplicated" class="dup-mark">
+                  [{{ g.items.length }} 个机型]
+                </em>
+              </span>
+            </td>
+            <td>{{ g.items[0]?.description ?? "" }}</td>
+            <td style="text-align: center">
+              <span v-if="g.duplicated">—</span>
+              <span v-else>{{ g.items[0]?.relaysNum ?? 0 }}</span>
+            </td>
+            <td class="actions">
+              <template v-if="g.duplicated">
+                <span class="group-hint">展开后按机型操作</span>
+              </template>
+              <template v-else-if="!boundIds.has(g.items[0]!.id)">
+                <button class="action-btn edit" @click="openEdit(g.items[0]!)">
+                  编辑
+                </button>
+                <button
+                  class="action-btn delete"
+                  @click="remove(g.items[0]!.id)">
+                  删除
+                </button>
+              </template>
+              <template v-else>
+                <button class="action-btn view" @click="viewDetail(g.items[0]!)">
+                  查看
+                </button>
+                <button class="action-btn save-as" @click="saveAsCopy(g.items[0]!)">
+                  另存为
+                </button>
+              </template>
+            </td>
+          </tr>
+
+          <!-- 同名组的子行：每行对应一种机型 -->
+          <tr
+            v-if="g.duplicated && !isGroupCollapsed(groupKey(g, 0))"
+            v-for="(cfg, i) in g.items"
+            :key="groupKey(g, i)"
+            class="group-child-row">
+            <td class="child-name">{{ g.name }}</td>
+            <td>{{ cfg.description }}</td>
+            <td style="text-align: center">{{ cfg.relaysNum ?? 0 }}</td>
+            <td class="actions">
               <em v-if="boundIds.has(cfg.id)" class="bound-mark">[已绑定]</em>
-            </span>
-          </td>
-          <td>{{ cfg.description }}</td>
-          <td style="text-align: center">{{ cfg.relaysNum ?? 0 }}</td>
-          <td class="actions">
-            <template v-if="!boundIds.has(cfg.id)">
-              <button class="action-btn edit" @click="openEdit(cfg)">
-                编辑
-              </button>
-              <button class="action-btn delete" @click="remove(cfg.id)">
-                删除
-              </button>
-            </template>
-            <template v-else>
-              <button class="action-btn view" @click="viewDetail(cfg)">
-                查看
-              </button>
-              <button class="action-btn save-as" @click="saveAsCopy(cfg)">
-                另存为
-              </button>
-            </template>
-          </td>
-        </tr>
+              <template v-if="!boundIds.has(cfg.id)">
+                <button class="action-btn edit" @click="openEdit(cfg)">
+                  编辑
+                </button>
+                <button class="action-btn delete" @click="remove(cfg.id)">
+                  删除
+                </button>
+              </template>
+              <template v-else>
+                <button class="action-btn view" @click="viewDetail(cfg)">
+                  查看
+                </button>
+                <button class="action-btn save-as" @click="saveAsCopy(cfg)">
+                  另存为
+                </button>
+              </template>
+            </td>
+          </tr>
+        </template>
         <tr v-if="configs.length === 0">
           <td colspan="4" class="empty-row">暂无配置</td>
         </tr>
@@ -848,6 +943,47 @@ onMounted(async () => {
   color: #e9c235;
   font-size: 11px;
   margin-left: 6px;
+}
+
+/* 同名配置分组：首行 + 可展开的子行 */
+.group-name-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.group-toggle {
+  background: none;
+  border: none;
+  color: #7fb0e0;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.group-toggle:hover {
+  color: #a9d0f5;
+}
+
+.dup-mark {
+  font-style: normal;
+  color: #7fb0e0;
+  font-size: 11px;
+}
+
+.group-hint {
+  color: #5a7288;
+  font-size: 11px;
+}
+
+.group-child-row {
+  background: rgba(20, 40, 66, 0.35);
+}
+
+.group-child-row .child-name {
+  padding-left: 26px;
+  color: #a9d0f5;
 }
 
 .actions {
