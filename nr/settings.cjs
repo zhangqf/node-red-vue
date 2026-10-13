@@ -1,7 +1,12 @@
 const path = require("path");
 const fs = require("fs");
 const isDev = process.env.NODE_ENV === "development";
-const nrDir = 'C:/switch/node-red-vue/nr'
+// 独立跑 Node-RED 时 process.resourcesPath 不存在，回退到 __dirname。
+// 不写死绝对路径，否则换机器/跨平台即失效。
+const nrDir =
+  isDev || !process.resourcesPath
+    ? __dirname
+    : path.join(process.resourcesPath, "nr");
 
 module.exports = {
   // uiHost: "127.0.0.1",
