@@ -33,6 +33,8 @@ interface useStartBeforeTestOptions {
     FC: boolean;
     diagnosis: string[];
   }>;
+  /** 测电阻前断开表示：表示回路带电会把电阻采样拉偏，必须先关 */
+  turnExpressOff: () => Promise<boolean>;
   handleFindCollect: (field: string) => ReturnType<typeof getCircuits>;
 }
 
@@ -52,6 +54,7 @@ export function useStartBeforeTest(options: useStartBeforeTestOptions) {
     availableDirections,
     restoreInitialRelayState,
     runExpressTest,
+    turnExpressOff,
     handleFindCollect,
   } = options;
   const currentResistanceChannle = ref("");
@@ -221,6 +224,14 @@ export function useStartBeforeTest(options: useStartBeforeTestOptions) {
       }
       return restored;
     };
+
+    // 先断开表示再测电阻：表示回路带电会干扰电阻采样
+    if (!(await turnExpressOff())) {
+      startBeforeLoading.value = false;
+      flow.fail();
+      return;
+    }
+    if (runId !== testRunId) return;
 
     // availableDirections.value = { DC: false, FC: false };
     const idxArr =

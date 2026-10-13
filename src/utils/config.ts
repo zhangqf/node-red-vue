@@ -62,6 +62,39 @@ export const StartPowerConfig = {
   ZDJ9: [29, 30, 31],
 };
 
+/* ===== 定操/反操 表示项分组 =====
+ * 交叉对应关系：定操电阻对应反位表示与反操项，反操电阻对应定位表示与定操项。
+ * 下面两组常量同时驱动「表示测试判定」与「操动记录判定」，两处必须同步修改。
+ */
+
+/** 定位侧表示项（含一级/二级传动定位与定操 B/C 项） */
+export const DC_GROUP_TYPES = new Set([
+  "SecondaryTransmissionPositioning",
+  "PrimaryTransmissionPositioning",
+  "DCBX",
+  "DCCX",
+]);
+
+/** 反位侧表示项（含一级/二级传动反位与反操 B/C 项） */
+export const FC_GROUP_TYPES = new Set([
+  "SecondaryTransmissionInReversePosition",
+  "PrimaryTransmissionInReversePosition",
+  "FCBX",
+  "FCCX",
+]);
+
+/** 记录判定范围：反操(FC)检查定位表示+定操项 */
+export const FC_RECORD_TYPES = new Set<string>([
+  "GreenLight",
+  ...DC_GROUP_TYPES,
+]);
+
+/** 记录判定范围：定操(DC)检查反位表示+反操项 */
+export const DC_RECORD_TYPES = new Set<string>([
+  "YellowLight",
+  ...FC_GROUP_TYPES,
+]);
+
 export const startBeforeTestConfigTypeSetup: Record<
   "ZD6" | "ZD9" | "ZYJ7" | "ZDJ9",
   string
@@ -72,9 +105,15 @@ export const startBeforeTestConfigTypeSetup: Record<
   ZDJ9: "step4",
 };
 
+/**
+ * 启动前测试（电阻阶段）需要额外合上的继电器位。
+ *
+ * 注意：这里只放电阻测量通路相关位，**不能包含 testExpress 的表示位**——
+ * 表示回路带电会干扰电阻采样，必须先关表示再测。
+ */
 export const StartBeforeTestConfig = {
   ZD6: [],
-  ZD9: [13, 14, 15, 16, 17, 18, 23],
+  ZD9: [23],
   ZYJ7: [13, 14, 15, 16, 17, 18, 19, 20],
   ZDJ9: [13, 14, 15, 16, 17, 18, 19, 20],
 };
