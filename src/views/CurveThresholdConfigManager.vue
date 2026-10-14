@@ -160,8 +160,8 @@ onMounted(async () => {
         </tr>
         <tr v-if="rows.length === 0">
           <td colspan="9" class="empty-row">
-            暂无曲线阈值配置（未配置机型将使用默认值：电流峰值 0.5~20A / 归零 ≤0.3A
-            / 最少 10 点；功率峰值 0.05~50KW / 归零 ≤0.5KW）
+            暂无曲线阈值配置（未配置机型将使用默认值：电流峰值 0.5~20A / 归零
+            ≤0.3A / 最少 10 点；功率峰值 0.05~50KW / 归零 ≤0.5KW）
           </td>
         </tr>
       </tbody>
@@ -170,7 +170,9 @@ onMounted(async () => {
     <!-- Modal -->
     <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
       <div class="modal-card">
-        <h3 class="modal-title">{{ isEdit ? "编辑曲线阈值" : "添加曲线阈值" }}</h3>
+        <h3 class="modal-title">
+          {{ isEdit ? "编辑曲线阈值" : "添加曲线阈值" }}
+        </h3>
         <div class="modal-body">
           <div class="form-row">
             <label>机型</label>
@@ -241,12 +243,15 @@ onMounted(async () => {
           </div>
 
           <p class="hint">
-            判定规则：电流峰值落在 min~max 区间、末段电流 ≤ 归零上限、采样点数足够，三者同时满足即判电流曲线正常；
+            判定规则：电流峰值落在 min~max 区间、末段电流 ≤
+            归零上限、采样点数足够，三者同时满足即判电流曲线正常；
             三相机型额外要求功率峰值落在区间且末段功率归零。综合表示继电器结果后得出最终成功/失败。
           </p>
         </div>
         <div class="modal-footer">
-          <button class="action-btn cancel" @click="showModal = false">取消</button>
+          <button class="action-btn cancel" @click="showModal = false">
+            取消
+          </button>
           <button class="action-btn save" @click="save">保存</button>
         </div>
       </div>
@@ -402,6 +407,24 @@ onMounted(async () => {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+}
+
+/* 深色弹框内的滚动条，宽度收窄以免抢占内容空间 */
+.modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: #1a3350;
+  border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: #254670;
 }
 
 .form-row {

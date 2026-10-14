@@ -357,6 +357,24 @@ onMounted(async () => {
   overflow-y: auto;
 }
 
+/* 深色弹框内的滚动条，宽度收窄以免抢占内容空间 */
+.modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: #1a3350;
+  border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: #254670;
+}
+
 .form-row {
   display: flex;
   flex-direction: column;
