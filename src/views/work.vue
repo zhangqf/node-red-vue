@@ -423,24 +423,8 @@ registerEvent("ThreePhaseACCollector", (data: Record<string, number[]>) =>
 /* ============================================================
  * 界面派生状态
  * ========================================================== */
-const showDCGroup = computed(() => true);
-const showFCGroup = computed(() => true);
-
-/** 诊断提示按当前视角过滤：定操视角只显示定操项，反操视角只显示反操项，通用提示始终显示 */
-const displayDiagnosisMessages = computed(() => {
-  return diagnosisMessages.value.filter((msg) => {
-    if (msg.startsWith("定操-")) return showDCGroup.value;
-    if (msg.startsWith("反操-")) return showFCGroup.value;
-    return true;
-  });
-});
-
-const currentData = ref({
-  currentValue: 3.8,
-  startCurrent: 1.0,
-  convertCurrent: 0,
-  lockCurrent: 0,
-});
+/** 定操/反操视角固定为「始终显示」，诊断提示直接全量透传 */
+const displayDiagnosisMessages = computed(() => diagnosisMessages.value);
 
 /** 通讯连接正常才允许下发指令 */
 const isShowButtons = computed(() => {
@@ -711,9 +695,6 @@ onMounted(async () => {
       @back="handleBack()" />
     <div class="main-content">
       <CurrentCurve
-        :start-current="currentData.startCurrent"
-        :convert-current="currentData.convertCurrent"
-        :lock-current="currentData.lockCurrent"
         :register-arr="isThreePhase ? undefined : registerArr"
         :register-arr-a="isThreePhase ? registerArrA : undefined"
         :register-arr-b="isThreePhase ? registerArrB : undefined"
@@ -737,8 +718,6 @@ onMounted(async () => {
         :available-directions="availableDirections"
         :diagnosis-messages="displayDiagnosisMessages"
         :start-before-test-finshed="startBeforeTestFinshed"
-        :show-d-c="showDCGroup"
-        :show-f-c="showFCGroup"
         :device-type="deviceType" />
     </div>
 
@@ -780,7 +759,7 @@ onMounted(async () => {
           <span v-if="butItemStatus === 'FC'" class="light light-yellow"></span>
         </span> -->
         <button
-          v-if="availableDirections.DC && showDCGroup"
+          v-if="availableDirections.DC"
           class="action-btn dc-btn"
           :disabled="butItemIsDisable"
           :class="butItemStatus === 'DC' ? 'active' : ''"
@@ -788,7 +767,7 @@ onMounted(async () => {
           定操
         </button>
         <button
-          v-if="availableDirections.FC && showFCGroup"
+          v-if="availableDirections.FC"
           class="action-btn fc-btn"
           :disabled="butItemIsDisable"
           :class="butItemStatus === 'FC' ? 'active' : ''"
