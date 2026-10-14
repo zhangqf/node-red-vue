@@ -172,12 +172,20 @@ export function useRecordSave(options: UseRecordSaveOptions) {
 
     const tips = getStartBeforeTestTips();
     if (tips) {
+      // dcResult / fcResult 是同一批通道在两个方向上的判定：
+      // 同一通道的定操期望与反操期望相反（如第3路 NORMAL / OPEN），
+      // 因此两侧判定都要留存，否则复盘时无法还原方向结论。
       tempData.pre_test = {
         direction: tips.direction,
-        channels: tips.dcResult.map((r: any) => ({
+        channels: tips.dcResult.map((r: any, i: number) => ({
           name: r.channelName,
           value: r.value,
           state: r.state,
+          dc: { isNormal: r.isNormal, tip: r.tip },
+          fc: {
+            isNormal: tips.fcResult?.[i]?.isNormal ?? false,
+            tip: tips.fcResult?.[i]?.tip ?? "",
+          },
         })),
       };
     }

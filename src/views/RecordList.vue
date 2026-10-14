@@ -21,7 +21,18 @@ interface RecordItem {
   result?: string;
   pre_test?: {
     direction: { DC: boolean; FC: boolean; diagnosis: string[] };
-    channels: { name: string; value: number; state: string }[];
+    /**
+     * 启动前测试各通道结果。
+     * dc / fc 为该通道在定操、反操两个方向上的判定；
+     * 旧版本记录只存 name/value/state，此二者可能缺失，需兼容显示。
+     */
+    channels: {
+      name: string;
+      value: number;
+      state: string;
+      dc?: { isNormal: boolean; tip: string };
+      fc?: { isNormal: boolean; tip: string };
+    }[];
   };
 }
 
@@ -106,6 +117,14 @@ function preTestLabel(r: RecordItem): string {
   if (d.FC) return "反操";
   return "不可用";
 }
+
+/**
+ * 新版记录在通道上带 dc/fc 双方向判定，旧记录只有 name/value/state。
+ * 用是否存在 dc 字段来判断版本，缺失时不渲染这两列，保持表格可读。
+ */
+const hasDirectionJudgement = computed(() =>
+  (currentRecord.value?.pre_test?.channels ?? []).some((ch) => !!ch?.dc),
+);
 
 // 详情：反操(FC)只显示反操方向与提示，定操(DC)只显示定操方向与提示
 const detailOpType = computed(() => currentRecord.value?.op_type || "");
@@ -861,6 +880,9 @@ onMounted(async () => {
                   <th>通道</th>
                   <th>阻值</th>
                   <th>状态</th>
+                  <!-- 新版记录才有双方向判定，旧记录缺失时退化为原三列 -->
+                  <th v-if="hasDirectionJudgement">定操判定</th>
+                  <th v-if="hasDirectionJudgement">反操判定</th>
                 </tr>
               </thead>
               <tbody>
@@ -882,6 +904,20 @@ onMounted(async () => {
                               ? "短路"
                               : "异常"
                       }}
+                    </span>
+                  </td>
+                  <td v-if="hasDirectionJudgement">
+                    <span
+                      class="pretest-state"
+                      :class="ch.dc?.isNormal ? 'ok' : 'ng'">
+                      {{ ch.dc?.isNormal ? "正常" : "异常" }}
+                    </span>
+                  </td>
+                  <td v-if="hasDirectionJudgement">
+                    <span
+                      class="pretest-state"
+                      :class="ch.fc?.isNormal ? 'ok' : 'ng'">
+                      {{ ch.fc?.isNormal ? "正常" : "异常" }}
                     </span>
                   </td>
                 </tr>
