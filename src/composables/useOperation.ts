@@ -42,6 +42,8 @@ const ACTION_TIMEOUT_MS = 13000;
 const ZERO_HOLD_MS = 1500;
 /** 强电操动前的警示倒计时 */
 const WARN_COUNTDOWN = 3;
+/** READY 态等待操作员的空闲超时：超时后退回启动前测试 */
+const IDLE_TIMEOUT_MS = 120_000;
 
 /**
  * 操动流程：定操/反操从警示倒计时、继电器下发、采集到收尾落库的完整编排。
@@ -82,6 +84,8 @@ export function useOperation(options: UseOperationOptions) {
   let operationRunId = 0;
   /** 电流是否已连续归零达到阈值 */
   let zeroHeld = false;
+  /** READY 态等待操作员的超时定时器 */
+  let idleTimerId: ReturnType<typeof setTimeout> | null = null;
 
   /** 结束所有采集与计时（进入收尾、切闭合方式、卸载时都要走） */
   const stopRecord = () => {
@@ -245,6 +249,8 @@ export function useOperation(options: UseOperationOptions) {
     butItemIsDisable.value = false;
     butItemStatus.value = "";
     flow.transition("READY");
+    // 回到 READY 仍需等待操作员，重新计时
+    armIdleTimer();
   };
 
   /** 把某个方向的继电器置为指定期望状态 */
@@ -339,6 +345,9 @@ export function useOperation(options: UseOperationOptions) {
     }
     if (butItemIsDisable.value) return;
 
+    // 操作员已开始操作，取消空闲超时
+    clearIdleTimer();
+
     const runId = ++operationRunId;
     resetCurves();
     operationStarted.value = false;
@@ -381,11 +390,46 @@ export function useOperation(options: UseOperationOptions) {
     }
   };
 
-  /** 组件卸载：作废运行代号并停掉兜底定时器 */
+  /* ============================================================
+   * READY 态空闲超时
+   *
+   * 启动前测试通过后进入 READY，等待操作员点定操/反操。若长时间无人操作，
+   * 退回启动前测试重新开始，避免停留在上一次的判定结果上继续操作。
+   *
+   * 超时只改流程状态，不动继电器——操作员重新点启动前测试时，
+   * 那里会先关表示再测电阻。
+   * ========================================================== */
+
+  /** 空闲超时后弹出的提示框 */
+  const idleTimeoutVisible = ref(false);
+
+  const clearIdleTimer = () => {
+    if (idleTimerId) clearTimeout(idleTimerId);
+    idleTimerId = null;
+  };
+
+  const armIdleTimer = () => {
+    clearIdleTimer();
+    idleTimerId = setTimeout(() => {
+      idleTimerId = null;
+      // 期间可能已进入操动或离开页面，此时不再回退
+      if (flow.currentStep.value !== "READY") return;
+      flow.transition("START_BEFORE_TEST");
+      idleTimeoutVisible.value = true;
+    }, IDLE_TIMEOUT_MS);
+  };
+
+  /** 操作员点【知道了】关闭提示 */
+  const closeIdleTimeoutDialog = () => {
+    idleTimeoutVisible.value = false;
+  };
+
+  /** 组件卸载：作废运行代号并停掉所有定时器 */
   const dispose = () => {
     operationRunId++;
     if (actionTimerId) clearTimeout(actionTimerId);
     actionTimerId = null;
+    clearIdleTimer();
   };
 
   return {
@@ -395,12 +439,17 @@ export function useOperation(options: UseOperationOptions) {
     butItemStatus,
     operationWarningVisible,
     operationCountdown,
+    idleTimeoutVisible,
     // 动作
     checkZeroCurrent,
     handleOpe,
     cancelPendingOperation,
     stopRecord,
     batchUpdateTerminal,
+    // 空闲超时
+    armIdleTimer,
+    clearIdleTimer,
+    closeIdleTimeoutDialog,
     // 生命周期
     dispose,
   };

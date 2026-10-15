@@ -35,6 +35,8 @@ interface useStartBeforeTestOptions {
   }>;
   /** 测电阻前断开表示：表示回路带电会把电阻采样拉偏，必须先关 */
   turnExpressOff: () => Promise<boolean>;
+  /** 测试通过、进入 READY 后的回调，用于启动空闲超时 */
+  onPass?: () => void;
   handleFindCollect: (field: string) => ReturnType<typeof getCircuits>;
 }
 
@@ -55,6 +57,7 @@ export function useStartBeforeTest(options: useStartBeforeTestOptions) {
     restoreInitialRelayState,
     runExpressTest,
     turnExpressOff,
+    onPass,
     handleFindCollect,
   } = options;
   const currentResistanceChannle = ref("");
@@ -337,6 +340,8 @@ export function useStartBeforeTest(options: useStartBeforeTestOptions) {
 
     if (availableDirections.value.DC || availableDirections.value.FC) {
       flow.pass();
+      // 进入 READY 后等待操作员点击，启动空闲超时
+      onPass?.();
     } else {
       flow.fail();
     }

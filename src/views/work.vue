@@ -216,6 +216,10 @@ const {
   cancelPendingOperation,
   stopRecord,
   batchUpdateTerminal,
+  idleTimeoutVisible,
+  armIdleTimer,
+  clearIdleTimer,
+  closeIdleTimeoutDialog,
   dispose: disposeOperation,
 } = useOperation({
   flow,
@@ -318,6 +322,7 @@ const {
   restoreInitialRelayState,
   runExpressTest,
   turnExpressOff,
+  onPass: armIdleTimer,
   handleFindCollect,
 });
 
@@ -517,6 +522,7 @@ const handleContactConfigClick = (
   selectedContactType.value = type;
   // 切换闭合方式后，原启动前测试结果失效，需重新测试
   startBeforeLoading.value = false;
+  clearIdleTimer();
   if (nonInitialPageTransition) {
     flow.transition("SETUP");
   }
@@ -834,6 +840,25 @@ onMounted(async () => {
           class="operation-warning-cancel"
           @click="cancelPendingOperation">
           取消操作
+        </button>
+      </div>
+    </div>
+
+    <!-- 空闲超时：长时间未操作，已退回启动前测试 -->
+    <div
+      v-if="idleTimeoutVisible"
+      class="operation-warning-overlay"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="idle-timeout-title">
+      <div class="operation-warning-dialog">
+        <h2 id="idle-timeout-title">长时间未操作</h2>
+        <p>
+          已等待 2 分钟无操作，为避免沿用上一次的测试结果，流程已退回启动前测试。
+          请重新进行启动前测试后再进行定操/反操。
+        </p>
+        <button class="operation-warning-cancel" @click="closeIdleTimeoutDialog">
+          知道了
         </button>
       </div>
     </div>
