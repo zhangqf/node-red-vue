@@ -38,6 +38,8 @@ import { useOperationLogPanel } from "@/composables/useOperationLogPanel";
 import { useRecordSave } from "@/composables/useRecordSave";
 import { useSocket } from "@/composables/useSocket";
 import { useStartBeforeTest } from "@/composables/useStartBeforeTest";
+import { buildExpressAnnouncement } from "@/utils/announce";
+import { speakSequence } from "@/utils/speech";
 import { useTestFlow } from "@/composables/useTestFlow";
 import { useToast } from "@/composables/useToast";
 
@@ -299,6 +301,14 @@ async function runExpressTest(): Promise<{
   const physicalFcPassed =
     green?.status === true && fcItems.every((item) => item.status === true);
   const swap = selectedContactType.value === "contact24Closed";
+
+  // 表示判定完成即播报：定位表示与反位表示同时未通过时，
+  // 道岔无有效位置指示，需立即语音提示未吸合的继电器。
+  const announcement = buildExpressAnnouncement(testResults.value);
+  if (announcement.length) {
+    speakSequence(announcement);
+  }
+
   return {
     DC: swap ? physicalFcPassed : physicalDcPassed,
     FC: swap ? physicalDcPassed : physicalFcPassed,
