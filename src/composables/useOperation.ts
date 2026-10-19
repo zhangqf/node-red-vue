@@ -1,6 +1,8 @@
 import { ref, type Ref } from "vue";
 import { gen32BitArray, sleep } from "@/utils/utils";
 import { testExpress } from "@/utils/config";
+import { EXPRESS_COMMAND_FAILED_TIP } from "@/utils/announce";
+import { speak } from "@/utils/speech";
 import type { ActionRelays } from "@/utils/interface";
 import { useToast } from "./useToast";
 import type { useTestFlow } from "./useTestFlow";
@@ -30,6 +32,8 @@ interface UseOperationOptions {
   resetCurves: () => void;
   /** 清空表示判定结果 */
   initTestResults: () => void;
+  /** 操动结束后合表示，等采样窗口到了播报表示异常 */
+  announceExpressResult: () => void;
 }
 
 /** 变频器是 ZYJ7/ZDJ9 才有的模块 */
@@ -44,6 +48,8 @@ const ZERO_HOLD_MS = 1500;
 const WARN_COUNTDOWN = 3;
 /** READY 态等待操作员的空闲超时：超时后退回启动前测试 */
 const IDLE_TIMEOUT_MS = 120_000;
+/** 合上表示后等采样的窗口，与 work.vue 的启动前测试表示测试一致 */
+const EXPRESS_SAMPLE_WINDOW_MS = 2000;
 
 /**
  * 操动流程：定操/反操从警示倒计时、继电器下发、采集到收尾落库的完整编排。
@@ -67,6 +73,7 @@ export function useOperation(options: UseOperationOptions) {
     saveRecord,
     resetCurves,
     initTestResults,
+    announceExpressResult,
   } = options;
 
   /* ---- 本次操动的采集与计时状态 ---- */
@@ -230,7 +237,18 @@ export function useOperation(options: UseOperationOptions) {
       // 操动结束合上表示，让操作员看到动作后的道岔位置
       const expressOk = await turnExpressOn();
       if (runId !== operationRunId) return;
-      if (!expressOk) throw new Error("开启表示继电器指令未确认");
+      if (!expressOk) {
+        // 指令未下发成功时表示没带电，读数无意义，按状态未知播报；
+        // toast 仍由下面的 catch 统一出，避免只提示一半
+        speak(EXPRESS_COMMAND_FAILED_TIP);
+        throw new Error("开启表示继电器指令未确认");
+      }
+
+      // 等采样窗口回来再判定：操动全程表示是断开的，此时才有读数。
+      // 与启动前测试、选型两处保持同一口径，异常统一由 announceExpressResult 播报。
+      await sleep(EXPRESS_SAMPLE_WINDOW_MS);
+      if (runId !== operationRunId) return;
+      announceExpressResult();
 
       await finalizeAction(key);
     } catch (error) {

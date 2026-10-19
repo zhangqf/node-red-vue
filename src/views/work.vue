@@ -38,12 +38,12 @@ import { useOperationLogPanel } from "@/composables/useOperationLogPanel";
 import { useRecordSave } from "@/composables/useRecordSave";
 import { useSocket } from "@/composables/useSocket";
 import { useStartBeforeTest } from "@/composables/useStartBeforeTest";
-import { buildExpressAnnouncement } from "@/utils/announce";
+import {
+  buildExpressAnnouncement,
+  EXPRESS_COMMAND_FAILED_TIP,
+} from "@/utils/announce";
 import { speak, speakSequence } from "@/utils/speech";
 
-/** 表示测试指令未确认时的播报文案：此时继电器状态未知，需与「未吸合」区分 */
-const EXPRESS_COMMAND_FAILED_TIP =
-  "表示测试指令未确认，继电器状态未知，请检查设备";
 import { useTestFlow } from "@/composables/useTestFlow";
 import { useToast } from "@/composables/useToast";
 
@@ -159,6 +159,21 @@ const {
   handleFindCollect,
 });
 
+/** 表示采样窗口：与启动前测试的表示测试保持一致 */
+const EXPRESS_SAMPLE_WINDOW_MS = 2000;
+
+/**
+ * 表示异常播报的统一入口。
+ *
+ * 凡是要测表示的地方都在采样窗口结束后调用本函数，判定口径完全一致：
+ * 定位表示与反位表示都不可用（继电器未吸合，或采样缺失）才播报；
+ * 任一可用说明道岔位置明确，静默以免打扰正常操作。
+ */
+const announceExpressResult = () => {
+  const sentences = buildExpressAnnouncement(testResults.value);
+  if (sentences.length) speakSequence(sentences);
+};
+
 /* ============================================================
  * 表示继电器（与电阻回路共用线圈，开合时机受流程约束）
  * ========================================================== */
@@ -241,6 +256,7 @@ const {
   saveRecord,
   resetCurves,
   initTestResults,
+  announceExpressResult,
 });
 
 onUnmounted(() => disposeOperation());
@@ -293,7 +309,7 @@ async function runExpressTest(): Promise<{
     return { DC: false, FC: false, diagnosis: ["表示测试指令未确认"] };
   }
 
-  await sleep(2000);
+  await sleep(EXPRESS_SAMPLE_WINDOW_MS);
   const findItem = (type: string) =>
     testResults.value.find((item) => item.type === type);
   const dcItems = testResults.value.filter((item) =>
@@ -310,12 +326,8 @@ async function runExpressTest(): Promise<{
     green?.status === true && fcItems.every((item) => item.status === true);
   const swap = selectedContactType.value === "contact24Closed";
 
-  // 表示判定完成即播报：定位表示与反位表示都不可用时（继电器未吸合，
-  // 或本轮采样缺失），道岔无有效位置指示，需立即语音提示。
-  const announcement = buildExpressAnnouncement(testResults.value);
-  if (announcement.length) {
-    speakSequence(announcement);
-  }
+  // 表示判定完成即播报
+  announceExpressResult();
 
   return {
     DC: swap ? physicalFcPassed : physicalDcPassed,
@@ -515,13 +527,25 @@ const terminalsReady = ref(false);
 /** 选型完成时要求开表示；若配置尚未到位，就绪后补发 */
 let pendingExpressOn = false;
 
-/** 合上表示；配置未就绪时挂起到 getConfig 完成后补发 */
+/**
+ * 合上表示；配置未就绪时挂起到 getConfig 完成后补发。
+ *
+ * 这是一次完整的表示判定：调用方（选型/切换闭合方式）已先
+ * initTestResults() 把状态清成「未判定」，这里等采样窗口回来后统一播报。
+ */
 async function requestExpressOn() {
   if (!terminalsReady.value) {
     pendingExpressOn = true;
     return;
   }
-  await turnExpressOn();
+  const ok = await turnExpressOn();
+  if (!ok) {
+    // 指令未下发成功时表示没带电，采样读数无意义，按状态未知播报
+    speak(EXPRESS_COMMAND_FAILED_TIP);
+    return;
+  }
+  await sleep(EXPRESS_SAMPLE_WINDOW_MS);
+  announceExpressResult();
 }
 
 async function getConfig(itemType: string) {

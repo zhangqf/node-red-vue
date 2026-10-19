@@ -23,6 +23,16 @@ import type { TestItem } from "@/utils/interface";
 const GREEN_LIGHT = "GreenLight";
 const YELLOW_LIGHT = "YellowLight";
 
+/**
+ * 开表示指令未确认时的播报文案。
+ *
+ * 指令没下发成功时表示回路根本没带电，采样回来也是无意义的读数，
+ * 此时不宜按「未吸合」或「缺失」播报——继电器状态本身是未知的。
+ * 单独一句，让操作员把「设备没响应」和「继电器该吸没吸」区分开。
+ */
+export const EXPRESS_COMMAND_FAILED_TIP =
+  "表示测试指令未确认，继电器状态未知，请检查设备";
+
 const findItem = (
   items: TestItem[],
   type: string,
