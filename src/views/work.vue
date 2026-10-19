@@ -310,8 +310,8 @@ async function runExpressTest(): Promise<{
     green?.status === true && fcItems.every((item) => item.status === true);
   const swap = selectedContactType.value === "contact24Closed";
 
-  // 表示判定完成即播报：定位表示与反位表示同时未通过时，
-  // 道岔无有效位置指示，需立即语音提示未吸合的继电器。
+  // 表示判定完成即播报：定位表示与反位表示都不可用时（继电器未吸合，
+  // 或本轮采样缺失），道岔无有效位置指示，需立即语音提示。
   const announcement = buildExpressAnnouncement(testResults.value);
   if (announcement.length) {
     speakSequence(announcement);

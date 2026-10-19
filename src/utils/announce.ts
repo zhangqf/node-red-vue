@@ -3,11 +3,19 @@ import type { TestItem } from "@/utils/interface";
 /**
  * 表示继电器异常的语音播报文案。
  *
- * 仅在「定位表示与反位表示同时未通过」时播报——此时道岔没有任何有效
- * 位置指示，操作员必须介入处理。若其中一个通过，说明道岔仍有确定位置，
- * 不打断操作。
+ * 触发条件：定位表示与反位表示都不是「通过」，即道岔没有任何有效位置指示。
+ * 若其中一个通过，说明位置明确，不打断操作。
  *
- * 播报内容覆盖所有未通过的表示项（含传动、续操等次级项），每项一句，
+ * 两种异常性质不同，需分别播报：
+ * - status === false：采到了数据但继电器未吸合 → 播报具体继电器与端子路径；
+ * - status === "NT"：本轮采样根本没回来（表示回路未闭合、通讯中断等），
+ *   继电器状态未知 → 播报「缺失」。此前这类情况被静默，恰恰漏掉了最需
+ *   要提示的场景。
+ *
+ * 所有表示项共用同一份采样数据（useIndication.handleWsRelayData 一次更新
+ * 全部），因此 "NT" 必然成对出现，不存在只有一个缺失的中间态。
+ *
+ * 播报内容覆盖所有不可用的表示项（含传动、续操等次级项），每项一句；
  * 句内只报未吸合的继电器，避免把正常吸合的也念一遍。
  */
 
@@ -20,8 +28,15 @@ const findItem = (
   type: string,
 ): TestItem | undefined => items.find((t) => t.type === type);
 
-/** 某表示项是否未通过（status 为 true 或尚未判定 "NT" 都不算失败） */
+/** 继电器未吸合：采到了数据但判定不通过 */
 const isFailed = (item?: TestItem): boolean => item?.status === false;
+
+/** 采样缺失：本轮没有收到该表示项的数据 */
+const isMissing = (item?: TestItem): boolean => item?.status === "NT";
+
+/** 不可用：未吸合或数据缺失，即 status 不为 true */
+const isUnavailable = (item?: TestItem): boolean =>
+  !!item && item.status !== true;
 
 /**
  * 取某表示项下未吸合的继电器描述，形如「C1未吸合，D4→21→11-12→42→绕组3」。
@@ -55,11 +70,11 @@ export function buildExpressAnnouncement(testResults: TestItem[]): string[] {
   const green = findItem(testResults, GREEN_LIGHT);
   const yellow = findItem(testResults, YELLOW_LIGHT);
 
-  // 只有定位表示与反位表示同时未通过才播报
-  if (!(isFailed(green) && isFailed(yellow))) return [];
+  // 定位表示与反位表示都不可用才播报：任一通过则位置明确，不打扰操作
+  if (!(isUnavailable(green) && isUnavailable(yellow))) return [];
 
   const failedItems = testResults
-    .filter((t) => t.type !== "empty" && isFailed(t))
+    .filter((t) => t.type !== "empty" && isUnavailable(t))
     // 定位表示在前，反位表示紧随其后，其余按原有顺序
     .sort((a, b) => {
       const rank = (t: string) =>
@@ -70,6 +85,11 @@ export function buildExpressAnnouncement(testResults: TestItem[]): string[] {
   const sentences: string[] = [];
 
   for (const item of failedItems) {
+    // 采样缺失：无法得知继电器状态，只能报缺失，不能报未吸合
+    if (isMissing(item)) {
+      sentences.push(`${item.name}缺失`);
+      continue;
+    }
     const detail = describeUnclosedRelays(item);
     sentences.push(detail ? `${item.name}异常，${detail}` : `${item.name}异常`);
   }
