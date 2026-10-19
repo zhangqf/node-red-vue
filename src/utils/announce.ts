@@ -15,8 +15,8 @@ import type { TestItem } from "@/utils/interface";
  * 所有表示项共用同一份采样数据（useIndication.handleWsRelayData 一次更新
  * 全部），因此 "NT" 必然成对出现，不存在只有一个缺失的中间态。
  *
- * 播报内容覆盖所有不可用的表示项（含传动、续操等次级项），每项一句；
- * 句内只报未吸合的继电器，避免把正常吸合的也念一遍。
+ * 播报内容覆盖传入列表里所有不可用的表示项，每项一句；句内只报未吸合的
+ * 继电器，避免把正常吸合的也念一遍。
  */
 
 /** 定位/反位表示的 type，用于判定触发条件 */
@@ -73,7 +73,9 @@ function describeUnclosedRelays(item: TestItem): string {
 /**
  * 生成播报语句列表。
  *
- * @param testResults 当前表示判定结果
+ * @param testResults 表示判定结果，需传入界面上实际显示的那份
+ *   （work.vue 的 displayedTestResults）。传动与 B/C 项在该侧表示未成功时
+ *   界面上不显示，若传入全量 testResults 会报出操作员眼前看不到的项目。
  * @returns 需要播报的句子；不满足触发条件时返回空数组
  */
 export function buildExpressAnnouncement(testResults: TestItem[]): string[] {

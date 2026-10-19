@@ -168,9 +168,13 @@ const EXPRESS_SAMPLE_WINDOW_MS = 2000;
  * 凡是要测表示的地方都在采样窗口结束后调用本函数，判定口径完全一致：
  * 定位表示与反位表示都不可用（继电器未吸合，或采样缺失）才播报；
  * 任一可用说明道岔位置明确，静默以免打扰正常操作。
+ *
+ * 数据源用 displayedTestResults 而非 testResults——它与界面同源，
+ * 传动与 B/C 项在该侧表示未成功时本就不显示（useIndication 的过滤规则），
+ * 播报必须与操作员眼前看到的内容一致，否则会报出界面上不存在的项目。
  */
 const announceExpressResult = () => {
-  const sentences = buildExpressAnnouncement(testResults.value);
+  const sentences = buildExpressAnnouncement(displayedTestResults.value);
   if (sentences.length) speakSequence(sentences);
 };
 
