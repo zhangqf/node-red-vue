@@ -428,8 +428,46 @@ registerEvent("ThreePhaseACCollector", (data: Record<string, number[]>) =>
 /* ============================================================
  * 界面派生状态
  * ========================================================== */
-/** 定操/反操视角固定为「始终显示」，诊断提示直接全量透传 */
-const displayDiagnosisMessages = computed(() => diagnosisMessages.value);
+
+/**
+ * 定操/反操视角显隐。
+ *
+ * 结果出来后只保留有效信息：某方向通过就只显示它，两个都不通过则都显示，
+ * 以便看到失败原因。
+ *
+ * 测试未开始或进行中一律都显示——此时正在逐组采样，实时阻值就展示在这两个
+ * 视角里，隐藏会导致操作员看不到进度。此处显式判断 complete，不依赖
+ * 「测试中 DC/FC 均为 false」的隐含前提。
+ */
+const isPreTestSettled = computed(() => {
+  const tips = startBeforeTestTips.value;
+  return !!tips && tips.direction.complete !== false;
+});
+
+const showDCView = computed(() => {
+  if (!isPreTestSettled.value) return true;
+  const { DC, FC } = availableDirections.value;
+  return DC || !FC;
+});
+
+const showFCView = computed(() => {
+  if (!isPreTestSettled.value) return true;
+  const { DC, FC } = availableDirections.value;
+  return FC || !DC;
+});
+
+/**
+ * 诊断提示跟随视角过滤：隐藏的视角不显示其失败原因，
+ * 混线等通用提示始终保留。测试未完成时不过滤。
+ */
+const displayDiagnosisMessages = computed(() => {
+  if (!isPreTestSettled.value) return diagnosisMessages.value;
+  return diagnosisMessages.value.filter((msg) => {
+    if (msg.startsWith("定操-")) return showDCView.value;
+    if (msg.startsWith("反操-")) return showFCView.value;
+    return true;
+  });
+});
 
 /** 通讯连接正常才允许下发指令 */
 const isShowButtons = computed(() => {
@@ -724,6 +762,8 @@ onMounted(async () => {
         :available-directions="availableDirections"
         :diagnosis-messages="displayDiagnosisMessages"
         :start-before-test-finshed="startBeforeTestFinshed"
+        :show-d-c="showDCView"
+        :show-f-c="showFCView"
         :device-type="deviceType" />
     </div>
 

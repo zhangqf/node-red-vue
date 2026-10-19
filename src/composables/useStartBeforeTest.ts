@@ -65,7 +65,13 @@ export function useStartBeforeTest(options: useStartBeforeTestOptions) {
   const startBeforeTestTips = ref<{
     dcResult: any[];
     fcResult: any[];
-    direction: { DC: boolean; FC: boolean; diagnosis: string[] };
+    /** complete 为 false 表示测试仍在进行中，DC/FC 结果尚未定论 */
+    direction: {
+      DC: boolean;
+      FC: boolean;
+      diagnosis: string[];
+      complete?: boolean;
+    };
   } | null>(null);
   const diagnosisMessages = ref<string[]>([]);
   const pendingSaveData = ref<Record<string, any> | null>(null);
