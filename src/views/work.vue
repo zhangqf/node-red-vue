@@ -39,7 +39,11 @@ import { useRecordSave } from "@/composables/useRecordSave";
 import { useSocket } from "@/composables/useSocket";
 import { useStartBeforeTest } from "@/composables/useStartBeforeTest";
 import { buildExpressAnnouncement } from "@/utils/announce";
-import { speakSequence } from "@/utils/speech";
+import { speak, speakSequence } from "@/utils/speech";
+
+/** 表示测试指令未确认时的播报文案：此时继电器状态未知，需与「未吸合」区分 */
+const EXPRESS_COMMAND_FAILED_TIP =
+  "表示测试指令未确认，继电器状态未知，请检查设备";
 import { useTestFlow } from "@/composables/useTestFlow";
 import { useToast } from "@/composables/useToast";
 
@@ -282,6 +286,10 @@ async function runExpressTest(): Promise<{
   // 表示继电器在此合上，采样窗口内保持带电以便读取各项状态
   const ok = await applyOnValue("表示测试");
   if (!ok) {
+    // 指令未确认意味着表示根本没测，状态停留在初始的「未判定」。
+    // 此时无法判断继电器是否吸合，若不播报，操作员听到的是上一轮的旧结果，
+    // 会误以为本轮测试成功。因此单独播报，明确区分于「继电器未吸合」。
+    speak(EXPRESS_COMMAND_FAILED_TIP);
     return { DC: false, FC: false, diagnosis: ["表示测试指令未确认"] };
   }
 
