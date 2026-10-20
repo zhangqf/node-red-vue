@@ -198,7 +198,7 @@ export const startBeforeTestExpress = (
   let configOption: ChannelExpect[] = [];
   // console.log(arr);
   if (deviceType === "ZD6" || deviceType === "ZD9") {
-    arr = arr.slice(6, 8);
+    arr = arr.slice(0, 2);
     states = arr.map((v, i) => {
       // if (i == 1) {
       //   v = 10;

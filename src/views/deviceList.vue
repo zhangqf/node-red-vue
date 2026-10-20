@@ -16,10 +16,10 @@ interface Device {
 }
 
 const devices = ref<Device[]>([
-  { id: "device-001", name: "ZD6 转辙机 #001", location: "站场 A 区" },
-  { id: "device-002", name: "ZD6 转辙机 #002", location: "站场 B 区" },
-  { id: "device-003", name: "ZD6 转辙机 #003", location: "站场 C 区" },
-  { id: "device-004", name: "S700K 转辙机 #001", location: "站场 A 区" },
+  // { id: "device-001", name: "ZD6 转辙机 #001", location: "站场 A 区" },
+  // { id: "device-002", name: "ZD6 转辙机 #002", location: "站场 B 区" },
+  // { id: "device-003", name: "ZD6 转辙机 #003", location: "站场 C 区" },
+  // { id: "device-004", name: "S700K 转辙机 #001", location: "站场 A 区" },
 ]);
 
 function deviceModel(name: string): string {
