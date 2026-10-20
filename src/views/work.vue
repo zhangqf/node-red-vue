@@ -233,6 +233,7 @@ const { saveRecord } = useRecordSave({
  * ========================================================== */
 const {
   isAction,
+  isRecording,
   butItemIsDisable,
   butItemStatus,
   operationWarningVisible,
@@ -398,9 +399,12 @@ const handleExpressRelays = (data: Record<string, any>) => {
 /** 采集直流电流曲线，动作中顺带做归零检测（单相机型走这里） */
 const handleCollectDCCurve = (data: Record<string, any>) => {
   const rawReg: number[] = Array.isArray(data.data) ? data.data : [];
+  // 曲线采集用 isRecording：比 isAction 早，曲线才能覆盖上电爬升段
+  if (isRecording.value) {
+    lastRegisterArr.value = rawReg;
+  }
+  // 归零检测用 isAction：电源未确认前不算一次操动
   if (!isAction.value) return;
-
-  lastRegisterArr.value = rawReg;
   // 后端已把寄存器除以 100，残留 1 个计数即 0.01A，用容差判零
   checkZeroCurrent((rawReg[0] ?? 0) <= CURRENT_ZERO_EPS);
 };
@@ -433,6 +437,7 @@ const {
 } = useModbus({
   deviceType,
   isAction,
+  isRecording,
   isThreePhase,
   checkZeroCurrent: checkThreePhaseZero,
   handleActionRelays,

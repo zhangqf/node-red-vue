@@ -16,6 +16,13 @@ interface useModbusOptions {
   // powerArr: Ref<number[]>;
   isAction: Ref<boolean>;
   /**
+   * 曲线采集开关。
+   *
+   * 与 isAction 分开：isAction 要等动作电源指令回读确认才置位，而曲线要
+   * 覆盖上电爬升那段，两者之间隔着一次 Modbus 往返。
+   */
+  isRecording: Ref<boolean>;
+  /**
    * 三相机型的归零判定器：由调用方按三相读数判定是否归零。
    *
    * 注意这里不是 useOperation 的 checkZeroCurrent(isZero)——那个接收布尔
@@ -34,6 +41,7 @@ export const useModbus = (option: useModbusOptions) => {
   const {
     deviceType,
     isAction,
+    isRecording,
     isThreePhase,
     checkZeroCurrent,
     handleActionRelays,
@@ -106,11 +114,15 @@ export const useModbus = (option: useModbusOptions) => {
     phaseCCurrent.value = handleCalculate(data[10] ?? 0, 1000);
     phasePower.value = handleCalculate(data[15] ?? 0, 10000);
 
-    if (isAction.value) {
+    // 曲线采集用 isRecording：它比 isAction 早，曲线才能覆盖上电爬升段
+    if (isRecording.value) {
       registerArrA.value = [phaseACurrent.value];
       registerArrB.value = [phaseBCurrent.value];
       registerArrC.value = [phaseCCurrent.value];
       powerArr.value = [phasePower.value];
+    }
+    // 归零检测用 isAction：电源未确认前不算一次操动，不参与收尾判定
+    if (isAction.value) {
       checkZeroCurrent();
     }
   };

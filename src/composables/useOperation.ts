@@ -55,6 +55,14 @@ const WARN_COUNTDOWN = 3;
 const IDLE_TIMEOUT_MS = 120_000;
 /** 合上表示后等采样的窗口，与 work.vue 的启动前测试表示测试一致 */
 const EXPRESS_SAMPLE_WINDOW_MS = 2000;
+/**
+ * 上电前预充采样窗口（ms）。
+ *
+ * 后端交流采集通道的实测采样周期是 200ms。开启采集后等一个周期再上电，
+ * 保证曲线上确实存在 0 值的前导点，起点才是 0 而不是工作电流。
+ * 取 300ms 留一点余量。
+ */
+const SAMPLE_PRECHARGE_MS = 300;
 
 /**
  * 操动流程：定操/反操从警示倒计时、继电器下发、采集到收尾落库的完整编排。
@@ -82,7 +90,23 @@ export function useOperation(options: UseOperationOptions) {
   } = options;
 
   /* ---- 本次操动的采集与计时状态 ---- */
+  /**
+   * 是否处于本次操动中（动作电源已确认）。
+   *
+   * 归零检测与记录落库都以它为准：电源没确认就收尾属于异常，不能算
+   * 一次完成的操动。
+   */
   const isAction = ref(false);
+  /**
+   * 是否正在采集曲线。
+   *
+   * 与 isAction 分开：曲线要覆盖「上电爬升」这段，而 isAction 要等到
+   * 动作电源指令回读确认后才置位。两者之间隔着一次 Modbus 下发+回读的
+   * 往返，这段时间里物理电流已经从 0 爬到工作值，若此时才开始记录，
+   * 曲线起点就不是 0，峰值也可能偏低。
+   */
+  const isRecording = ref(false);
+
   /** 本次操动是否真正开始过，用于决定失败时是否落库 */
   const operationStarted = ref(false);
   const butItemIsDisable = ref(false);
@@ -102,8 +126,20 @@ export function useOperation(options: UseOperationOptions) {
   /** 结束所有采集与计时（进入收尾、切闭合方式、卸载时都要走） */
   const stopRecord = () => {
     isAction.value = false;
+    isRecording.value = false;
   };
 
+  /**
+   * 开始采集曲线。
+   *
+   * 在动作电源指令下发前调用，好让曲线覆盖上电爬升段。
+   * 电源指令失败时由调用方 stopRecord() 撤销。
+   */
+  const startRecording = () => {
+    isRecording.value = true;
+  };
+
+  /** 动作电源已确认：本次操动正式开始，可以判定归零、可以落库 */
   const startRecord = () => {
     isAction.value = true;
     operationStarted.value = true;
@@ -347,9 +383,26 @@ export function useOperation(options: UseOperationOptions) {
 
     const finalValue = [...baseValue];
     finalValue[31] = 1;
+    // 先开采集再上电，曲线才能覆盖上电爬升段。
+    //
+    // 光是「提前开采集」还不够：采样周期是 200ms，若电源指令恰好落在采样
+    // 周期的后半段，下一个采样点到达时物理电流已经起来，曲线起点仍不是 0
+    // （现场记录里同一个操作有 3 条起点是 0、3 条起点直接是工作值）。
+    // 所以开采集后先等一个采样周期，让 0 点确实被采到再上电。
+    startRecording();
+    await sleep(SAMPLE_PRECHARGE_MS);
+    if (runId !== operationRunId) {
+      stopRecord();
+      return false;
+    }
     const finalRelayOk = await sendRelayState(finalValue, "开启动作电源");
-    if (runId !== operationRunId) return false;
+    if (runId !== operationRunId) {
+      stopRecord();
+      return false;
+    }
     if (!finalRelayOk) {
+      // 电源没合上，采到的数据不代表一次操动，撤销采集
+      stopRecord();
       showToast("开启电源指令未确认，请检查设备状态", "error");
       return false;
     }
@@ -460,6 +513,8 @@ export function useOperation(options: UseOperationOptions) {
   return {
     // 状态
     isAction,
+    /** 曲线采集开关，与 isAction 解耦：采集早于电源确认 */
+    isRecording,
     butItemIsDisable,
     butItemStatus,
     operationWarningVisible,
