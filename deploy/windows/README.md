@@ -107,6 +107,30 @@ node-red                   # 跑的是全局那份
 `install-service.bat` 启动前会打印项目实际的版本，并在检测到全局 `node-red`
 时给出 `[WARN]` 提示。
 
+### nvm-windows 的额外坑
+
+如果用 nvm-windows 管理 Node，全局包和 nvm 一样按版本存放：
+
+```
+C:\Users\PC\AppData\Local\Author Software\nvm\.nodejs\node.exe       ← 当前版本
+C:\Users\PC\AppData\Local\Author Software\nvm\.nodejs\node-red.exe   ← 全局 node-red
+```
+
+`.nodejs` 是指向具体版本目录的符号链接。这意味着：
+
+- **`node-red` 命令的版本会跟着 nvm 切换的版本变**，服务用的却是仓库里
+  固定的那份 —— 两者很容易对不上
+- 切换 nvm 版本后，全局 `node-red` 可能就找不到了（那是好事）
+- 但如果全局装过 `node-red`，在某个版本下它会复活并带来困惑
+
+**建议直接卸载全局副本**：
+
+```bat
+npm uninstall -g node-red
+```
+
+服务不依赖它，只用仓库里的那份。
+
 ---
 
 ## 关键配置说明
