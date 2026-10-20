@@ -17,8 +17,9 @@ interface UseIndicationOptions {
 /**
  * 表示继电器判定：维护 testResults 列表，接收实时采样更新每一项的吸合状态。
  *
- * 定操/反操与表示项是交叉对应的——定操时判定的是反位表示与反操项，
- * 该映射由 DC_GROUP_TYPES / FC_GROUP_TYPES 统一表达。
+ * 表示项按定位侧/反位侧分组：DC_GROUP_TYPES 是定位侧（定位传动+定操B/C），
+ * FC_GROUP_TYPES 是反位侧（反位传动+反操B/C）。操动完成后的判定范围与
+ * 操作方向同侧，见 config.ts 的 DC_RECORD_TYPES / FC_RECORD_TYPES。
  */
 export function useIndication(options: UseIndicationOptions) {
   const {
