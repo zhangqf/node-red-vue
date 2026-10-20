@@ -83,16 +83,26 @@ export const FC_GROUP_TYPES = new Set([
   "FCCX",
 ]);
 
-/** 记录判定范围：反操(FC)检查定位表示+定操项 */
+/**
+ * 记录判定范围：反操(FC)检查反位侧
+ *
+ * 操动完成后判定本次操动是否成功。操动到反位后，反位表示与反位侧传动、
+ * 反操B/C 项才应当成立；定位侧的项此时是灭的，拿它们判失败没有意义。
+ * 所以判定范围与操作方向同侧。
+ */
 export const FC_RECORD_TYPES = new Set<string>([
-  "GreenLight",
-  ...DC_GROUP_TYPES,
-]);
-
-/** 记录判定范围：定操(DC)检查反位表示+反操项 */
-export const DC_RECORD_TYPES = new Set<string>([
   "YellowLight",
   ...FC_GROUP_TYPES,
+]);
+
+/**
+ * 记录判定范围：定操(DC)检查定位侧
+ *
+ * 同上：定操完成后应检查定位表示与定位侧传动、定操B/C 项。
+ */
+export const DC_RECORD_TYPES = new Set<string>([
+  "GreenLight",
+  ...DC_GROUP_TYPES,
 ]);
 
 export const startBeforeTestConfigTypeSetup: Record<
