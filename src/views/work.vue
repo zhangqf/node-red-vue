@@ -303,6 +303,8 @@ async function runExpressTest(): Promise<{
   DC: boolean;
   FC: boolean;
   diagnosis: string[];
+  /** 表示指令是否下发并确认成功：false 表示表示带电状态未知 */
+  commandOk: boolean;
 }> {
   initTestResults();
   // 表示继电器在此合上，采样窗口内保持带电以便读取各项状态
@@ -312,7 +314,12 @@ async function runExpressTest(): Promise<{
     // 此时无法判断继电器是否吸合，若不播报，操作员听到的是上一轮的旧结果，
     // 会误以为本轮测试成功。因此单独播报，明确区分于「继电器未吸合」。
     speak(EXPRESS_COMMAND_FAILED_TIP);
-    return { DC: false, FC: false, diagnosis: ["表示测试指令未确认"] };
+    return {
+      DC: false,
+      FC: false,
+      diagnosis: ["表示测试指令未确认"],
+      commandOk: false,
+    };
   }
 
   await sleep(EXPRESS_SAMPLE_WINDOW_MS);
@@ -339,6 +346,7 @@ async function runExpressTest(): Promise<{
     DC: swap ? physicalFcPassed : physicalDcPassed,
     FC: swap ? physicalDcPassed : physicalFcPassed,
     diagnosis: [],
+    commandOk: true,
   };
 }
 

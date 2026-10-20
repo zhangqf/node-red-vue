@@ -32,6 +32,8 @@ interface useStartBeforeTestOptions {
     DC: boolean;
     FC: boolean;
     diagnosis: string[];
+    /** 表示指令是否下发并确认成功：false 表示表示带电状态未知 */
+    commandOk: boolean;
   }>;
   /** 测电阻前断开表示：表示回路带电会把电阻采样拉偏，必须先关 */
   turnExpressOff: () => Promise<boolean>;
@@ -314,10 +316,20 @@ export function useStartBeforeTest(options: useStartBeforeTestOptions) {
     }
     const expressResult = await runExpressTest();
     if (runId !== testRunId || !startBeforeLoading.value) return;
-    if (!(await restoreRelays())) {
-      startBeforeLoading.value = false;
-      flow.fail();
-      return;
+    // 表示测完不再恢复继电器：表示保持闭合，让操作员在 READY 阶段就能
+    // 看到道岔当前的位置。真正要操动时才断开表示（useOperation 的
+    // sendOperationCommands 里会先 turnExpressOff 并确认成功）。
+    // 这里若恢复，default_status 的表示位是 0，等于把刚合上的表示又关掉。
+    //
+    // 例外：表示指令没确认时表示带电状态未知，得恢复成确定的初始态，
+    // 否则设备会停在一个说不清的状态上。注意不能用「两个方向都没通过」
+    // 来判断——那表示继电器没吸合，指令是确认过的，表示确实带电。
+    if (!expressResult.commandOk) {
+      if (!(await restoreRelays())) {
+        startBeforeLoading.value = false;
+        flow.fail();
+        return;
+      }
     }
     diagnosisMessages.value = result.direction.diagnosis;
     diagnosisMessages.value.push(...expressResult.diagnosis);

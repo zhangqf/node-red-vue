@@ -94,9 +94,19 @@ export function useExpressRelay(options: UseExpressRelayOptions) {
       },
     );
 
-  /** 仅按期望值下发（用于表示测试：合上表示后还要读各项状态） */
+  /**
+   * 仅按期望值下发（用于表示测试：合上表示后还要读各项状态）。
+   *
+   * 与 turnOn 的区别是这里不参与「读各项状态」的流程，但表示位同样是合上
+   * 的，所以 isOn 也要置位——否则界面上会显示「表示OFF」而实际带电。
+   */
   const applyOnValue = (label = "开启表示") =>
-    send(buildOnValue(), label, "开启表示指令未确认，请检查设备状态");
+    send(buildOnValue(), label, "开启表示指令未确认，请检查设备状态").then(
+      (ok) => {
+        if (ok) isOn.value = true;
+        return ok;
+      },
+    );
 
   return {
     expressIndexes,
