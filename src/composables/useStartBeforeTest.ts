@@ -105,8 +105,8 @@ export function useStartBeforeTest(options: useStartBeforeTestOptions) {
   const getStepMapping = () => {
     if (deviceType.value === "ZD6" || deviceType.value === "ZD9") {
       return [
-        { stepKey: "1", sourceIndex: 6 },
-        { stepKey: "2", sourceIndex: 7 },
+        { stepKey: "1", sourceIndex: 0 },
+        { stepKey: "2", sourceIndex: 1 },
       ];
     }
     return [
