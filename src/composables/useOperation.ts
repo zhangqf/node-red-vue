@@ -42,8 +42,13 @@ const hasVfd = (deviceType: string) =>
 
 /** 兜底收尾时限：超过则无论是否归零都结束本次操动 */
 const ACTION_TIMEOUT_MS = 13000;
-/** 电流连续为 0 多久判定动作结束 */
-const ZERO_HOLD_MS = 1500;
+/**
+ * 电流连续为 0 多久判定动作结束。
+ *
+ * 后端采集周期是 1 秒，因此 2 秒意味着需要连续 3 个零样本，中间任何一个
+ * 抖动都会重新计时——这正是要的：单点读数不可信，连续 3 点才认。
+ */
+const ZERO_HOLD_MS = 2000;
 /** 强电操动前的警示倒计时 */
 const WARN_COUNTDOWN = 3;
 /** READY 态等待操作员的空闲超时：超时后退回启动前测试 */
@@ -105,8 +110,10 @@ export function useOperation(options: UseOperationOptions) {
   };
 
   /**
-   * 电流归零检测：连续 ZERO_HOLD_MS 为 0 即结束动作。
-   * 单相/三相的「是否归零」由调用方判定（取各自通道的读数），此处只负责计时。
+   * 电流归零检测：连续 ZERO_HOLD_MS 判定为归零即结束动作。
+   *
+   * 单相/三相的「是否归零」由调用方判定（取各自通道的读数，与容差
+   * CURRENT_ZERO_EPS 比较），此处只负责计时。
    */
   const checkZeroCurrent = (isZero: boolean) => {
     if (!isAction.value) return;

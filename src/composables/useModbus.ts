@@ -15,6 +15,12 @@ interface useModbusOptions {
   // registerArrC: Ref<number[]>;
   // powerArr: Ref<number[]>;
   isAction: Ref<boolean>;
+  /**
+   * 三相机型的归零判定器：由调用方按三相读数判定是否归零。
+   *
+   * 注意这里不是 useOperation 的 checkZeroCurrent(isZero)——那个接收布尔
+   * 判据，本模块拿不到三相读数，只能委托给包装函数。
+   */
   checkZeroCurrent: () => void;
   handleActionRelays: (data: Record<string, string | number>) => void;
   handleExpressRelays: (data: Record<string, string | number>) => void;

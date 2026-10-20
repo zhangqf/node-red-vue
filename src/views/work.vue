@@ -13,6 +13,7 @@ import {
   DC_GROUP_TYPES,
   FC_GROUP_TYPES,
   DEFAULT_THRESHOLD,
+  CURRENT_ZERO_EPS,
 } from "@/utils/config";
 import type { ChannelExpect, ResistanceThreshold } from "@/utils/config";
 import { fetchWithTimeout as fetch } from "@/utils/http";
@@ -400,16 +401,18 @@ const handleCollectDCCurve = (data: Record<string, any>) => {
   if (!isAction.value) return;
 
   lastRegisterArr.value = rawReg;
-  checkZeroCurrent((rawReg[0] ?? 0) === 0);
+  // 后端已把寄存器除以 100，残留 1 个计数即 0.01A，用容差判零
+  checkZeroCurrent((rawReg[0] ?? 0) <= CURRENT_ZERO_EPS);
 };
 
-/** 三相机型的归零判定：三路电流同时为 0 才算归零 */
+/** 三相机型的归零判定：三路电流都在容差内才算归零 */
 const checkThreePhaseZero = () => {
   if (!isAction.value) return;
+  // 三相 ÷1000，残留 1 个计数即 0.001A；任一相有残留都会卡住不归零
   checkZeroCurrent(
-    phaseACurrent.value === 0 &&
-      phaseBCurrent.value === 0 &&
-      phaseCCurrent.value === 0,
+    phaseACurrent.value <= CURRENT_ZERO_EPS &&
+      phaseBCurrent.value <= CURRENT_ZERO_EPS &&
+      phaseCCurrent.value <= CURRENT_ZERO_EPS,
   );
 };
 
