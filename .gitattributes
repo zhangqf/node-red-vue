@@ -1,0 +1,24 @@
+# Windows batch files must keep CRLF line endings. cmd.exe mis-parses
+# LF-only batch files, especially around '^' continuation lines.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+*.ps1 text eol=crlf
+
+# Scripts and source
+*.js text eol=lf
+*.cjs text eol=lf
+*.ts text eol=lf
+*.vue text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.cjs text eol=lf
+
+# Binary
+*.exe binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.db binary
+*.pem binary
+*.xlsx binary

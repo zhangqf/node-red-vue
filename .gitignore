@@ -7,6 +7,9 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Node-RED userDir (created by the Windows service; see deploy/windows)
+nr/.node-red
+
 node_modules
 .DS_Store
 dist
