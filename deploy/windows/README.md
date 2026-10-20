@@ -24,7 +24,7 @@
 在 **管理员** 命令提示符里，依次执行：
 
 ```bat
-cd /d D:\path\to\switch-machine-nr\nr\..\deploy\windows
+cd /d C:\switch\node-red-vue\deploy\windows
 
 install-service.bat
 grant-permissions.bat
@@ -32,13 +32,80 @@ grant-permissions.bat
 
 第一条注册服务并启动，第二条补权限。顺序不能反（服务启动时就要能写 `nr\data`）。
 
-验证：
+`install-service.bat` 结束时会**自动验证**：等 40 秒看 1880 端口有没有起来。
+成功会打印 `[OK] ... is running and listening on port 1880`；
+失败则打印服务状态 + 两份日志的全文 + 常见原因对照表。
+
+手动验证：
 
 ```bat
 sc query SwitchMachineNR
 ```
 
 看到 `STATE : 4 RUNNING` 就成了。
+
+---
+
+## ⚠️ STATE 7 PAUSED 是什么意思
+
+```
+STATE : 7  PAUSED
+```
+
+**不是"暂停"，是"崩溃重启循环中"**。NSSM 在进程反复异常退出时会进入退避等待，
+此时把服务状态标成 `PAUSED`（源码 `service.cpp:1878` 的 `throttle_restart()`）。
+
+```bash
+# NSSM 源码里的原文
+service->status.dwCurrentState = SERVICE_PAUSED;
+```
+
+所以看到 PAUSED 就意味着：**Node-RED 起来就崩，NSSM 在反复重试**。
+直接看日志定位原因：
+
+```bat
+type logs\node-red.out.log
+type logs\node-red.err.log
+```
+
+> 注意日志目录的相对路径。脚本在 `deploy\windows` 下，所以是 `logs\xxx.log`；
+> 如果你已经 cd 到仓库根，才是 `deploy\windows\logs\xxx.log`。
+
+### 崩溃重启循环的常见原因
+
+| 日志关键字 | 原因 | 处理 |
+|---|---|---|
+| `port in use` | 1880 被别的进程占 | `netstat -ano \| findstr :1880` 找到 PID 后杀掉 |
+| `failed to open ./data/device.db` | 工作目录不对，或 SYSTEM 没写权限 | 查 `AppDirectory`；跑 `grant-permissions.bat` |
+| `Cannot find module` | 项目依赖没装 | 在仓库根跑 `pnpm install` |
+| 版本号不是 4.1.11 | 跑成了全局安装的 node-red | 见下 |
+
+---
+
+## ⚠️ 必须用项目里的 node-red，不能用全局安装的
+
+这是最容易踩的坑，而且**症状很隐蔽**。
+
+```bat
+npm i -g node-red          # 装的是最新版（现在是 5.x）
+node-red                   # 跑的是全局那份
+```
+
+全局安装的 Node-RED 从**自己的安装目录**向上扫描 `node_modules` 找自定义节点，
+永远不会找到项目的 `node-red-contrib-modbus` / `node-red-node-sqlite`。
+结果就是流程加载失败、服务崩溃重启。
+
+项目声明的是 `"node-red": "^4.1.0"`，`pnpm-lock.yaml` 锁定 **4.1.11**。
+**日志里出现别的版本号就说明跑错了。**
+
+服务始终使用：
+
+```
+<repo>\node_modules\node-red\red.js
+```
+
+`install-service.bat` 启动前会打印项目实际的版本，并在检测到全局 `node-red`
+时给出 `[WARN]` 提示。
 
 ---
 
@@ -161,6 +228,17 @@ type deploy\windows\logs\node-red.out.log
 
 ## 排障
 
+**先看日志** —— 它会直接告诉你为什么退出：
+
+```bat
+cd C:\switch\node-red-vue\deploy\windows
+type logs\node-red.out.log
+type logs\node-red.err.log
+```
+
+> 日志的相对路径取决于你在哪个目录。脚本在 `deploy\windows` 下，所以是
+> `logs\xxx.log`；站在仓库根才是 `deploy\windows\logs\xxx.log`。
+
 ### 端口被占用
 
 ```
@@ -168,7 +246,7 @@ type deploy\windows\logs\node-red.out.log
 [error] Error: port in use
 ```
 
-说明还有一个 Node-RED 实例在跑（多半是手工 `run-nr.bat` 起的）。
+说明还有一个 Node-RED 实例在跑（多半是手工 `run-nr.bat` 起的，或者 Electron 版）。
 
 ```bat
 netstat -ano | findstr :1880
@@ -193,7 +271,7 @@ taskkill /PID <PID> /F
 nssm get SwitchMachineNR AppDirectory
 ```
 
-应该指向 `...\switch-machine-nr\nr`。
+应该指向 `C:\switch\node-red-vue\nr`。
 
 ### 服务起不来
 
@@ -207,6 +285,10 @@ nssm get SwitchMachineNR AppDirectory
 
 `nssm.exe` 可以直接带 `get` / `set` / `start` / `stop` / `edit`（图形界面），
 排查时 `nssm edit SwitchMachineNR` 最直观。
+
+### 状态显示 PAUSED
+
+不是"暂停"，是崩溃重启循环中，见上面「STATE 7 PAUSED 是什么意思」。
 
 ---
 

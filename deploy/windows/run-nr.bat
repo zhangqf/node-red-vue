@@ -48,6 +48,21 @@ if not defined NODE_EXE (
   exit /b 1
 )
 
+REM --- the project's own node-red, not a globally installed one ---
+REM A global install (npm i -g node-red) resolves its palette from its own
+REM directory tree and never finds the project's node-red-contrib-modbus /
+REM node-red-node-sqlite, so the flows fail to load. Always use the copy
+REM inside the repository.
+if not exist "%REPO_ROOT%\node_modules\node-red\red.js" (
+  echo [ERROR] Project node-red is missing: %REPO_ROOT%\node_modules\node-red
+  echo         Run `pnpm install` in %REPO_ROOT% first.
+  exit /b 1
+)
+for /f "usebackq delims=" %%g in (`where node-red 2^>nul`) do (
+  echo [WARN] A global 'node-red' is on the PATH: %%g
+  echo        This script does NOT use it; it runs the project's copy.
+)
+
 REM --- userDir: keep Node-RED's own files inside the repository ---
 REM Without this, Node-RED falls back to %%USERPROFILE%%\.node-red, which for
 REM the SYSTEM account lands in C:\Windows\System32\config\systemprofile.
@@ -58,6 +73,7 @@ cd /d "%NR_DIR%"
 
 echo [INFO] Node    : %NODE_EXE%
 echo [INFO] Repo    : %REPO_ROOT%
+echo [INFO] node-red: %REPO_ROOT%\node_modules\node-red\red.js
 echo [INFO] Working : %NR_DIR%
 echo [INFO] userDir : %USER_DIR%
 echo [INFO] Listening on port 1880 ...
