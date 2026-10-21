@@ -40,3 +40,24 @@ pnpm dev
 ```sh
 pnpm build
 ```
+
+## 后端 Node-RED（本地开发）
+
+```sh
+cd nr
+../node_modules/.bin/node-red -s settings.cjs
+```
+
+三个条件缺一不可：
+
+| 条件 | 原因 |
+| --- | --- |
+| 用**项目本地**的 `node_modules/.bin/node-red` | 全局装的 node-red 扫不到项目里的 `node-red-node-sqlite`、`node-red-contrib-uuid`，flows 会卡在「Waiting for missing types to be registered」，所有接口 404 |
+| 工作目录在 `nr/` | flows 里的 sqlite 节点用相对路径 `./data/device.db` |
+| 带 `-s settings.cjs` | 不带就落到 `~/.node-red/settings.js`，没有 `credentialSecret`，且拿不到 `functionGlobalContext`（`rootPath`/`fs`/`path`） |
+
+Windows 上跑开机自启服务见 `deploy/windows/README.md`。
+
+### 改 device.db 之前
+
+`nr/data/device.db` 是被 git 跟踪的二进制文件。**先停 Node-RED 再改**——它持有这个文件的句柄，运行中覆盖会丢数据。改完 `git pull` 部署到现场机器时如果因为这个二进制文件被拒绝覆盖，用 `deploy/windows/update.ps1`。

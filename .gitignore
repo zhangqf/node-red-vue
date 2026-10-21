@@ -10,6 +10,9 @@ lerna-debug.log*
 # Node-RED userDir (created by the Windows service; see deploy/windows)
 nr/.node-red
 
+# 一次性改库脚本留下的备份（scripts/sync-*.py）
+nr/data/device.db.bak
+
 # Backups made by deploy/windows/update.ps1 before a git pull
 deploy/windows/backup/
 
