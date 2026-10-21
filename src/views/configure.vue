@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { HTTP_URL } from "@/config/config";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { fetchWithTimeout as fetch } from "@/utils/http";
 
@@ -17,6 +17,74 @@ const deviceType = ref("");
 
 const UNIVERSAL_ID = "__universal__";
 
+/** 配线类型：无外部配线 / 有外部配线 */
+const WIRING_INTERNAL = "无外部配线";
+const WIRING_EXTERNAL = "有外部配线";
+
+/**
+ * 组合方式 id -> 配线类型。
+ *
+ * 来自后端 /getWiringTypes（combination_wiring 表）。ZD6 的组合方式分
+ * 「无外部配线」（单机使用）与「有外部配线」（多机牵引）两类，选型时要先
+ * 选配线类型再选组合方式。没有该记录的组合方式（ZYJ7/ZDJ9 等机型）不在
+ * 返回里，按不分组处理。
+ */
+const wiringTypes = ref<Record<string, string>>({});
+
+/** 配线类型的展示顺序：有外部配线在前（组合方式多），无外部配线在后 */
+const WIRING_ORDER = [WIRING_EXTERNAL, WIRING_INTERNAL];
+
+/**
+ * 按配线类型把组合方式分组。
+ *
+ * 只有存在配线类型记录的组合方式才参与分组；其余的（如通用模式、ZYJ7 的
+ * 组合方式）归到一个不分组的组里，保持原来的平铺展示。
+ */
+const wiringGroups = computed(() => {
+  const grouped = new Map<string, any[]>();
+  const ungrouped: any[] = [];
+
+  for (const combo of combinations.value) {
+    const type = wiringTypes.value[combo.id];
+    if (!type) {
+      ungrouped.push(combo);
+      continue;
+    }
+    const list = grouped.get(type);
+    if (list) list.push(combo);
+    else grouped.set(type, [combo]);
+  }
+
+  const result: { type: string; items: any[] }[] = [];
+  for (const type of WIRING_ORDER) {
+    const items = grouped.get(type);
+    if (items?.length) result.push({ type, items });
+  }
+  // 剩余的配线类型（后加的）也显示出来，避免漏项
+  for (const [type, items] of grouped) {
+    if (!WIRING_ORDER.includes(type)) result.push({ type, items });
+  }
+  if (ungrouped.length) result.push({ type: "", items: ungrouped });
+  return result;
+});
+
+/** 是否需要显示配线类型这一层：只有一个分组时不显示，避免多此一举 */
+const showWiringLayer = computed(
+  () => wiringGroups.value.filter((g) => g.type).length > 1,
+);
+
+/** 拉取组合方式的配线类型（有无外部配线） */
+async function getWiringTypes() {
+  try {
+    const res = await fetch(HTTP_URL + "/getWiringTypes");
+    const { data } = await res.json();
+    wiringTypes.value = data || {};
+  } catch {
+    // 拿不到就按不分组处理，不影响原有流程
+    wiringTypes.value = {};
+  }
+}
+
 async function getCombinations(id: string) {
   loading.value = true;
   error.value = "";
@@ -24,6 +92,7 @@ async function getCombinations(id: string) {
     const res = await fetch(HTTP_URL + "/getDeviceCombination/" + id);
     const list = await res.json();
     deviceType.value = list[0]?.deviceType || "";
+    await getWiringTypes();
     // ZD6 设备在列表头部注入通用模式
     if (deviceType.value === "ZD6") {
       combinations.value = [
@@ -157,16 +226,24 @@ onMounted(async () => {
       <button class="back-btn" @click="router.back()">← 返回</button>
       <h2 class="page-title">选择组合方式</h2>
       <div class="step-indicator">
+        <template v-if="showWiringLayer">
+          <span class="step active">1. 配线类型</span>
+          <span class="step-divider">→</span>
+        </template>
         <span
           class="step"
-          :class="[!selectedCombination && !selectedConfig ? 'active' : '']"
-          >1. 组合方式</span
+          :class="[
+            !showWiringLayer && !selectedCombination && !selectedConfig
+              ? 'active'
+              : '',
+          ]"
+          >{{ showWiringLayer ? 2 : 1 }}. 组合方式</span
         >
         <span class="step-divider">→</span>
         <span
           class="step"
           :class="[selectedCombination && !selectedConfig ? 'active' : '']"
-          >2. 测试机型</span
+          >{{ showWiringLayer ? 3 : 2 }}. 测试机型</span
         >
       </div>
     </div>
@@ -251,78 +328,87 @@ onMounted(async () => {
           <span class="column-count">{{ combinations.length }} 项</span>
         </div>
         <div class="card-list">
-          <div
-            v-for="combo in combinations"
-            :key="combo.id"
-            class="card-item combo-card"
-            :class="{ active: selectedCombination?.id === combo.id }"
-            @click="selectCombination(combo)">
-            <div class="combo-icon">
-              <svg
-                viewBox="0 0 36 36"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg">
-                <rect
-                  x="4"
-                  y="6"
-                  width="28"
-                  height="24"
-                  rx="4"
-                  stroke="#5a92d0"
-                  stroke-width="1.5"
-                  fill="none" />
-                <line
-                  x1="4"
-                  y1="15"
-                  x2="32"
-                  y2="15"
-                  stroke="#5a92d0"
-                  stroke-width="1"
-                  opacity="0.3" />
-                <circle
-                  cx="12"
-                  cy="10.5"
-                  r="1.5"
-                  fill="#5a92d0"
-                  opacity="0.5" />
-                <circle
-                  cx="18"
-                  cy="10.5"
-                  r="1.5"
-                  fill="#5a92d0"
-                  opacity="0.3" />
-              </svg>
-            </div>
-            <div class="combo-body">
-              <div class="combo-name">{{ combo.name }}</div>
-              <div v-if="combo.deviceType" class="combo-tag">
-                {{ combo.deviceType }}
-              </div>
-              <div v-if="combo.description" class="combo-desc">
-                {{ combo.description }}
+          <!-- 按配线类型分组：无外部配线 / 有外部配线 -->
+          <template v-for="group in wiringGroups" :key="group.type || 'other'">
+            <div v-if="group.type" class="wiring-group">
+              <div class="wiring-group-header">
+                <span class="wiring-group-title">{{ group.type }}</span>
+                <span class="wiring-group-count">{{ group.items.length }} 项</span>
               </div>
             </div>
             <div
-              class="combo-check"
-              v-if="selectedCombination?.id === combo.id">
-              <svg viewBox="0 0 20 20" fill="none">
-                <circle
-                  cx="10"
-                  cy="10"
-                  r="9"
-                  fill="#34d399"
-                  opacity="0.15"
-                  stroke="#34d399"
-                  stroke-width="1.5" />
-                <path
-                  d="M6 10L9 13L14 7"
-                  stroke="#34d399"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round" />
-              </svg>
+              v-for="combo in group.items"
+              :key="combo.id"
+              class="card-item combo-card"
+              :class="{ active: selectedCombination?.id === combo.id }"
+              @click="selectCombination(combo)">
+              <div class="combo-icon">
+                <svg
+                  viewBox="0 0 36 36"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <rect
+                    x="4"
+                    y="6"
+                    width="28"
+                    height="24"
+                    rx="4"
+                    stroke="#5a92d0"
+                    stroke-width="1.5"
+                    fill="none" />
+                  <line
+                    x1="4"
+                    y1="15"
+                    x2="32"
+                    y2="15"
+                    stroke="#5a92d0"
+                    stroke-width="1"
+                    opacity="0.3" />
+                  <circle
+                    cx="12"
+                    cy="10.5"
+                    r="1.5"
+                    fill="#5a92d0"
+                    opacity="0.5" />
+                  <circle
+                    cx="18"
+                    cy="10.5"
+                    r="1.5"
+                    fill="#5a92d0"
+                    opacity="0.3" />
+                </svg>
+              </div>
+              <div class="combo-body">
+                <div class="combo-name">{{ combo.name }}</div>
+                <div v-if="combo.deviceType" class="combo-tag">
+                  {{ combo.deviceType }}
+                </div>
+                <div v-if="combo.description" class="combo-desc">
+                  {{ combo.description }}
+                </div>
+              </div>
+              <div
+                class="combo-check"
+                v-if="selectedCombination?.id === combo.id">
+                <svg viewBox="0 0 20 20" fill="none">
+                  <circle
+                    cx="10"
+                    cy="10"
+                    r="9"
+                    fill="#34d399"
+                    opacity="0.15"
+                    stroke="#34d399"
+                    stroke-width="1.5" />
+                  <path
+                    d="M6 10L9 13L14 7"
+                    stroke="#34d399"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round" />
+                </svg>
+              </div>
             </div>
-          </div>
+          </template>
         </div>
       </div>
 
@@ -567,6 +653,33 @@ onMounted(async () => {
 .card-list::-webkit-scrollbar-thumb {
   background: #1a2d44;
   border-radius: 2px;
+}
+
+/* ---- 配线类型分组标题（无外部配线 / 有外部配线） ---- */
+.wiring-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 4px 4px;
+}
+
+.wiring-group:first-child {
+  padding-top: 0;
+}
+
+.wiring-group-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #7fb0e0;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: rgba(90, 146, 208, 0.12);
+  border: 1px solid rgba(90, 146, 208, 0.25);
+}
+
+.wiring-group-count {
+  font-size: 11px;
+  color: #5a7288;
 }
 
 /* ---- Combo card ---- */
