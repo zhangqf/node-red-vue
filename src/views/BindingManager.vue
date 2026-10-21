@@ -41,6 +41,17 @@ const devices = ref<Device[]>([]);
 const combinations = ref<Combination[]>([]);
 const configs = ref<Config[]>([]);
 
+/**
+ * 各组合方式下绑定的测试机型（按 combinationId 精确对应）。
+ *
+ * 不能靠配置名里的【组合方式】去匹配全量 configs：同一个配置在 ZD6 与 ZD9
+ * 下各有一条同名记录（内容相同、id 不同），名字匹配会把两条都列出来，
+ * 界面上出现重复芯片，且分不清属于哪个机型。
+ * 后端 /getConfigsByBinding 是按 deviceId + combinationId 精确查绑定关系的，
+ * 用它拿到的就是该组合方式真正绑定的配置。
+ */
+const configsByCombination = ref<Record<string, Config[]>>({});
+
 /* ---- 绑定数据 ---- */
 const bindings = ref<Binding[]>([]);
 
@@ -232,6 +243,52 @@ async function fetchConfigs() {
   }
 }
 
+/**
+ * 拉取当前机型下每个组合方式绑定的测试机型。
+ *
+ * 用后端 /getConfigsByBinding（按 deviceId + combinationId 精确查绑定关系），
+ * 而不是拉全量配置再按名字匹配——同名配置在 ZD6/ZD9 下各有一条，名字匹配
+ * 会把两条都列出来，界面上出现重复芯片。
+ *
+ * 记录在途的 Promise：onMounted 赋值 selectedDeviceId 会触发 watch 再拉一次，
+ * 靠它保证同一设备只发一轮请求，且调用方能 await 到结果。
+ */
+let configFetchDeviceId = "";
+let configFetchPromise: Promise<void> | null = null;
+
+function fetchConfigsByCombination(deviceId: string): Promise<void> {
+  if (!deviceId) {
+    configsByCombination.value = {};
+    configFetchDeviceId = "";
+    configFetchPromise = null;
+    return Promise.resolve();
+  }
+  if (deviceId === configFetchDeviceId && configFetchPromise) {
+    return configFetchPromise;
+  }
+  configFetchDeviceId = deviceId;
+  configFetchPromise = (async () => {
+    const result: Record<string, Config[]> = {};
+    await Promise.all(
+      combinations.value.map(async (combo) => {
+        try {
+          const res = await fetch(
+            HTTP_URL + "/getConfigsByBinding/" + deviceId + "/" + combo.id,
+          );
+          const list = await res.json();
+          if (Array.isArray(list)) {
+            result[combo.id] = list as Config[];
+          }
+        } catch {
+          result[combo.id] = [];
+        }
+      }),
+    );
+    configsByCombination.value = result;
+  })();
+  return configFetchPromise;
+}
+
 const BindData = ref<any[]>([]);
 
 async function fetchBindings() {
@@ -265,15 +322,13 @@ const filteredCombinations = computed(() => {
     (c) => c.deviceType === selectedDeviceType.value,
   );
 });
-const getInnerText = (text: string) => {
-  const match = text.match(/【([^】]+)】/);
-  return match ? match[1] : null;
-};
 
-watch(selectedDeviceId, (newVal) => {
+watch(selectedDeviceId, async (newVal) => {
   if (newVal) {
     const deviceData = BindData.value.find((i: any) => i.deviceId === newVal);
     bindings.value = deviceData?.bindings || [];
+    // 组合方式下的测试机型按绑定关系取，换设备要重新拉
+    await fetchConfigsByCombination(newVal);
   }
 });
 
@@ -293,6 +348,8 @@ onMounted(async () => {
         selectedDeviceId.value = devices.value[0]!.id;
       }
     }
+    // 等各组合方式下的测试机型到齐，避免先渲染空的再补上
+    await fetchConfigsByCombination(selectedDeviceId.value);
   }, "数据加载成功");
 });
 </script>
@@ -341,18 +398,10 @@ onMounted(async () => {
         <div v-if="isCombinationBound(combo.id)" class="config-sublist">
           <span class="config-label">关联测试机型：</span>
           <div class="config-chips">
-            <template v-for="cfg in configs" :key="cfg.id">
+            <template
+              v-for="cfg in configsByCombination[combo.id] || []"
+              :key="cfg.id">
               <label
-                v-if="
-                  cfg.name &&
-                  (() => {
-                    const inner = getInnerText(cfg.name) ?? '';
-                    return (
-                      inner === combo.name ||
-                      inner.split('/').includes(combo.name)
-                    );
-                  })()
-                "
                 class="chip-label"
                 :class="{ checked: isConfigBound(combo.id, cfg.id) }">
                 <input
@@ -362,7 +411,9 @@ onMounted(async () => {
                 {{ cfg.name }}
               </label>
             </template>
-            <span v-if="configs.length === 0" class="empty-hint"
+            <span
+              v-if="(configsByCombination[combo.id] || []).length === 0"
+              class="empty-hint"
               >暂无测试机型</span
             >
           </div>
