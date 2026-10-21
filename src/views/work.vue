@@ -13,7 +13,7 @@ import {
   DC_GROUP_TYPES,
   FC_GROUP_TYPES,
   DEFAULT_THRESHOLD,
-  CURRENT_ZERO_EPS,
+  clampZeroNoise,
 } from "@/utils/config";
 import type { ChannelExpect, ResistanceThreshold } from "@/utils/config";
 import { fetchWithTimeout as fetch } from "@/utils/http";
@@ -406,24 +406,25 @@ const handleExpressRelays = (data: Record<string, any>) => {
 /** 采集直流电流曲线，动作中顺带做归零检测（单相机型走这里） */
 const handleCollectDCCurve = (data: Record<string, any>) => {
   const rawReg: number[] = Array.isArray(data.data) ? data.data : [];
+  // 后端已把寄存器除以 100，该通道静止时读数停在 0.07~0.11A（零点偏置）
+  const current = clampZeroNoise(rawReg[0] ?? 0);
   // 曲线采集用 isRecording：比 isAction 早，曲线才能覆盖上电爬升段
   if (isRecording.value) {
-    lastRegisterArr.value = rawReg;
+    lastRegisterArr.value = [current];
   }
   // 归零检测用 isAction：电源未确认前不算一次操动
   if (!isAction.value) return;
-  // 后端已把寄存器除以 100，残留 1 个计数即 0.01A，用容差判零
-  checkZeroCurrent((rawReg[0] ?? 0) <= CURRENT_ZERO_EPS);
+  checkZeroCurrent(current === 0);
 };
 
 /** 三相机型的归零判定：三路电流都在容差内才算归零 */
 const checkThreePhaseZero = () => {
   if (!isAction.value) return;
-  // 三相 ÷1000，残留 1 个计数即 0.001A；任一相有残留都会卡住不归零
+  // 与曲线采集用同一套钳位后的值，保证判定与显示口径一致
   checkZeroCurrent(
-    phaseACurrent.value <= CURRENT_ZERO_EPS &&
-      phaseBCurrent.value <= CURRENT_ZERO_EPS &&
-      phaseCCurrent.value <= CURRENT_ZERO_EPS,
+    clampZeroNoise(phaseACurrent.value) === 0 &&
+      clampZeroNoise(phaseBCurrent.value) === 0 &&
+      clampZeroNoise(phaseCCurrent.value) === 0,
   );
 };
 

@@ -1,4 +1,5 @@
 import { ref, type Ref } from "vue";
+import { clampZeroNoise } from "@/utils/config";
 
 interface useModbusOptions {
   deviceType: Ref<string>;
@@ -116,9 +117,10 @@ export const useModbus = (option: useModbusOptions) => {
 
     // 曲线采集用 isRecording：它比 isAction 早，曲线才能覆盖上电爬升段
     if (isRecording.value) {
-      registerArrA.value = [phaseACurrent.value];
-      registerArrB.value = [phaseBCurrent.value];
-      registerArrC.value = [phaseCCurrent.value];
+      // 钳掉零点偏置，曲线起点与末值才是 0，判定与显示口径一致
+      registerArrA.value = [clampZeroNoise(phaseACurrent.value)];
+      registerArrB.value = [clampZeroNoise(phaseBCurrent.value)];
+      registerArrC.value = [clampZeroNoise(phaseCCurrent.value)];
       powerArr.value = [phasePower.value];
     }
     // 归零检测用 isAction：电源未确认前不算一次操动，不参与收尾判定
