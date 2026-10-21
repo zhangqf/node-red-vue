@@ -332,6 +332,7 @@ onMounted(async () => {
               :disabled="!selectedDeviceId"
               @change="toggleCombination(combo.id)" />
             <span class="combo-name">{{ combo.name }}</span>
+            <span class="combo-type">{{ combo.deviceType }}</span>
             <span class="combo-desc">{{ combo.description }}</span>
           </label>
         </div>
@@ -516,6 +517,26 @@ onMounted(async () => {
   font-size: 14px;
   font-weight: 600;
   color: #e0e8f0;
+}
+
+/*
+ * 适用机型标签。
+ *
+ * ZD6 与 ZD9 有 8 个同名组合方式（双动双机、单动单机、单-单-双、
+ * 双-单-双、单-单-单-单、双-单-单、双-单-单-单、双-单-双-单），
+ * 名字和描述完全一样，不标机型就分不清谁是谁的。
+ * 样式与 configure.vue 的 combo-tag 保持一致。
+ */
+.combo-type {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  color: #5a92d0;
+  background: rgba(90, 146, 208, 0.1);
+  border: 1px solid rgba(90, 146, 208, 0.2);
+  border-radius: 4px;
+  padding: 1px 8px;
+  letter-spacing: 0.5px;
 }
 
 .combo-desc {
