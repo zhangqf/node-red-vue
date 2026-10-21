@@ -363,7 +363,17 @@
             "5a31edf78df34513",
             "ddb522b50c088b8a",
             "1b9903b7587a0886",
-            "86e8584270b91319"
+            "86e8584270b91319",
+            "d6ddcefe62654ac2",
+            "6d4722b143b94e7c",
+            "524d6746f8ec4aa8",
+            "dba1538a0f474afe",
+            "efcbeff33248459b",
+            "1cae70fe35c14699",
+            "ccad6c9e5906410a",
+            "24d70e8468274736",
+            "9c3286032d14420b",
+            "0458f1b0be8443c5"
         ],
         "x": 114,
         "y": 3859,
@@ -7250,5 +7260,189 @@
         "x": 640,
         "y": 700,
         "wires": []
+    },
+    {
+        "type": "http in",
+        "z": "616b0fbf58fc4465",
+        "g": "14d861217ea12ab5",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 230,
+        "y": 4380,
+        "wires": [
+            [
+                "6d4722b143b94e7c"
+            ]
+        ],
+        "id": "d6ddcefe62654ac2",
+        "name": "查询配置适用机型",
+        "url": "/getConfigModels"
+    },
+    {
+        "type": "function",
+        "z": "616b0fbf58fc4465",
+        "g": "14d861217ea12ab5",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 4380,
+        "wires": [
+            [
+                "524d6746f8ec4aa8"
+            ]
+        ],
+        "id": "6d4722b143b94e7c",
+        "name": "按绑定关系查机型",
+        "func": "// 配置 -> 组合方式 -> 机型\n// binding_id 格式为 \"<deviceId>_<combinationId>\"，\n// deviceId 本身可能含下划线，故从右侧切分。\n//\n// 绑定关系是准的；没绑定的配置（ZYJ7/ZDJ9/SH6 那几个）从名字前缀\n// 兜底推断，推不出就留空由前端显示「未指定」。\nmsg.topic = `\nSELECT DISTINCT\n       cfg.id AS configId,\n       COALESCE(\n         cb.deviceType,\n         CASE\n           WHEN cfg.name LIKE 'ZDJ9%' THEN 'ZDJ9'\n           WHEN cfg.name LIKE 'ZYJ7%' THEN 'ZYJ7'\n           WHEN cfg.name LIKE 'ZD9%'  THEN 'ZD9'\n           WHEN cfg.name LIKE 'ZD6%'  THEN 'ZD6'\n           WHEN cfg.name LIKE 'SH6%'  THEN 'ZYJ7'\n           ELSE ''\n         END\n       ) AS deviceType\nFROM config cfg\nLEFT JOIN combination_config_bindings ccb\n  ON ccb.config_id = cfg.id\nLEFT JOIN combination cb\n  ON cb.id = substr(ccb.binding_id, instr(ccb.binding_id, '_') + 1)\n`;\nreturn msg;"
+    },
+    {
+        "type": "sqlite",
+        "z": "616b0fbf58fc4465",
+        "g": "14d861217ea12ab5",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "x": 960,
+        "y": 4380,
+        "wires": [
+            [
+                "dba1538a0f474afe"
+            ]
+        ],
+        "id": "524d6746f8ec4aa8",
+        "name": "查询config对应机型"
+    },
+    {
+        "type": "function",
+        "z": "616b0fbf58fc4465",
+        "g": "14d861217ea12ab5",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 4380,
+        "wires": [
+            [
+                "efcbeff33248459b"
+            ]
+        ],
+        "id": "dba1538a0f474afe",
+        "name": "整理机型映射",
+        "func": "// 行数组 -> { configId: deviceType } 映射\nconst rows = msg.payload || [];\nconst models = {};\nfor (const r of rows) {\n  if (r && r.configId) models[r.configId] = r.deviceType || \"\";\n}\n\nmsg.payload = { code: 200, data: models };\nreturn msg;"
+    },
+    {
+        "type": "http response",
+        "z": "616b0fbf58fc4465",
+        "g": "14d861217ea12ab5",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 1660,
+        "y": 4380,
+        "wires": [],
+        "id": "efcbeff33248459b",
+        "name": "response"
+    },
+    {
+        "type": "http in",
+        "z": "616b0fbf58fc4465",
+        "g": "14d861217ea12ab5",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 230,
+        "y": 4620,
+        "wires": [
+            [
+                "ccad6c9e5906410a"
+            ]
+        ],
+        "id": "1cae70fe35c14699",
+        "name": "查询组合方式配线类型",
+        "url": "/getWiringTypes"
+    },
+    {
+        "type": "function",
+        "z": "616b0fbf58fc4465",
+        "g": "14d861217ea12ab5",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 4620,
+        "wires": [
+            [
+                "24d70e8468274736"
+            ]
+        ],
+        "id": "ccad6c9e5906410a",
+        "name": "按组合方式查配线类型",
+        "func": "// 组合方式 -> 配线类型（有无外部配线）\n// 选型页据此把组合方式分组展示。\nmsg.topic = `\nSELECT combination_id AS combinationId, wiring_type AS wiringType\nFROM combination_wiring\n`;\nreturn msg;"
+    },
+    {
+        "type": "sqlite",
+        "z": "616b0fbf58fc4465",
+        "g": "14d861217ea12ab5",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "x": 960,
+        "y": 4620,
+        "wires": [
+            [
+                "9c3286032d14420b"
+            ]
+        ],
+        "id": "24d70e8468274736",
+        "name": "查询配线类型表"
+    },
+    {
+        "type": "function",
+        "z": "616b0fbf58fc4465",
+        "g": "14d861217ea12ab5",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 4620,
+        "wires": [
+            [
+                "0458f1b0be8443c5"
+            ]
+        ],
+        "id": "9c3286032d14420b",
+        "name": "整理配线类型映射",
+        "func": "// 行数组 -> { combinationId: wiringType }\nconst rows = msg.payload || [];\nconst types = {};\nfor (const r of rows) {\n  if (r && r.combinationId) types[r.combinationId] = r.wiringType || \"\";\n}\n\nmsg.payload = { code: 200, data: types };\nreturn msg;"
+    },
+    {
+        "type": "http response",
+        "z": "616b0fbf58fc4465",
+        "g": "14d861217ea12ab5",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 1660,
+        "y": 4620,
+        "wires": [],
+        "id": "0458f1b0be8443c5",
+        "name": "response"
     }
 ]

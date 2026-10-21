@@ -91,17 +91,27 @@ if not exist "%REPO_ROOT%\node_modules\node-red\package.json" (
   exit /b 1
 )
 
-REM Read the version the project actually ships. Using node itself keeps the
-REM parse correct even if package.json gets reformatted.
+REM Read the version the project actually ships. Redirect to a temp file
+REM instead of capturing through a for-loop: the node -p expression contains
+REM parentheses and quotes, which cmd.exe mangles when it re-parses a
+REM backtick/for body.
 set "PROJECT_NR_VERSION=unknown"
-for /f "usebackq delims=" %%v in (`"%NODE_EXE%" -p "require(process.argv[1]).version" "%REPO_ROOT%\node_modules\node-red\package.json" 2^>nul`) do set "PROJECT_NR_VERSION=%%v"
+set "VER_TMP=%TEMP%\nr-version.txt"
+"%NODE_EXE%" -p "require(process.argv[1]).version" "%REPO_ROOT%\node_modules\node-red\package.json" > "%VER_TMP%" 2>nul
+if exist "%VER_TMP%" call set /p "PROJECT_NR_VERSION=" < "%VER_TMP%"
+if exist "%VER_TMP%" del /q "%VER_TMP%" >nul 2>&1
 echo [INFO] Project node-red version: %PROJECT_NR_VERSION%
 
 REM Warn if a global node-red exists -- it is a common source of confusion
-REM because "node-red" on the PATH then runs a different version.
+REM because "node-red" on the PATH then runs a different version. Under nvm
+REM the global shim lives in the versioned .nodejs folder and follows whichever
+REM version is currently active, so the version seen by `node-red` and the one
+REM the service uses can easily differ.
 for /f "delims=" %%g in ('where node-red 2^>nul') do (
   echo [WARN] A global 'node-red' is on the PATH: %%g
   echo        The service does NOT use it, but a manual 'node-red' command would.
+  echo        If that global copy is a different version, the flows will fail
+  echo        to load. Uninstall it with: npm uninstall -g node-red
 )
 
 REM The flows depend on these nodes; if they are missing the flows cannot load.
@@ -155,8 +165,12 @@ REM keep the stdout log from growing without bound
 "%NSSM%" set "%SERVICE_NAME%" AppRotateBytes 10485760
 
 REM --- restart on failure ---
-REM AppExit Default Restart covers unexpected exits (crash, OOM, port taken).
-"%NSSM%" set "%SERVICE_NAME%" AppExit Default Restart
+REM The syntax is <action> <exit-code>: the action is one of
+REM Restart/Ignore/Exit/Suicide, and the exit code is a number or
+REM "Default". Writing "AppExit Default Restart" would set the ACTION to
+REM the invalid value "Default", so NSSM silently resets the parameter to
+REM its default instead of enabling restarts.
+"%NSSM%" set "%SERVICE_NAME%" AppExit Restart Default
 "%NSSM%" set "%SERVICE_NAME%" AppRestartDelay 5000
 
 REM --- stop cleanly: red.js handles SIGINT/SIGTERM/SIGBREAK (red.js:552-556) ---

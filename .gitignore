@@ -50,3 +50,7 @@ release/
 .node-red-runtime/
 
 android
+
+# 数据库与流程文件的临时备份（改数据前会自动生成）
+nr/data/*.bak-*
+nr/*.json.bak-*
