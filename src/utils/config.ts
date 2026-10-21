@@ -122,8 +122,8 @@ export const startBeforeTestConfigTypeSetup: Record<
  * 表示回路带电会干扰电阻采样，必须先关表示再测。
  */
 export const StartBeforeTestConfig = {
-  ZD6: [],
-  ZD9: [23],
+  ZD6: [22, 23],
+  ZD9: [22, 23],
   ZYJ7: [13, 14, 15, 16, 17, 18, 19, 20],
   ZDJ9: [13, 14, 15, 16, 17, 18, 19, 20],
 };
