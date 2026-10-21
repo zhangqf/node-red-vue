@@ -85,11 +85,28 @@ const configs = ref<Config[]>([]);
  */
 interface ConfigGroup {
   name: string;
-  /** 同名配置，按继电器数降序，便于优先看到配置完整的那条 */
+  /** 同名配置，按机型归拢，便于一眼看出哪条属于哪个机型 */
   items: Config[];
   /** 是否存在多条同名 */
   duplicated: boolean;
 }
+
+/**
+ * 配置 id -> 适用机型。
+ *
+ * 来自后端 /getConfigModels：按绑定关系（配置 -> 组合方式 -> 机型）反查。
+ * 同一配置名在 ZD6 与 ZD9 下各有一条（内容相同、id 不同），名字和描述完全
+ * 一样，光看名字分不出归属，必须靠这个映射。
+ */
+const configModels = ref<Record<string, string>>({});
+
+/** 取配置的适用机型；查不到说明没绑定任何组合方式 */
+function modelOf(configId: string): string {
+  return configModels.value[configId] || "";
+}
+
+/** 未绑定的配置显示成这个，区别于具体机型 */
+const UNKNOWN_MODEL = "未指定";
 
 const groupedConfigs = computed<ConfigGroup[]>(() => {
   const map = new Map<string, Config[]>();
@@ -100,9 +117,13 @@ const groupedConfigs = computed<ConfigGroup[]>(() => {
   }
   return Array.from(map.entries()).map(([name, items]) => ({
     name,
-    items: [...items].sort(
-      (a, b) => (b.relaysNum ?? 0) - (a.relaysNum ?? 0),
-    ),
+    // 同名组内先按机型排，再按继电器数降序，优先看到配置完整的那条
+    items: [...items].sort((a, b) => {
+      const ma = modelOf(a.id);
+      const mb = modelOf(b.id);
+      if (ma !== mb) return ma.localeCompare(mb);
+      return (b.relaysNum ?? 0) - (a.relaysNum ?? 0);
+    }),
     duplicated: items.length > 1,
   }));
 });
@@ -144,6 +165,17 @@ async function fetchBoundIds() {
     boundIds.value = new Set(ids);
   } catch {
     console.error("获取绑定配置失败");
+  }
+}
+
+/** 拉取配置 id -> 适用机型，用于区分 ZD6 / ZD9 的同名配置 */
+async function fetchConfigModels() {
+  try {
+    const res = await fetch(HTTP_URL + "/getConfigModels");
+    const { data } = await res.json();
+    configModels.value = data || {};
+  } catch {
+    console.error("获取配置适用机型失败");
   }
 }
 
@@ -417,6 +449,7 @@ async function remove(id: string) {
 
 const getList = async () => {
   fetchBoundIds();
+  fetchConfigModels();
   const response = await fetch(HTTP_URL + "/getConfig", {
     method: "get",
     headers: { "Content-Type": "application/json" },
@@ -462,7 +495,7 @@ onMounted(async () => {
                 </button>
                 <span>{{ g.name }}</span>
                 <em v-if="g.duplicated" class="dup-mark">
-                  [{{ g.items.length }} 个机型]
+                  [{{ g.items.map((c) => modelOf(c.id) || UNKNOWN_MODEL).join(" / ") }}]
                 </em>
               </span>
             </td>
@@ -502,7 +535,10 @@ onMounted(async () => {
             v-for="(cfg, i) in g.items"
             :key="groupKey(g, i)"
             class="group-child-row">
-            <td class="child-name">{{ g.name }}</td>
+            <td class="child-name">
+              <span class="child-name-text">{{ g.name }}</span>
+              <span class="config-model">{{ modelOf(cfg.id) || UNKNOWN_MODEL }}</span>
+            </td>
             <td>{{ cfg.description }}</td>
             <td style="text-align: center">{{ cfg.relaysNum ?? 0 }}</td>
             <td class="actions">
@@ -548,6 +584,9 @@ onMounted(async () => {
                 v-model="form.name"
                 class="modal-input"
                 :disabled="boundIds.has(editId)" />
+              <span class="form-hint">
+                适用机型：{{ modelOf(editId) || UNKNOWN_MODEL }}
+              </span>
             </div>
             <div class="form-col">
               <label>描述</label>
@@ -984,6 +1023,28 @@ onMounted(async () => {
 .group-child-row .child-name {
   padding-left: 26px;
   color: #a9d0f5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/*
+ * 适用机型徽标。
+ *
+ * ZD6 与 ZD9 的配置同名且内容一致，只有所属机型不同；同名子行展开后
+ * 名字和描述都一样，必须标出机型才分得清。
+ */
+.config-model {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  color: #5a92d0;
+  background: rgba(90, 146, 208, 0.1);
+  border: 1px solid rgba(90, 146, 208, 0.2);
+  border-radius: 4px;
+  padding: 1px 8px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .actions {
@@ -1105,6 +1166,13 @@ onMounted(async () => {
 .form-col > label {
   font-size: 12px;
   color: #5a7288;
+}
+
+/* 弹窗里的适用机型提示：ZD6 / ZD9 的配置同名，得靠它区分 */
+.form-hint {
+  font-size: 11px;
+  color: #5a92d0;
+  margin-top: 4px;
 }
 
 .modal-input {
