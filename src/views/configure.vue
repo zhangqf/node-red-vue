@@ -15,8 +15,6 @@ const error = ref("");
 const selectedCombination = ref<any>(null);
 const deviceType = ref("");
 
-const UNIVERSAL_ID = "__universal__";
-
 /** 配线类型：无外部配线 / 有外部配线 */
 const WIRING_INTERNAL = "无外部配线";
 const WIRING_EXTERNAL = "有外部配线";
@@ -31,14 +29,18 @@ const WIRING_EXTERNAL = "有外部配线";
  */
 const wiringTypes = ref<Record<string, string>>({});
 
-/** 配线类型的展示顺序：有外部配线在前（组合方式多），无外部配线在后 */
-const WIRING_ORDER = [WIRING_EXTERNAL, WIRING_INTERNAL];
+/**
+ * 配线类型的展示顺序。
+ *
+ * 无外部配线（单机使用）放最前，是现场最常用的。
+ */
+const WIRING_ORDER = [WIRING_INTERNAL, WIRING_EXTERNAL];
 
 /**
  * 按配线类型把组合方式分组。
  *
- * 只有存在配线类型记录的组合方式才参与分组；其余的（如通用模式、ZYJ7 的
- * 组合方式）归到一个不分组的组里，保持原来的平铺展示。
+ * 只有存在配线类型记录的组合方式才参与分组；其余的（如 ZYJ7 的组合方式）
+ * 归到一个不分组的组里，保持原来的平铺展示。
  */
 const wiringGroups = computed(() => {
   const grouped = new Map<string, any[]>();
@@ -93,15 +95,7 @@ async function getCombinations(id: string) {
     const list = await res.json();
     deviceType.value = list[0]?.deviceType || "";
     await getWiringTypes();
-    // ZD6 设备在列表头部注入通用模式
-    if (deviceType.value === "ZD6") {
-      combinations.value = [
-        { id: UNIVERSAL_ID, name: "通用模式", deviceType: "ZD6" },
-        ...list,
-      ];
-    } else {
-      combinations.value = list;
-    }
+    combinations.value = list;
   } catch {
     error.value = "数据加载失败";
   } finally {
@@ -110,11 +104,6 @@ async function getCombinations(id: string) {
 }
 
 async function selectCombination(combo: any) {
-  // 通用模式：进入 work 后由 work 内选择四线制/六线制
-  if (combo.id === UNIVERSAL_ID) {
-    await handleUniversalMode();
-    return;
-  }
   selectedCombination.value = combo;
   configsLoading.value = true;
   configs.value = [];
@@ -136,58 +125,6 @@ async function selectCombination(combo: any) {
 }
 
 // 按组合方式名 + 配置名定位，返回 { comboId, configId }，找不到返回 null
-async function resolveWire(
-  comboName: string,
-  configBaseName: string,
-): Promise<{ comboId: string; configId: string } | null> {
-  const targetCombo = combinations.value.find(
-    (c) => c.name === comboName && c.id !== UNIVERSAL_ID,
-  );
-  if (!targetCombo) return null;
-  try {
-    const res = await fetch(
-      HTTP_URL +
-        "/getConfigsByBinding/" +
-        route.params.deviceId +
-        "/" +
-        targetCombo.id,
-    );
-    const configList = await res.json();
-    const targetConfig = configList.find((c: any) => {
-      const cfg = (c.name || "").replace(/(【.+?】)$/, "");
-      return cfg === configBaseName;
-    });
-    if (!targetConfig) return null;
-    return { comboId: targetCombo.id, configId: targetConfig.id };
-  } catch {
-    return null;
-  }
-}
-
-// 通用模式：解析六线制（双动双机 + 一动J机）与四线制（单动单机 + ZD6-D），
-// 进入 work，由 work 内弹窗选择接线方式
-async function handleUniversalMode() {
-  const sixWire = await resolveWire("双动双机", "一动J机");
-  if (!sixWire) {
-    error.value = "未找到六线制配置（双动双机 + 一动J机）";
-    return;
-  }
-  const fourWire = await resolveWire("单动单机", "ZD6-D");
-
-  router.push({
-    name: "work",
-    params: {
-      deviceId: route.params.deviceId,
-      combinationId: sixWire.comboId,
-      configId: sixWire.configId,
-    },
-    query: {
-      universal: "true",
-      fourCombo: fourWire?.comboId || "",
-      fourConfig: fourWire?.configId || "",
-    },
-  });
-}
 const selectedConfig = ref<any>(null);
 
 function onConfigClick(configId: string) {

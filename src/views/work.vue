@@ -83,7 +83,6 @@ configId.value = route.params.configId as string;
 
 const opeModel = route.query.opeModel as string;
 codeName.value = route.query.name as string;
-const isUniversalMode = route.query.universal === "true";
 routeCloseType.value = route.query.closeType as string;
 
 const terminals = ref<any[]>([]);
@@ -533,10 +532,7 @@ const statusDesc = computed(() => {
   return "";
 });
 
-const showContactDialog = ref(
-  route.query.opeModel !== "code" && route.query.universal !== "true",
-);
-const showWireDialog = ref(route.query.universal === "true");
+const showContactDialog = ref(route.query.opeModel !== "code");
 
 /* ============================================================
  * 配置加载
@@ -706,37 +702,7 @@ const handleBack = async () => {
   }
 };
 
-/* ============================================================
- * 通用模式：四线制 / 六线制
- * ========================================================== */
-async function loadUniversalData() {
-  await withLoading(async () => {
-    await getList();
-  }, "数据加载成功");
-  showContactDialog.value = true;
-}
-
-/** 六线制：沿用进入时携带的双动双机 + 一动J机 */
-function selectSixWire() {
-  showWireDialog.value = false;
-  loadUniversalData();
-}
-
-/** 四线制：单动单机 + ZD6-D */
-function selectFourWire() {
-  combinationId.value =
-    (route.query.fourCombo as string) || combinationId.value;
-  configId.value = (route.query.fourConfig as string) || configId.value;
-  showWireDialog.value = false;
-  loadUniversalData();
-}
-
 onMounted(async () => {
-  if (isUniversalMode) {
-    // 通用模式：先选择四线制/六线制，再加载数据
-    showWireDialog.value = true;
-    return;
-  }
   await withLoading(async () => {
     switch (opeModel) {
       case "code":
@@ -757,17 +723,6 @@ onMounted(async () => {
 </script>
 
 <template>
-  <!-- 通用模式：四线制/六线制选择弹框 -->
-  <div v-if="showWireDialog" class="wire-overlay">
-    <div class="wire-dialog">
-      <div class="wire-dialog-title">请选择接线方式</div>
-      <div class="wire-dialog-buttons">
-        <button class="wire-dialog-btn" @click="selectSixWire">六线制</button>
-        <button class="wire-dialog-btn" @click="selectFourWire">四线制</button>
-      </div>
-    </div>
-  </div>
-
   <!-- 触点选择弹框 -->
   <div v-if="showContactDialog" class="contact-overlay">
     <div class="contact-dialog">
@@ -790,9 +745,9 @@ onMounted(async () => {
   <div class="dashboard">
     <DeviceBar
       :device-name="device.name"
-      :combination-name="isUniversalMode ? '通用模式' : combinationName"
+      :combination-name="combinationName"
       :device-type="deviceType"
-      :config-name="isUniversalMode ? '通用模式' : configName"
+      :config-name="configName"
       :item-config="itemConfig"
       :contact-active="selectedContactType"
       :status-message="stepPrompt"
@@ -1719,55 +1674,6 @@ onMounted(async () => {
 }
 
 .contact-dialog-btn:hover {
-  background: rgba(90, 146, 208, 0.25);
-  border-color: #5a92d0;
-  color: #fff;
-}
-
-.wire-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
-}
-
-.wire-dialog {
-  background: #0b1d33;
-  border: 1px solid #1a2d44;
-  border-radius: 12px;
-  padding: 40px 48px;
-  text-align: center;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-}
-
-.wire-dialog-title {
-  font-size: 20px;
-  color: #e0e8f0;
-  margin-bottom: 32px;
-}
-
-.wire-dialog-buttons {
-  display: flex;
-  gap: 24px;
-  justify-content: center;
-}
-
-.wire-dialog-btn {
-  background: rgba(90, 146, 208, 0.1);
-  border: 1px solid #2a4a68;
-  color: #c0d0e0;
-  font-size: 18px;
-  padding: 12px 36px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.wire-dialog-btn:hover {
   background: rgba(90, 146, 208, 0.25);
   border-color: #5a92d0;
   color: #fff;
