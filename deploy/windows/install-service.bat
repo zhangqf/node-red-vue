@@ -192,9 +192,14 @@ REM --- verify it actually came up ---
 REM NSSM reports a crash-looping service as STATE 7 PAUSED (it is waiting to
 REM retry), so a plain "start" returning success does NOT mean Node-RED is
 REM running. Wait for the port, then report what really happened.
-echo [INFO] Waiting for port 1880 ...
+REM
+REM The wait is generous on purpose: the very first start is slow (uibuilder
+REM runs "npm list" to build its package index, which can take 60+ seconds).
+REM A too-short window reports a false failure. 20 x 2s = 40s was not enough;
+REM 90 x 2s = 180s is.
+echo [INFO] Waiting for port 1880 (up to 180s) ...
 set "PORT_UP=0"
-for /l %%i in (1,1,20) do call :check_port_1880
+for /l %%i in (1,1,90) do call :check_port_1880
 if "%PORT_UP%"=="1" goto :verify_ok
 goto :verify_failed
 
@@ -224,7 +229,7 @@ exit /b 0
 
 :verify_failed
 REM Not up. Show the service state and the log tail so the cause is visible.
-echo [WARN] Port 1880 is not listening after 40s -- Node-RED did not start.
+echo [WARN] Port 1880 is not listening after 180s -- Node-RED did not start.
 echo.
 sc query "%SERVICE_NAME%"
 echo.
