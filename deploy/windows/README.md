@@ -5,12 +5,17 @@
 > 适用范围：本目录脚本用于 **独立跑 Node-RED** 的场景（前端在别的设备上连 1880）。
 > 如果用 Electron 打包版，Node-RED 由 Electron 进程内启动，不需要这套脚本。
 
+> 📖 **日常操作、重装依赖、拉代码更新、排障步骤** 请看 **[OPERATIONS.md](OPERATIONS.md)**。
+> 本文只讲服务本身的原理和配置，命令怎么用看那份。
+
 ---
 
 ## 文件说明
 
 | 文件 | 作用 |
 |---|---|
+| `OPERATIONS.md` | **操作说明**：重装依赖 / 拉代码 / 换机器 / 排障的分步操作 |
+| `update.ps1` / `update.bat` | 日常更新：拉代码 / 重装依赖 / 重启服务 |
 | `run-nr.bat` | 前台启动 Node-RED（排障用），自动切到正确的���作目录 |
 | `install-service.bat` | 注册 Windows 服务并启动（**管理员**运行） |
 | `uninstall-service.bat` | 卸载服务（**管理员**运行） |

@@ -10,6 +10,9 @@ lerna-debug.log*
 # Node-RED userDir (created by the Windows service; see deploy/windows)
 nr/.node-red
 
+# Backups made by deploy/windows/update.ps1 before a git pull
+deploy/windows/backup/
+
 node_modules
 .DS_Store
 dist
