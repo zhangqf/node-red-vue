@@ -42,15 +42,67 @@ const combinations = ref<Combination[]>([]);
 const configs = ref<Config[]>([]);
 
 /**
- * 各组合方式下绑定的测试机型（按 combinationId 精确对应）。
+ * 配置 id -> 适用机型。
  *
- * 不能靠配置名里的【组合方式】去匹配全量 configs：同一个配置在 ZD6 与 ZD9
- * 下各有一条同名记录（内容相同、id 不同），名字匹配会把两条都列出来，
- * 界面上出现重复芯片，且分不清属于哪个机型。
- * 后端 /getConfigsByBinding 是按 deviceId + combinationId 精确查绑定关系的，
- * 用它拿到的就是该组合方式真正绑定的配置。
+ * 来自后端 /getConfigModels：按绑定关系（配置 -> 组合方式 -> 机型）反查。
+ * ZD6 与 ZD9 的配置同名（内容相同、id 不同），光看名字分不出归属，必须
+ * 靠这个映射。
  */
-const configsByCombination = ref<Record<string, Config[]>>({});
+const configModels = ref<Record<string, string>>({});
+
+/** 当前选中设备的类型 */
+const selectedDeviceType = computed(() => {
+  const device = devices.value.find((d) => d.id === selectedDeviceId.value);
+  return device?.typeName || "";
+});
+
+/**
+ * 取配置名【】里的组合方式。
+ *
+ * 配置名形如「三动A机【双-单-双】」，【】里就是它所属的组合方式。
+ */
+const getInnerText = (text: string): string | null => {
+  const match = text.match(/【([^】]+)】/);
+  return match && match[1] ? match[1] : null;
+};
+
+/**
+ * 各组合方式下可选的测试机型。
+ *
+ * 列表 = 该组合方式下、属于当前机型的**全部**配置，包含尚未绑定的。
+ * 绑定配置页是勾选配置的地方，若只列已绑定的，就没法把新配置（另存的副本等）
+ * 绑上去。
+ *
+ * 归属由两处共同确定：
+ *   1. 配置名【】里的组合方式要与当前组合方式一致；
+ *   2. 配置的适用机型要与当前机型一致（configModels）。
+ * 靠名字匹配会同时列出 ZD6 与 ZD9 的同名记录，所以必须再按机型筛一次。
+ */
+const configsByCombination = computed<Record<string, Config[]>>(() => {
+  const result: Record<string, Config[]> = {};
+  const deviceType = selectedDeviceType.value;
+  if (!deviceType) return result;
+
+  for (const combo of combinations.value) {
+    if (combo.deviceType !== deviceType) continue;
+    const inner = combo.name;
+    const list = configs.value.filter((cfg) => {
+      const cfgCombo = getInnerText(cfg.name);
+      if (!cfgCombo) return false;
+      // 配置名里可能用 / 列出多个组合方式，如 ZDJ9【ZDJ9双机/ZDJ9五机/ZDJ9单机】
+      const belongs = cfgCombo.split("/").map((s) => s.trim());
+      if (!belongs.includes(inner)) return false;
+      // 机型：绑定关系推出的为准。推不出（尚未绑定）的配置两边都列出来，
+      // 由勾选来定归属——它还没绑到任何机型，内容与别的同名配置完全一样，
+      // 没有别的办法区分。
+      const model = configModels.value[cfg.id];
+      if (model) return model === deviceType;
+      return true;
+    });
+    result[combo.id] = list;
+  }
+  return result;
+});
 
 /* ---- 绑定数据 ---- */
 const bindings = ref<Binding[]>([]);
@@ -243,50 +295,16 @@ async function fetchConfigs() {
   }
 }
 
-/**
- * 拉取当前机型下每个组合方式绑定的测试机型。
- *
- * 用后端 /getConfigsByBinding（按 deviceId + combinationId 精确查绑定关系），
- * 而不是拉全量配置再按名字匹配——同名配置在 ZD6/ZD9 下各有一条，名字匹配
- * 会把两条都列出来，界面上出现重复芯片。
- *
- * 记录在途的 Promise：onMounted 赋值 selectedDeviceId 会触发 watch 再拉一次，
- * 靠它保证同一设备只发一轮请求，且调用方能 await 到结果。
- */
-let configFetchDeviceId = "";
-let configFetchPromise: Promise<void> | null = null;
-
-function fetchConfigsByCombination(deviceId: string): Promise<void> {
-  if (!deviceId) {
-    configsByCombination.value = {};
-    configFetchDeviceId = "";
-    configFetchPromise = null;
-    return Promise.resolve();
+/** 拉取配置 id -> 适用机型，用于区分 ZD6 / ZD9 的同名配置 */
+async function fetchConfigModels() {
+  try {
+    const res = await fetch(HTTP_URL + "/getConfigModels");
+    const { data } = await res.json();
+    configModels.value = data || {};
+  } catch {
+    console.error("获取配置适用机型失败");
+    configModels.value = {};
   }
-  if (deviceId === configFetchDeviceId && configFetchPromise) {
-    return configFetchPromise;
-  }
-  configFetchDeviceId = deviceId;
-  configFetchPromise = (async () => {
-    const result: Record<string, Config[]> = {};
-    await Promise.all(
-      combinations.value.map(async (combo) => {
-        try {
-          const res = await fetch(
-            HTTP_URL + "/getConfigsByBinding/" + deviceId + "/" + combo.id,
-          );
-          const list = await res.json();
-          if (Array.isArray(list)) {
-            result[combo.id] = list as Config[];
-          }
-        } catch {
-          result[combo.id] = [];
-        }
-      }),
-    );
-    configsByCombination.value = result;
-  })();
-  return configFetchPromise;
 }
 
 const BindData = ref<any[]>([]);
@@ -312,11 +330,6 @@ async function fetchBindings() {
   }
 }
 /* 获取当前选中设备的类型 */
-const selectedDeviceType = computed(() => {
-  const device = devices.value.find((d) => d.id === selectedDeviceId.value);
-  return device?.typeName || "";
-});
-
 const filteredCombinations = computed(() => {
   return combinations.value.filter(
     (c) => c.deviceType === selectedDeviceType.value,
@@ -327,8 +340,6 @@ watch(selectedDeviceId, async (newVal) => {
   if (newVal) {
     const deviceData = BindData.value.find((i: any) => i.deviceId === newVal);
     bindings.value = deviceData?.bindings || [];
-    // 组合方式下的测试机型按绑定关系取，换设备要重新拉
-    await fetchConfigsByCombination(newVal);
   }
 });
 
@@ -338,6 +349,7 @@ onMounted(async () => {
       fetchDevices(),
       fetchCombinations(),
       fetchConfigs(),
+      fetchConfigModels(),
       fetchBindings(),
     ]);
     if (devices.value.length > 0 && !selectedDeviceId.value) {
@@ -348,8 +360,6 @@ onMounted(async () => {
         selectedDeviceId.value = devices.value[0]!.id;
       }
     }
-    // 等各组合方式下的测试机型到齐，避免先渲染空的再补上
-    await fetchConfigsByCombination(selectedDeviceId.value);
   }, "数据加载成功");
 });
 </script>
