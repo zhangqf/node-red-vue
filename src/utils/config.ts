@@ -406,7 +406,8 @@ function getImgZD6(model: string, type: "DW" | "FW" | "DWC" | "FWC") {
 }
 function getImgZD624(model: string, type: "DW" | "FW" | "DWC" | "FWC") {
   const prefix = model.includes("A") ? "ZD6E-A" : "ZD6J-B";
-  return getPublicImagePath("img24", `${prefix}-${type}.png`);
+  const imageType = model.includes("A") && type === "FW" ? "FB" : type;
+  return getPublicImagePath("img24", `${prefix}-${imageType}.png`);
 }
 function getImgZDJ9(type: "DW" | "FW") {
   const prefix = "ZDJ9";
@@ -1034,8 +1035,7 @@ export const collectConfig: Record<
         C4: "D3→D4→44-43→02-01→24-23→D10",
       },
     },
-    // 无外部配线：ZD6 单独使用，不与其它转辙机牵引联动。
-    // 机内接线与 B 机式相同（端子走 D13/D14/D15/D16），路径取 B 机式那套。
+    // 无外部配线：分别支持 E 型一动 A 机、D 型一动 B 机、J 型二动单机。
     WBFW: {
       "1314": {
         img: {
@@ -1050,6 +1050,48 @@ export const collectConfig: Record<
         C4: "D4→44-43→02-01→24-23→D10",
         C5: "D15→35-36→D17",
         C6: "D16→25-26→D18",
+      },
+      "103A4": {
+        img: {
+          DWBS: getImgZD6("A", "DW"),
+          FWBS: getImgZD6("A", "FW"),
+          YJCDDWBS: getImgZD6("A", "DWC"),
+          YJCDFWBS: getImgZD6("A", "FWC"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+        C5: "D13→35-36→D15",
+        C6: "D14→25-26→D16",
+      },
+      "103B4": {
+        img: {
+          DWBS: getImgZD6("B", "DW"),
+          FWBS: getImgZD6("B", "FW"),
+          YJCDDWBS: getImgZD6("B", "DWC"),
+          YJCDFWBS: getImgZD6("B", "FWC"),
+        },
+        C1: "D13→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D14→21-22→D8",
+        C4: "D4→44-43→02-01→24-23→D10",
+        C5: "D15→35-36→D17",
+        C6: "D16→25-26→D18",
+      },
+      "20314": {
+        img: {
+          DWBS: getImgZD6("A", "DW"),
+          FWBS: getImgZD6("A", "FW"),
+          YJCDDWBS: getImgZD6("A", "DWC"),
+          YJCDFWBS: getImgZD6("A", "FWC"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+        C5: "D13→35-36→D15",
+        C6: "D14→25-26→D16",
       },
     },
   },
@@ -1637,8 +1679,7 @@ export const collectConfig24: Record<
         C4: "D3→D4→44-43→02-01→24-23→D10",
       },
     },
-    // 无外部配线：ZD6 单独使用，不与其它转辙机牵引联动。
-    // 机内接线与 B 机式相同（端子走 D13/D14/D15/D16），路径取 B 机式那套。
+    // 无外部配线：分别支持 E 型一动 A 机、D 型一动 B 机、J 型二动单机。
     WBFW: {
       "1314": {
         img: {
@@ -1653,6 +1694,48 @@ export const collectConfig24: Record<
         C4: "D4→44-43→02-01→24-23→D10",
         C5: "D15→35-36→D17",
         C6: "D16→25-26→D18",
+      },
+      "103A4": {
+        img: {
+          DWBS: getImgZD624("A", "DW"),
+          FWBS: getImgZD624("A", "FW"),
+          YJCDDWBS: getImgZD624("A", "DWC"),
+          YJCDFWBS: getImgZD624("A", "FWC"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+        C5: "D13→35-36→D15",
+        C6: "D14→25-26→D16",
+      },
+      "103B4": {
+        img: {
+          DWBS: getImgZD624("B", "DW"),
+          FWBS: getImgZD624("B", "FW"),
+          YJCDDWBS: getImgZD624("B", "DWC"),
+          YJCDFWBS: getImgZD624("B", "FWC"),
+        },
+        C1: "D13→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D14→21-22→D8",
+        C4: "D4→44-43→02-01→24-23→D10",
+        C5: "D15→35-36→D17",
+        C6: "D16→25-26→D18",
+      },
+      "20314": {
+        img: {
+          DWBS: getImgZD624("A", "DW"),
+          FWBS: getImgZD624("A", "FW"),
+          YJCDDWBS: getImgZD624("A", "DWC"),
+          YJCDFWBS: getImgZD624("A", "FWC"),
+        },
+        C1: "D1→41→31-32→D7",
+        C2: "D3→04-03→14-13→34-33→D9",
+        C3: "D2→11→21-22→D8",
+        C4: "D3→D4→44-43→02-01→24-23→D10",
+        C5: "D13→35-36→D15",
+        C6: "D14→25-26→D16",
       },
     },
   },
