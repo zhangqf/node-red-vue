@@ -6,6 +6,7 @@ import { useToast } from "@/composables/useToast";
 import * as XLSX from "xlsx";
 import { Workbook } from "exceljs";
 import { fetchWithTimeout as fetch } from "@/utils/http";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 
 const { withLoading, showToast } = useToast();
 const router = useRouter();
@@ -25,6 +26,25 @@ interface Device {
 const devices = ref<Device[]>([]);
 const showImportMenu = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
+
+interface StationFilePlugin {
+  saveFile(options: {
+    fileName: string;
+    mimeType: string;
+    dataBase64: string;
+  }): Promise<{ cancelled: boolean }>;
+  openFile(): Promise<{
+    cancelled: boolean;
+    fileName?: string;
+    dataBase64?: string;
+  }>;
+}
+
+const stationFilePlugin = registerPlugin<StationFilePlugin>("StationFile");
+const isAndroidApp =
+  Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android";
+const excelMimeType =
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
 const latestStatus = ref<Record<string, { DC?: string; FC?: string }>>({});
 
@@ -153,7 +173,7 @@ function closeImportMenu() {
   showImportMenu.value = false;
 }
 
-async function downloadExcelTemplate() {
+async function createExcelTemplate() {
   const workbook = new Workbook();
 
   // ---- Hidden options sheets ----
@@ -254,23 +274,84 @@ async function downloadExcelTemplate() {
     };
   }
 
-  const buf = await workbook.xlsx.writeBuffer();
-  const blob = new Blob([buf], {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "设备导入模板.xlsx";
-  a.click();
-  URL.revokeObjectURL(url);
-  closeImportMenu();
-  showToast("Excel 模板下载成功", "success");
+  return workbook.xlsx.writeBuffer();
+}
+
+async function downloadExcelTemplate() {
+  try {
+    const buf = await createExcelTemplate();
+    if (isAndroidApp) {
+      const bytes = new Uint8Array(buf);
+      let binary = "";
+      const chunkSize = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode(
+          ...bytes.subarray(i, i + chunkSize),
+        );
+      }
+      const result = await stationFilePlugin.saveFile({
+        fileName: "设备导入模板.xlsx",
+        mimeType: excelMimeType,
+        dataBase64: btoa(binary),
+      });
+      closeImportMenu();
+      if (!result.cancelled) {
+        showToast("Excel 模板已保存", "success");
+      }
+      return;
+    }
+
+    const blob = new Blob([buf], { type: excelMimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "设备导入模板.xlsx";
+    a.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    closeImportMenu();
+    showToast("Excel 模板下载成功", "success");
+  } catch (error) {
+    console.error("Failed to save Excel template", error);
+    closeImportMenu();
+    showToast("模板生成或保存失败，请重试", "error");
+  }
 }
 
 function triggerFileInput() {
-  fileInput.value?.click();
   closeImportMenu();
+  if (isAndroidApp) {
+    void pickAndroidFile();
+  } else {
+    fileInput.value?.click();
+  }
+}
+
+function decodeBase64File(fileName: string, dataBase64: string): File {
+  const binary = atob(dataBase64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new File([bytes], fileName, { type: "application/octet-stream" });
+}
+
+async function pickAndroidFile() {
+  try {
+    const result = await stationFilePlugin.openFile();
+    if (result.cancelled) return;
+    if (!result.fileName || !result.dataBase64) {
+      throw new Error("文件选择器未返回有效文件内容");
+    }
+    await importFile(
+      decodeBase64File(result.fileName, result.dataBase64),
+    );
+  } catch (error) {
+    console.error("Failed to select import file", error);
+    showToast(
+      error instanceof Error ? error.message : "选择文件失败，请重试",
+      "error",
+    );
+  }
 }
 
 function parseRows(rows: Record<string, string>[]): Device[] {
@@ -370,9 +451,7 @@ async function parseExcelFile(file: File): Promise<Device[]> {
   return parseRows(rows);
 }
 
-async function handleFileImport(event: Event) {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
+async function importFile(file: File) {
   if (!file) return;
 
   try {
@@ -385,13 +464,11 @@ async function handleFileImport(event: Event) {
       imported = await parseExcelFile(file);
     } else {
       showToast("不支持的文件格式，请上传 CSV 或 Excel 文件", "error");
-      target.value = "";
       return;
     }
 
     if (imported.length === 0) {
       showToast("未解析到有效设备数据", "error");
-      target.value = "";
       return;
     }
 
@@ -444,10 +521,18 @@ async function handleFileImport(event: Event) {
           : `成功导入 ${successCount} 台设备`;
       showToast(msg, "success");
     }
-  } catch (e: any) {
-    showToast(e.message || "文件读取失败，请检查文件格式", "error");
+  } catch (error) {
+    showToast(
+      error instanceof Error ? error.message : "文件读取失败，请检查文件格式",
+      "error",
+    );
   }
+}
 
+async function handleFileImport(event: Event) {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (file) await importFile(file);
   target.value = "";
 }
 
@@ -556,7 +641,7 @@ onMounted(async () => {
     <input
       ref="fileInput"
       type="file"
-      accept=".xlsx,.xls"
+      accept=".xlsx,.xls,.csv"
       class="file-input-hidden"
       @change="handleFileImport" />
 
