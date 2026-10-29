@@ -175,6 +175,9 @@ function getDirectionTip(
   return { tip: "阻值正常但应为开路", isNormal: false };
 }
 
+/** 四开位置：参与判定的通道全部落在正常阻值区间时的结论文案 */
+export const FOUR_OPEN_TIP = "当前位置为四开位置";
+
 /**
  * @description 道岔启动前电阻检测统一计算入口
  * @param arr 四路通道实测电阻数组 [第1路,第2路,第3路,第4路]
@@ -182,8 +185,9 @@ function getDirectionTip(
  * 核心逻辑：
  * 1. 批量将四路阻值转为电阻状态 NORMAL/OPEN/SHORT/UNKNOWN
  * 2. 分别计算【定操DC】、【反操FC】两套判定结果
- * 3. 满足全部通道NORMAL，或单套方向全部合格，则该方向判定通过
- * 4. 任一方判定未通过时，汇总该方向的异常通道诊断文案
+ * 3. 全部参与判定的通道都落在正常区间（NORMAL，当前 1~40Ω）→ 判定为四开位置，
+ *    定操/反操两个方向同时通过；否则单套方向全部合格才算该方向通过
+ * 4. 非四开位置时，任一方判定未通过，汇总该方向的异常通道诊断文案
  */
 
 export const startBeforeTestExpress = (
@@ -255,16 +259,27 @@ export const startBeforeTestExpress = (
     };
   });
 
-  // 全部通道均为 NORMAL（导通）→ 判定混线
-  const allNormal = states.slice(0, 4).every((s) => s === "NORMAL");
+  // 参与判定的通道全部落在正常阻值区间（1~40Ω）→ 道岔处于四开位置。
+  // 此时各通道「应为开路/应为导通」的期望都不再成立，定操/反操两个方向都通过。
+  // 只统计参与判定的通道：ZYJ7/ZDJ9 的 16 个寄存器会拼出 8 个值，
+  // slice(2) 后多出的两路不属于本机型配置，不能算进「每一路」。
+  const judgedStates = states.slice(0, configOption.length);
+  const allChannelNormal =
+    judgedStates.length > 0 && judgedStates.every((s) => s === "NORMAL");
 
-  const dcPassed = dcResult.every((r) => r.isNormal);
-  const fcPassed = fcResult.every((r) => r.isNormal);
+  const dcPassed = allChannelNormal || dcResult.every((r) => r.isNormal);
+  const fcPassed = allChannelNormal || fcResult.every((r) => r.isNormal);
 
   const diagnosis: string[] = [];
 
-  if (allNormal) {
-    diagnosis.push("混线：所有通道阻值均为正常区间");
+  if (allChannelNormal) {
+    // 逐路文案改成统一的「四开位置」，避免出现「通过」却挂着
+    // 「阻值正常但应为开路」这类相互矛盾的红色提示。
+    [...dcResult, ...fcResult].forEach((r) => {
+      r.isNormal = true;
+      r.tip = "四开位置";
+    });
+    diagnosis.push(FOUR_OPEN_TIP);
   } else {
     if (!dcPassed) {
       dcResult.forEach((r) => {
@@ -283,7 +298,12 @@ export const startBeforeTestExpress = (
   return {
     dcResult,
     fcResult,
-    direction: { DC: dcPassed, FC: fcPassed, diagnosis },
+    direction: {
+      DC: dcPassed,
+      FC: fcPassed,
+      diagnosis,
+      fourOpen: allChannelNormal,
+    },
   };
 };
 

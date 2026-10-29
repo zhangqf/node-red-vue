@@ -239,6 +239,8 @@ export interface DirectionResult {
   FC: boolean;
   diagnosis: string[];
   complete?: boolean;
+  /** 全部参与判定的通道都在正常区间 → 四开位置，结论不受表示门约束 */
+  fourOpen?: boolean;
 }
 
 export interface StartBeforeTestReturn {

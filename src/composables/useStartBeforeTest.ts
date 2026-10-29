@@ -28,7 +28,8 @@ interface useStartBeforeTestOptions {
   availableDirections: Ref<{ DC: boolean; FC: boolean }>;
   selectedContactType: Ref<string>;
   restoreInitialRelayState: () => Promise<boolean>;
-  runExpressTest: () => Promise<{
+  /** fourOpen：电阻已判定四开位置，表示只采样展示，不参与结论 */
+  runExpressTest: (fourOpen: boolean) => Promise<{
     DC: boolean;
     FC: boolean;
     diagnosis: string[];
@@ -314,7 +315,8 @@ export function useStartBeforeTest(options: useStartBeforeTestOptions) {
       flow.fail();
       return;
     }
-    const expressResult = await runExpressTest();
+    const fourOpen = result.direction.fourOpen === true;
+    const expressResult = await runExpressTest(fourOpen);
     if (runId !== testRunId || !startBeforeLoading.value) return;
     // 表示测完不再恢复继电器：表示保持闭合，让操作员在 READY 阶段就能
     // 看到道岔当前的位置。真正要操动时才断开表示（useOperation 的
@@ -334,15 +336,19 @@ export function useStartBeforeTest(options: useStartBeforeTestOptions) {
     diagnosisMessages.value = result.direction.diagnosis;
     diagnosisMessages.value.push(...expressResult.diagnosis);
     const expressPassed = expressResult.DC || expressResult.FC;
-    const finalDirections = expressPassed
-      ? {
-          DC: result.direction.DC && expressResult.DC,
-          FC: result.direction.FC && expressResult.FC,
-        }
-      : {
-          DC: result.direction.DC,
-          FC: result.direction.FC,
-        };
+    // 四开位置：两个方向都可用，无条件跳过表示门（四开时本来就没有
+    // 定位/反位表示，若还按表示判定会把可用的方向误判成失败）。
+    const finalDirections = fourOpen
+      ? { DC: true, FC: true }
+      : expressPassed
+        ? {
+            DC: result.direction.DC && expressResult.DC,
+            FC: result.direction.FC && expressResult.FC,
+          }
+        : {
+            DC: result.direction.DC,
+            FC: result.direction.FC,
+          };
     availableDirections.value = {
       DC: finalDirections.DC,
       FC: finalDirections.FC,

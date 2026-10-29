@@ -18,6 +18,7 @@ import {
 import type { ChannelExpect, ResistanceThreshold } from "@/utils/config";
 import { fetchWithTimeout as fetch } from "@/utils/http";
 import {
+  FOUR_OPEN_TIP,
   gen32BitArray,
   getCircuits,
   handleCalculate,
@@ -298,7 +299,7 @@ async function restoreInitialRelayState(): Promise<boolean> {
  * 表示测试：合上表示继电器后读回各项状态，推断定操/反操两个方向是否可用。
  * 电阻与表示是交叉对应关系：定操电阻对应反位表示与反操项，反操电阻对应定位表示与定操项。
  */
-async function runExpressTest(): Promise<{
+async function runExpressTest(fourOpen = false): Promise<{
   DC: boolean;
   FC: boolean;
   diagnosis: string[];
@@ -309,14 +310,14 @@ async function runExpressTest(): Promise<{
   // 表示继电器在此合上，采样窗口内保持带电以便读取各项状态
   const ok = await applyOnValue("表示测试");
   if (!ok) {
-    // 指令未确认意味着表示根本没测，状态停留在初始的「未判定」。
-    // 此时无法判断继电器是否吸合，若不播报，操作员听到的是上一轮的旧结果，
-    // 会误以为本轮测试成功。因此单独播报，明确区分于「继电器未吸合」。
-    speak(EXPRESS_COMMAND_FAILED_TIP);
+    // 四开位置的结论完全由电阻决定，表示只是顺带展示；指令失败时
+    // 不播「继电器状态未知」，避免覆盖「当前位置为四开位置」这条结论。
+    if (fourOpen) speak(FOUR_OPEN_TIP);
+    else speak(EXPRESS_COMMAND_FAILED_TIP);
     return {
       DC: false,
       FC: false,
-      diagnosis: ["表示测试指令未确认"],
+      diagnosis: fourOpen ? [] : ["表示测试指令未确认"],
       commandOk: false,
     };
   }
@@ -338,8 +339,10 @@ async function runExpressTest(): Promise<{
     green?.status === true && fcItems.every((item) => item.status === true);
   const swap = selectedContactType.value === "contact24Closed";
 
-  // 表示判定完成即播报
-  announceExpressResult();
+  // 表示判定完成即播报；四开位置本就没有定位/反位表示，
+  // 只播结论，避免播一堆「表示缺失」盖过真正的判定结果。
+  if (fourOpen) speak(FOUR_OPEN_TIP);
+  else announceExpressResult();
 
   return {
     DC: swap ? physicalFcPassed : physicalDcPassed,
