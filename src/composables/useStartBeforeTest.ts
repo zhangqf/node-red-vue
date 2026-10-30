@@ -57,6 +57,7 @@ export function useStartBeforeTest(options: useStartBeforeTestOptions) {
     channelConfigs,
     resistanceThresholds,
     availableDirections,
+    selectedContactType,
     restoreInitialRelayState,
     runExpressTest,
     turnExpressOff,
@@ -134,6 +135,38 @@ export function useStartBeforeTest(options: useStartBeforeTestOptions) {
     return result;
   };
 
+  /**
+   * 2、4 闭合时，定操视角与反操视角互换。
+   *
+   * 表示继电器在 2、4 闭合下把定位/反位、定操/反操的继电器分组整体对调
+   * （见 config 表 contact24Closed），所以同一批电阻通道的“定操”结果在
+   * 2、4 闭合下就是操作员眼里的“反操”。这里交换的是整份展示结果：
+   * 视角列表、逐路提示、方向结论、诊断前缀一起换，避免出现徽标和逐路
+   * 提示对不上的情况。电阻期望本身（channel_config）不参与交换。
+   */
+  const applyContactTypeSwap = (
+    result: ReturnType<typeof startBeforeTestExpress>,
+  ) => {
+    if (selectedContactType.value !== "contact24Closed") return result;
+
+    const dcResult = result.dcResult;
+    result.dcResult = result.fcResult;
+    result.fcResult = dcResult;
+
+    const DC = result.direction.DC;
+    result.direction.DC = result.direction.FC;
+    result.direction.FC = DC;
+
+    result.direction.diagnosis = result.direction.diagnosis.map((msg) =>
+      msg.startsWith("定操-")
+        ? "反操-" + msg.slice(3)
+        : msg.startsWith("反操-")
+          ? "定操-" + msg.slice(3)
+          : msg,
+    );
+    return result;
+  };
+
   const buildDisplayedResult = () => {
     const mapping = getStepMapping();
     const rawValues: number[] = [];
@@ -147,12 +180,14 @@ export function useStartBeforeTest(options: useStartBeforeTestOptions) {
       }
     });
 
-    const result = resolveCircuitImages(
-      startBeforeTestExpress(
-        rawValues,
-        deviceType.value,
-        currentChannelConfig.value,
-        currentThreshold.value,
+    const result = applyContactTypeSwap(
+      resolveCircuitImages(
+        startBeforeTestExpress(
+          rawValues,
+          deviceType.value,
+          currentChannelConfig.value,
+          currentThreshold.value,
+        ),
       ),
     );
     const isComplete = completedIndexes.size === mapping.length;
