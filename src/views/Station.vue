@@ -146,9 +146,36 @@ async function fetchDevices() {
   }
 }
 
-const combinationOptions = ref<{ name: string }[]>([]);
-const configOptions = ref<{ name: string }[]>([]);
+interface TemplateCombination {
+  id: string;
+  name: string;
+  deviceType: string;
+}
+
+interface TemplateConfig {
+  id: string;
+  name: string;
+}
+
+interface ModelDevice {
+  id: string;
+  name: string;
+  typeName: string;
+}
+
+interface BindingGroup {
+  deviceId: string;
+  bindings: { combinationId: string; configIds: string[] }[];
+}
+
+const combinationOptions = ref<TemplateCombination[]>([]);
+const configOptions = ref<TemplateConfig[]>([]);
 const typeOptions = ref<{ typeName: string }[]>([]);
+/** 机型记录（device 表），用于把绑定关系里的 deviceId 还原成 typeName */
+const modelDevices = ref<ModelDevice[]>([]);
+/** 绑定关系（/getBingings），记录每个机型绑定了哪些组合方式、每个组合方式下有哪些配置 */
+const bindingGroups = ref<BindingGroup[]>([]);
+
 async function fetchTemplateData() {
   try {
     const response = await fetch(HTTP_URL + "/getCombinationAndConfig", {
@@ -156,13 +183,184 @@ async function fetchTemplateData() {
       headers: { "Content-Type": "application/json" },
     });
     const { combination, config, type } = await response.json();
-    combinationOptions.value = combination;
-    configOptions.value = config;
-    typeOptions.value = type;
+    combinationOptions.value = combination || [];
+    configOptions.value = config || [];
+    typeOptions.value = type || [];
   } catch {
     console.error("Failed to fetch combination and config data");
     showToast("加载模板数据失败", "error");
   }
+
+  // 绑定关系是“组合方式 -> 配置”联动的一部分，拿不到时降级为按配置名匹配
+  try {
+    const [deviceRes, bindingRes] = await Promise.all([
+      fetch(HTTP_URL + "/getDevice", {
+        method: "get",
+        headers: { "Content-Type": "application/json" },
+      }),
+      fetch(HTTP_URL + "/getBingings", {
+        method: "get",
+        headers: { "Content-Type": "application/json" },
+      }),
+    ]);
+    modelDevices.value = (await deviceRes.json()) || [];
+    bindingGroups.value = (await bindingRes.json()) || [];
+  } catch {
+    console.error("Failed to fetch device bindings");
+    modelDevices.value = [];
+    bindingGroups.value = [];
+  }
+}
+
+/** 配置名形如「三动A机【双-单-双】」，取出【】里的组合方式（可能用 / 列出多个） */
+function getConfigCombinationNames(name: string): string[] {
+  const match = String(name || "").match(/【([^】]+)】/);
+  if (!match || !match[1]) return [];
+  return match[1]
+    .split(/[\/／]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+const CASCADE_KEY_SEPARATOR = "\u0001";
+
+function cascadeKey(type: string, combination: string): string {
+  return type + CASCADE_KEY_SEPARATOR + combination;
+}
+
+interface TemplateCascade {
+  types: string[];
+  combinationsByType: Record<string, string[]>;
+  /** key = `${type}\u0001${combination}` */
+  configsByTypeCombination: Record<string, string[]>;
+  /** 已经有绑定关系、导入时能真正查到配置的组合方式 */
+  importableKeys: Set<string>;
+}
+
+/**
+ * 生成模板用的三级联动数据：type -> 该类型下的 combination -> 该组合方式下的 config。
+ *
+ * 配置归属优先用绑定关系（combination_config_bindings）判断；没有绑定记录的
+ * 配置（例如 ZDJ9 目前还没绑定到机型）再退化为看配置名【】里的组合方式，避免
+ * 这些配置在模板里消失。
+ */
+function buildTemplateCascade(): TemplateCascade {
+  const types: string[] = [];
+  const addType = (type: string) => {
+    if (type && !types.includes(type)) types.push(type);
+  };
+  typeOptions.value.forEach((t) => addType(t.typeName));
+
+  const combinationsByType: Record<string, string[]> = {};
+  for (const combo of combinationOptions.value) {
+    if (!combo.deviceType || !combo.name) continue;
+    addType(combo.deviceType);
+    const list =
+      combinationsByType[combo.deviceType] ||
+      (combinationsByType[combo.deviceType] = []);
+    if (!list.includes(combo.name)) list.push(combo.name);
+  }
+
+  const comboById = new Map(
+    combinationOptions.value.map((combo) => [combo.id, combo] as const),
+  );
+  const configById = new Map(
+    configOptions.value.map((cfg) => [cfg.id, cfg] as const),
+  );
+  const typeByDeviceId = new Map(
+    modelDevices.value.map((d) => [d.id, d.typeName] as const),
+  );
+
+  /** config.id -> 通过绑定关系反推出的适用机型 */
+  const configTypes = new Map<string, Set<string>>();
+  /** `${type}\u0001${combination}` -> 已绑定的配置名 */
+  const boundNames = new Map<string, Set<string>>();
+  /** type -> 该机型下出现过绑定关系的配置名（不区分组合方式） */
+  const boundNamesByType = new Map<string, Set<string>>();
+
+  for (const group of bindingGroups.value) {
+    const type = typeByDeviceId.get(group.deviceId);
+    if (!type) continue;
+    for (const binding of group.bindings || []) {
+      const combo = comboById.get(binding.combinationId);
+      if (!combo || !combo.name) continue;
+      // 历史数据里可能存在跨机型绑定，按组合方式自己的机型过滤
+      if (combo.deviceType && combo.deviceType !== type) continue;
+      const key = cascadeKey(type, combo.name);
+      for (const configId of binding.configIds || []) {
+        const cfg = configById.get(configId);
+        if (!cfg) continue;
+        let names = boundNames.get(key);
+        if (!names) {
+          names = new Set();
+          boundNames.set(key, names);
+        }
+        names.add(cfg.name);
+        let typeNames = boundNamesByType.get(type);
+        if (!typeNames) {
+          typeNames = new Set();
+          boundNamesByType.set(type, typeNames);
+        }
+        typeNames.add(cfg.name);
+        let models = configTypes.get(configId);
+        if (!models) {
+          models = new Set();
+          configTypes.set(configId, models);
+        }
+        models.add(type);
+      }
+    }
+  }
+
+  const configsByTypeCombination: Record<string, string[]> = {};
+  const importableKeys = new Set<string>();
+  for (const type of types) {
+    for (const combination of combinationsByType[type] || []) {
+      const key = cascadeKey(type, combination);
+      const bound = boundNames.get(key);
+      const boundForType = boundNamesByType.get(type);
+      const names: string[] = [];
+      const seen = new Set<string>();
+      // 按 config 表原始顺序输出，保证每次生成的模板一致
+      for (const cfg of configOptions.value) {
+        if (seen.has(cfg.name)) continue;
+        let include = bound?.has(cfg.name) ?? false;
+        if (!include) {
+          const comboNames = getConfigCombinationNames(cfg.name);
+          if (comboNames.includes(combination)) {
+            const models = configTypes.get(cfg.id);
+            // 有绑定记录的配置按机型判断；没有绑定记录的（例如另存的副本），
+            // 只有当同名配置在该机型下确实绑定过才列出，保证导入时能查到。
+            include = models
+              ? models.has(type)
+              : (boundForType?.has(cfg.name) ?? false);
+          }
+        }
+        if (include) {
+          seen.add(cfg.name);
+          names.push(cfg.name);
+        }
+      }
+      if (names.length > 0) {
+        configsByTypeCombination[key] = names;
+        if (bound && bound.size > 0) importableKeys.add(key);
+      }
+    }
+  }
+
+  return { types, combinationsByType, configsByTypeCombination, importableKeys };
+}
+
+/** 把 1、2、3… 转成 A、B、…、AA 这样的列号 */
+function excelColumnName(index: number): string {
+  let n = index;
+  let name = "";
+  while (n > 0) {
+    const remainder = (n - 1) % 26;
+    name = String.fromCharCode(65 + remainder) + name;
+    n = Math.floor((n - 1) / 26);
+  }
+  return name;
 }
 
 function toggleImportMenu() {
@@ -175,29 +373,102 @@ function closeImportMenu() {
 
 async function createExcelTemplate() {
   const workbook = new Workbook();
+  const cascade = buildTemplateCascade();
+  const types = cascade.types;
+  // 下拉框和辅助公式覆盖到 501 行，够站场批量导入使用
+  const lastRow = 501;
 
-  // ---- Hidden options sheets ----
-  const typeSheet1 = workbook.addWorksheet("设备类型选项");
-  typeSheet1.addRows([
-    ["请替换为系统中的类型信息"],
-    ...typeOptions.value.map((v) => [v.typeName]),
-  ]);
-  typeSheet1.state = "veryHidden";
-
-  const comboSheet = workbook.addWorksheet("组合方式选项");
-
-  const comboData = combinationOptions.value.map((v) => {
-    return [v.name];
+  // ---- 隐藏选项页：类型 ----
+  const typeSheet = workbook.addWorksheet("设备类型选项");
+  typeSheet.getCell("A1").value = "设备类型";
+  types.forEach((type, i) => {
+    typeSheet.getCell(`A${i + 2}`).value = type;
   });
-  comboSheet.addRows([["请替换为系统中的配置信息"], ...comboData]);
-  comboSheet.state = "veryHidden";
+  typeSheet.state = "hidden";
+  // ExcelJS 不支持整列命名区域，这里用实际行数收尾
+  workbook.definedNames.add(
+    `'设备类型选项'!$A$2:$A$${Math.max(2, types.length + 1)}`,
+    "selType",
+  );
 
+  // ---- 隐藏选项页：组合方式（一个类型一列） ----
+  const comboSheet = workbook.addWorksheet("组合方式选项");
+  const comboRangeNames = new Map<string, string>();
+  types.forEach((type, index) => {
+    const col = index + 1;
+    const letter = excelColumnName(col);
+    comboSheet.getCell(`${letter}1`).value = type;
+    const list = cascade.combinationsByType[type] || [];
+    list.forEach((name, i) => {
+      comboSheet.getCell(`${letter}${i + 2}`).value = name;
+    });
+    const rangeName = `selCombo${col}`;
+    workbook.definedNames.add(
+      `'组合方式选项'!$${letter}$2:$${letter}$${Math.max(2, list.length + 1)}`,
+      rangeName,
+    );
+    comboRangeNames.set(type, rangeName);
+  });
+  comboSheet.state = "hidden";
+
+  // ---- 隐藏选项页：配置（一个「类型 + 组合方式」一列） ----
   const configSheet = workbook.addWorksheet("配置选项");
-  configSheet.addRows([
-    ["请替换为系统中的配置信息"],
-    ...configOptions.value.map((v) => [v.name]),
-  ]);
-  configSheet.state = "veryHidden";
+  const configRangeNames = new Map<string, string>();
+  let configCol = 0;
+  for (const type of types) {
+    for (const combination of cascade.combinationsByType[type] || []) {
+      const list =
+        cascade.configsByTypeCombination[cascadeKey(type, combination)] || [];
+      if (list.length === 0) continue;
+      configCol += 1;
+      const letter = excelColumnName(configCol);
+      configSheet.getCell(`${letter}1`).value = `${type}|${combination}`;
+      list.forEach((name, i) => {
+        configSheet.getCell(`${letter}${i + 2}`).value = name;
+      });
+      const rangeName = `selConfig${configCol}`;
+      workbook.definedNames.add(
+        `'配置选项'!$${letter}$2:$${letter}$${list.length + 1}`,
+        rangeName,
+      );
+      configRangeNames.set(cascadeKey(type, combination), rangeName);
+    }
+  }
+  configSheet.state = "hidden";
+
+  // ---- 隐藏映射页：把「类型 / 类型+组合方式」翻译成对应的命名区域 ----
+  const mapSheet = workbook.addWorksheet("级联映射");
+  mapSheet.getCell("A1").value = "type";
+  mapSheet.getCell("B1").value = "组合方式范围";
+  mapSheet.getCell("C1").value = "type|combination";
+  mapSheet.getCell("D1").value = "配置范围";
+  types.forEach((type, i) => {
+    const row = i + 2;
+    mapSheet.getCell(`A${row}`).value = type;
+    mapSheet.getCell(`B${row}`).value = comboRangeNames.get(type) || "";
+  });
+  let mapRow = 2;
+  for (const [key, rangeName] of configRangeNames) {
+    const separatorIndex = key.indexOf(CASCADE_KEY_SEPARATOR);
+    const type = key.slice(0, separatorIndex);
+    const combination = key.slice(separatorIndex + 1);
+    mapSheet.getCell(`C${mapRow}`).value = `${type}|${combination}`;
+    mapSheet.getCell(`D${mapRow}`).value = rangeName;
+    mapRow += 1;
+  }
+  // 空选项：选不到时让下拉列表为空，而不是直接报公式错误
+  mapSheet.getCell("H1").value = "";
+  mapSheet.state = "hidden";
+
+  workbook.definedNames.add(
+    `'级联映射'!$A$2:$B$${Math.max(2, types.length + 1)}`,
+    "selMapCombo",
+  );
+  workbook.definedNames.add(
+    `'级联映射'!$C$2:$D$${Math.max(2, configRangeNames.size + 1)}`,
+    "selMapConfig",
+  );
+  workbook.definedNames.add("'级联映射'!$H$1", "selNone");
 
   const ws = workbook.addWorksheet("设备信息");
 
@@ -205,21 +476,62 @@ async function createExcelTemplate() {
     { header: "name", key: "name", width: 25 },
     { header: "type", key: "type", width: 12 },
     { header: "combination", key: "combination", width: 20 },
-    { header: "config", key: "config", width: 20 },
+    { header: "config", key: "config", width: 30 },
     { header: "闭合方式", key: "closeType", width: 15 },
     { header: "location", key: "location", width: 15 },
   ];
 
-  ws.addRows([
-    {
-      name: "01转辙机",
-      type: "ZD6",
-      combination: "单动单机",
-      config: "ZD6-D",
-      closeType: "1、3闭合",
-      location: "站场 A 区",
-    },
-  ]);
+  // 示例行优先取「已绑定、导入时能查到配置」的组合，避免示例本身导入失败
+  const sampleKey =
+    [...cascade.importableKeys][0] ||
+    Object.keys(cascade.configsByTypeCombination)[0] ||
+    "";
+  let sampleType = types[0] || "";
+  let sampleCombination = "";
+  let sampleConfig = "";
+  if (sampleKey) {
+    const separatorIndex = sampleKey.indexOf(CASCADE_KEY_SEPARATOR);
+    sampleType = sampleKey.slice(0, separatorIndex);
+    sampleCombination = sampleKey.slice(separatorIndex + 1);
+    sampleConfig = cascade.configsByTypeCombination[sampleKey]?.[0] || "";
+  }
+
+  ws.addRow({
+    name: "01转辙机",
+    type: sampleType,
+    combination: sampleCombination,
+    config: sampleConfig,
+    closeType: "1、3闭合",
+    location: "站场 A 区",
+  });
+
+  // 辅助列：先算出当前行应该使用哪个命名区域，下拉框再用 INDIRECT($H2) 取范围。
+  // 这是 Excel / WPS 都支持的“省市区”式写法。不要直接把
+  // INDIRECT(VLOOKUP(...)) 写进下拉公式，部分 WPS 版本会把它当成一个普通值，
+  // 结果下拉框里只剩一项。
+  ws.getCell("H1").value = "辅助-组合范围";
+  ws.getCell("I1").value = "辅助-配置范围";
+  ws.getCell("J1").value = "辅助-C无效";
+  ws.getCell("K1").value = "辅助-D无效";
+  for (let r = 2; r <= lastRow; r++) {
+    ws.getCell(`H${r}`).value = {
+      formula: `IFERROR(VLOOKUP($B${r},selMapCombo,2,FALSE),"selNone")`,
+    };
+    ws.getCell(`I${r}`).value = {
+      formula: `IFERROR(VLOOKUP($B${r}&"|"&$C${r},selMapConfig,2,FALSE),"selNone")`,
+    };
+    // 1 表示当前值已经不在上级列表里，需要重新选择
+    ws.getCell(`J${r}`).value = {
+      formula: `IF($C${r}="",0,IF(ISNA(MATCH($C${r},INDIRECT($H${r}),0)),1,0))`,
+    };
+    ws.getCell(`K${r}`).value = {
+      formula: `IF($D${r}="",0,IF(ISNA(MATCH($D${r},INDIRECT($I${r}),0)),1,0))`,
+    };
+  }
+  ws.getColumn(8).hidden = true;
+  ws.getColumn(9).hidden = true;
+  ws.getColumn(10).hidden = true;
+  ws.getColumn(11).hidden = true;
 
   // Header row styling
   const headerRow = ws.getRow(1);
@@ -232,47 +544,133 @@ async function createExcelTemplate() {
   headerRow.alignment = { horizontal: "center" };
   headerRow.height = 22;
   await headerRow.commit();
-  // Data validation: type (column B)
-  // ws.getCell("B2").dataValidation = {
-  //   type: "list",
-  //   allowBlank: true,
-  //   formulae: ['"ZD6,ZDJ9,ZYJ7,S700K,ZD9"'],
-  // };
-  // Copy validation to all type cells
-  for (let r = 2; r <= 100; r++) {
-    ws.getCell(`B${r}`).dataValidation = {
-      type: "list",
-      allowBlank: true,
-      formulae: ["'设备类型选项'!$A$2:$A$100"],
-    };
-  }
 
-  // Data validation: combination (column C) - reference hidden sheet
-  for (let r = 2; r <= 100; r++) {
-    ws.getCell(`C${r}`).dataValidation = {
-      type: "list",
-      allowBlank: true,
-      formulae: ["'组合方式选项'!$A$2:$A$100"],
-    };
-  }
+  // ExcelJS 的类型声明里没有 dataValidations，但运行时支持整段区域校验；
+  // 整段区域比逐格设置更小，也能让相对引用按行自动偏移。
+  const validations = (
+    ws as unknown as {
+      dataValidations: {
+        add: (
+          address: string,
+          validation: {
+            type: "list";
+            allowBlank?: boolean;
+            formulae: string[];
+            showErrorMessage?: boolean;
+            errorStyle?: string;
+            errorTitle?: string;
+            error?: string;
+            showInputMessage?: boolean;
+            promptTitle?: string;
+            prompt?: string;
+          },
+        ) => void;
+      };
+    }
+  ).dataValidations;
 
-  // Data validation: config (column D) - reference hidden sheet
-  for (let r = 2; r <= 100; r++) {
-    ws.getCell(`D${r}`).dataValidation = {
-      type: "list",
-      allowBlank: true,
-      formulae: ["'配置选项'!$A$2:$A$100"],
-    };
-  }
+  // type：全部类型
+  validations.add(`B2:B${lastRow}`, {
+    type: "list",
+    allowBlank: true,
+    formulae: ["selType"],
+    showErrorMessage: true,
+    errorStyle: "warning",
+    errorTitle: "类型无效",
+    error: "请从下拉列表中选择设备类型",
+  });
 
-  // Data validation: 闭合方式 (column E)
-  for (let r = 2; r <= 100; r++) {
-    ws.getCell(`E${r}`).dataValidation = {
-      type: "list",
-      allowBlank: true,
-      formulae: ['"1、3闭合,2、4闭合"'],
-    };
-  }
+  // combination：只列当前 type 下的组合方式。
+  // 这里只引用辅助列 H，保持最基础的 INDIRECT(单元格) 写法。
+  validations.add(`C2:C${lastRow}`, {
+    type: "list",
+    allowBlank: true,
+    formulae: ["INDIRECT($H2)"],
+    showErrorMessage: true,
+    errorStyle: "warning",
+    errorTitle: "组合方式无效",
+    error: "请先选择 type，再选择该类型下的组合方式",
+    showInputMessage: true,
+    promptTitle: "组合方式",
+    prompt: "修改 type 后，如果此单元格变红，说明原组合方式已失效，请重新选择。",
+  });
+
+  // config：只列当前 type + combination 下已绑定的配置
+  validations.add(`D2:D${lastRow}`, {
+    type: "list",
+    allowBlank: true,
+    formulae: ["INDIRECT($I2)"],
+    showErrorMessage: true,
+    errorStyle: "warning",
+    errorTitle: "配置无效",
+    error: "请先选择 combination，再选择该组合方式下的配置",
+    showInputMessage: true,
+    promptTitle: "配置",
+    prompt: "修改 combination 后，如果此单元格变红，说明原配置已失效，请重新选择。",
+  });
+
+  // 闭合方式
+  validations.add(`E2:E${lastRow}`, {
+    type: "list",
+    allowBlank: true,
+    formulae: ['"1、3闭合,2、4闭合"'],
+  });
+
+  // 数据验证不会自动清空下级单元格。用户在已有行上改了 type / combination 后，
+  // 原来选的组合方式或配置可能已经不在新列表里，这里用条件格式把它们标红，
+  // 提示用户重新选择。
+  const invalidStyle = {
+    fill: {
+      type: "pattern",
+      pattern: "solid",
+      bgColor: { argb: "FFFFC7CE" },
+    },
+    font: { color: { argb: "FF9C0006" } },
+  } as const;
+  ws.addConditionalFormatting({
+    ref: `C2:C${lastRow}`,
+    rules: [
+      {
+        type: "expression",
+        priority: 1,
+        formulae: ["$J2=1"],
+        style: invalidStyle,
+      },
+    ],
+  });
+  ws.addConditionalFormatting({
+    ref: `D2:D${lastRow}`,
+    rules: [
+      {
+        type: "expression",
+        priority: 2,
+        formulae: ["$K2=1"],
+        style: invalidStyle,
+      },
+    ],
+  });
+
+  ws.getCell("C1").note =
+    "修改 type 后，如果此列出现红色，说明原组合方式已失效，请重新选择。";
+  ws.getCell("D1").note =
+    "修改 combination 后，如果此列出现红色，说明原配置已失效，请重新选择。";
+
+  ws.views = [{ state: "frozen", ySplit: 1 }];
+
+  // 打开工作簿时定位到“设备信息”。如果不设置，activeTab 默认是 0，
+  // 正好落在隐藏的“设备类型选项”上；部分 Excel/WPS 版本遇到“活动表被隐藏”
+  // 会把这个表重新显示出来，看起来就像隐藏时有时无。
+  workbook.views = [
+    {
+      x: 0,
+      y: 0,
+      width: 10000,
+      height: 20000,
+      firstSheet: 0,
+      activeTab: workbook.worksheets.length - 1,
+      visibility: "visible",
+    },
+  ];
 
   return workbook.xlsx.writeBuffer();
 }
