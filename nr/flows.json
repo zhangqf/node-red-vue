@@ -375,10 +375,10 @@
             "9c3286032d14420b",
             "0458f1b0be8443c5"
         ],
-        "x": 114,
+        "x": 104,
         "y": 3859,
-        "w": 1632,
-        "h": 322
+        "w": 1642,
+        "h": 802
     },
     {
         "id": "d988c9e174ddf1e9",
@@ -509,7 +509,12 @@
             "3ed8093cf8f66111",
             "9635370b9e8fdc6c",
             "a2350d0f7e15c60a",
-            "b44ec23269872eb7"
+            "b44ec23269872eb7",
+            "a6ec2d9d929f2d2f",
+            "84a937f44025afa4",
+            "14191642c2a5eb30",
+            "dbf4b8df5349aebe",
+            "cf25c7663236fde3"
         ],
         "x": 114,
         "y": 4739,
@@ -4647,7 +4652,8 @@
                 "b7e51f0047a688d6",
                 "d6561ce2b153f39c",
                 "e8fba6ec4d303407",
-                "c0481cbd8f46eba2"
+                "c0481cbd8f46eba2",
+                "cf25c7663236fde3"
             ]
         ]
     },
@@ -7179,53 +7185,6 @@
         ]
     },
     {
-        "id": "a14676b446819458",
-        "type": "function",
-        "z": "616b0fbf58fc4465",
-        "name": "function 33",
-        "func": "flow.set('root', \"C:\\\\switch\\\\node-red-vue\\\\nr\")\n",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 290,
-        "y": 5540,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "8f4da6d8238c6fe8",
-        "type": "inject",
-        "z": "616b0fbf58fc4465",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 130,
-        "y": 5540,
-        "wires": [
-            [
-                "a14676b446819458"
-            ]
-        ]
-    },
-    {
         "id": "c704fa769d94e9d4",
         "type": "debug",
         "z": "616b0fbf58fc4465",
@@ -7262,9 +7221,12 @@
         "wires": []
     },
     {
+        "id": "d6ddcefe62654ac2",
         "type": "http in",
         "z": "616b0fbf58fc4465",
         "g": "14d861217ea12ab5",
+        "name": "查询配置适用机型",
+        "url": "/getConfigModels",
         "method": "get",
         "upload": false,
         "skipBodyParsing": false,
@@ -7275,15 +7237,15 @@
             [
                 "6d4722b143b94e7c"
             ]
-        ],
-        "id": "d6ddcefe62654ac2",
-        "name": "查询配置适用机型",
-        "url": "/getConfigModels"
+        ]
     },
     {
+        "id": "6d4722b143b94e7c",
         "type": "function",
         "z": "616b0fbf58fc4465",
         "g": "14d861217ea12ab5",
+        "name": "按绑定关系查机型",
+        "func": "// 配置 -> 组合方式 -> 机型\n// binding_id 格式为 \"<deviceId>_<combinationId>\"，\n// deviceId 本身可能含下划线，故从右侧切分。\n//\n// 绑定关系是准的；没绑定的配置（ZYJ7/ZDJ9/SH6 那几个）从名字前缀\n// 兜底推断，推不出就留空由前端显示「未指定」。\nmsg.topic = `\nSELECT DISTINCT\n       cfg.id AS configId,\n       COALESCE(\n         cb.deviceType,\n         CASE\n           WHEN cfg.name LIKE 'ZDJ9%' THEN 'ZDJ9'\n           WHEN cfg.name LIKE 'ZYJ7%' THEN 'ZYJ7'\n           WHEN cfg.name LIKE 'ZD9%'  THEN 'ZD9'\n           WHEN cfg.name LIKE 'ZD6%'  THEN 'ZD6'\n           WHEN cfg.name LIKE 'SH6%'  THEN 'ZYJ7'\n           ELSE ''\n         END\n       ) AS deviceType\nFROM config cfg\nLEFT JOIN combination_config_bindings ccb\n  ON ccb.config_id = cfg.id\nLEFT JOIN combination cb\n  ON cb.id = substr(ccb.binding_id, instr(ccb.binding_id, '_') + 1)\n`;\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -7296,32 +7258,32 @@
             [
                 "524d6746f8ec4aa8"
             ]
-        ],
-        "id": "6d4722b143b94e7c",
-        "name": "按绑定关系查机型",
-        "func": "// 配置 -> 组合方式 -> 机型\n// binding_id 格式为 \"<deviceId>_<combinationId>\"，\n// deviceId 本身可能含下划线，故从右侧切分。\n//\n// 绑定关系是准的；没绑定的配置（ZYJ7/ZDJ9/SH6 那几个）从名字前缀\n// 兜底推断，推不出就留空由前端显示「未指定」。\nmsg.topic = `\nSELECT DISTINCT\n       cfg.id AS configId,\n       COALESCE(\n         cb.deviceType,\n         CASE\n           WHEN cfg.name LIKE 'ZDJ9%' THEN 'ZDJ9'\n           WHEN cfg.name LIKE 'ZYJ7%' THEN 'ZYJ7'\n           WHEN cfg.name LIKE 'ZD9%'  THEN 'ZD9'\n           WHEN cfg.name LIKE 'ZD6%'  THEN 'ZD6'\n           WHEN cfg.name LIKE 'SH6%'  THEN 'ZYJ7'\n           ELSE ''\n         END\n       ) AS deviceType\nFROM config cfg\nLEFT JOIN combination_config_bindings ccb\n  ON ccb.config_id = cfg.id\nLEFT JOIN combination cb\n  ON cb.id = substr(ccb.binding_id, instr(ccb.binding_id, '_') + 1)\n`;\nreturn msg;"
+        ]
     },
     {
+        "id": "524d6746f8ec4aa8",
         "type": "sqlite",
         "z": "616b0fbf58fc4465",
         "g": "14d861217ea12ab5",
         "mydb": "a074385e545da94b",
         "sqlquery": "msg.topic",
         "sql": "",
+        "name": "查询config对应机型",
         "x": 960,
         "y": 4380,
         "wires": [
             [
                 "dba1538a0f474afe"
             ]
-        ],
-        "id": "524d6746f8ec4aa8",
-        "name": "查询config对应机型"
+        ]
     },
     {
+        "id": "dba1538a0f474afe",
         "type": "function",
         "z": "616b0fbf58fc4465",
         "g": "14d861217ea12ab5",
+        "name": "整理机型映射",
+        "func": "// 行数组 -> { configId: deviceType } 映射\nconst rows = msg.payload || [];\nconst models = {};\nfor (const r of rows) {\n  if (r && r.configId) models[r.configId] = r.deviceType || \"\";\n}\n\nmsg.payload = { code: 200, data: models };\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -7334,29 +7296,29 @@
             [
                 "efcbeff33248459b"
             ]
-        ],
-        "id": "dba1538a0f474afe",
-        "name": "整理机型映射",
-        "func": "// 行数组 -> { configId: deviceType } 映射\nconst rows = msg.payload || [];\nconst models = {};\nfor (const r of rows) {\n  if (r && r.configId) models[r.configId] = r.deviceType || \"\";\n}\n\nmsg.payload = { code: 200, data: models };\nreturn msg;"
+        ]
     },
     {
+        "id": "efcbeff33248459b",
         "type": "http response",
         "z": "616b0fbf58fc4465",
         "g": "14d861217ea12ab5",
+        "name": "response",
         "statusCode": "200",
         "headers": {
             "content-type": "application/json"
         },
         "x": 1660,
         "y": 4380,
-        "wires": [],
-        "id": "efcbeff33248459b",
-        "name": "response"
+        "wires": []
     },
     {
+        "id": "1cae70fe35c14699",
         "type": "http in",
         "z": "616b0fbf58fc4465",
         "g": "14d861217ea12ab5",
+        "name": "查询组合方式配线类型",
+        "url": "/getWiringTypes",
         "method": "get",
         "upload": false,
         "skipBodyParsing": false,
@@ -7367,15 +7329,15 @@
             [
                 "ccad6c9e5906410a"
             ]
-        ],
-        "id": "1cae70fe35c14699",
-        "name": "查询组合方式配线类型",
-        "url": "/getWiringTypes"
+        ]
     },
     {
+        "id": "ccad6c9e5906410a",
         "type": "function",
         "z": "616b0fbf58fc4465",
         "g": "14d861217ea12ab5",
+        "name": "按组合方式查配线类型",
+        "func": "// 组合方式 -> 配线类型（有无外部配线）\n// 选型页据此把组合方式分组展示。\nmsg.topic = `\nSELECT combination_id AS combinationId, wiring_type AS wiringType\nFROM combination_wiring\n`;\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -7388,32 +7350,32 @@
             [
                 "24d70e8468274736"
             ]
-        ],
-        "id": "ccad6c9e5906410a",
-        "name": "按组合方式查配线类型",
-        "func": "// 组合方式 -> 配线类型（有无外部配线）\n// 选型页据此把组合方式分组展示。\nmsg.topic = `\nSELECT combination_id AS combinationId, wiring_type AS wiringType\nFROM combination_wiring\n`;\nreturn msg;"
+        ]
     },
     {
+        "id": "24d70e8468274736",
         "type": "sqlite",
         "z": "616b0fbf58fc4465",
         "g": "14d861217ea12ab5",
         "mydb": "a074385e545da94b",
         "sqlquery": "msg.topic",
         "sql": "",
+        "name": "查询配线类型表",
         "x": 960,
         "y": 4620,
         "wires": [
             [
                 "9c3286032d14420b"
             ]
-        ],
-        "id": "24d70e8468274736",
-        "name": "查询配线类型表"
+        ]
     },
     {
+        "id": "9c3286032d14420b",
         "type": "function",
         "z": "616b0fbf58fc4465",
         "g": "14d861217ea12ab5",
+        "name": "整理配线类型映射",
+        "func": "// 行数组 -> { combinationId: wiringType }\nconst rows = msg.payload || [];\nconst types = {};\nfor (const r of rows) {\n  if (r && r.combinationId) types[r.combinationId] = r.wiringType || \"\";\n}\n\nmsg.payload = { code: 200, data: types };\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -7426,23 +7388,112 @@
             [
                 "0458f1b0be8443c5"
             ]
-        ],
-        "id": "9c3286032d14420b",
-        "name": "整理配线类型映射",
-        "func": "// 行数组 -> { combinationId: wiringType }\nconst rows = msg.payload || [];\nconst types = {};\nfor (const r of rows) {\n  if (r && r.combinationId) types[r.combinationId] = r.wiringType || \"\";\n}\n\nmsg.payload = { code: 200, data: types };\nreturn msg;"
+        ]
     },
     {
+        "id": "0458f1b0be8443c5",
         "type": "http response",
         "z": "616b0fbf58fc4465",
         "g": "14d861217ea12ab5",
+        "name": "response",
         "statusCode": "200",
         "headers": {
             "content-type": "application/json"
         },
         "x": 1660,
         "y": 4620,
-        "wires": [],
-        "id": "0458f1b0be8443c5",
-        "name": "response"
+        "wires": []
+    },
+    {
+        "id": "a6ec2d9d929f2d2f",
+        "type": "http in",
+        "z": "616b0fbf58fc4465",
+        "g": "25117979b7b223cc",
+        "name": "deleteDeviceCode",
+        "url": "/deleteDeviceCode/:id",
+        "method": "delete",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 410,
+        "y": 5340,
+        "wires": [
+            [
+                "14191642c2a5eb30"
+            ]
+        ]
+    },
+    {
+        "id": "84a937f44025afa4",
+        "type": "sqlite",
+        "z": "616b0fbf58fc4465",
+        "g": "25117979b7b223cc",
+        "mydb": "a074385e545da94b",
+        "sqlquery": "msg.topic",
+        "sql": "\n\nSELECT * FROM combination ORDER BY updated_at DESC",
+        "name": "删除deviceCode",
+        "x": 1000,
+        "y": 5340,
+        "wires": [
+            [
+                "dbf4b8df5349aebe"
+            ]
+        ]
+    },
+    {
+        "id": "14191642c2a5eb30",
+        "type": "function",
+        "z": "616b0fbf58fc4465",
+        "g": "25117979b7b223cc",
+        "name": "deleteDeviceCode",
+        "func": "\nconst id = msg.req.params.id\nmsg.topic = `\nDELETE FROM code_device WHERE id = \"${id}\"\n`\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 670,
+        "y": 5340,
+        "wires": [
+            [
+                "84a937f44025afa4"
+            ]
+        ]
+    },
+    {
+        "id": "dbf4b8df5349aebe",
+        "type": "function",
+        "z": "616b0fbf58fc4465",
+        "g": "25117979b7b223cc",
+        "name": "处理数据",
+        "func": "  msg.payload = {\n    code:200,\n    message: \"删除成功\"\n  }\n  return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1380,
+        "y": 5340,
+        "wires": [
+            [
+                "cf25c7663236fde3"
+            ]
+        ]
+    },
+    {
+        "id": "cf25c7663236fde3",
+        "type": "http response",
+        "z": "616b0fbf58fc4465",
+        "g": "25117979b7b223cc",
+        "name": "response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 1600,
+        "y": 5340,
+        "wires": []
     }
 ]
