@@ -137,12 +137,7 @@ async function fetchDevices() {
     });
     devices.value = await response.json();
   } catch {
-    devices.value = [
-      { id: "device-001", name: "ZD6 转辙机 #001", location: "站场 A 区" },
-      { id: "device-002", name: "ZD6 转辙机 #002", location: "站场 B 区" },
-      { id: "device-003", name: "ZD6 转辙机 #003", location: "站场 C 区" },
-      { id: "device-004", name: "S700K 转辙机 #001", location: "站场 A 区" },
-    ];
+    devices.value = [];
   }
 }
 
@@ -348,7 +343,12 @@ function buildTemplateCascade(): TemplateCascade {
     }
   }
 
-  return { types, combinationsByType, configsByTypeCombination, importableKeys };
+  return {
+    types,
+    combinationsByType,
+    configsByTypeCombination,
+    importableKeys,
+  };
 }
 
 /** 把 1、2、3… 转成 A、B、…、AA 这样的列号 */
@@ -592,7 +592,8 @@ async function createExcelTemplate() {
     error: "请先选择 type，再选择该类型下的组合方式",
     showInputMessage: true,
     promptTitle: "组合方式",
-    prompt: "修改 type 后，如果此单元格变红，说明原组合方式已失效，请重新选择。",
+    prompt:
+      "修改 type 后，如果此单元格变红，说明原组合方式已失效，请重新选择。",
   });
 
   // config：只列当前 type + combination 下已绑定的配置
@@ -606,7 +607,8 @@ async function createExcelTemplate() {
     error: "请先选择 combination，再选择该组合方式下的配置",
     showInputMessage: true,
     promptTitle: "配置",
-    prompt: "修改 combination 后，如果此单元格变红，说明原配置已失效，请重新选择。",
+    prompt:
+      "修改 combination 后，如果此单元格变红，说明原配置已失效，请重新选择。",
   });
 
   // 闭合方式
@@ -683,9 +685,7 @@ async function downloadExcelTemplate() {
       let binary = "";
       const chunkSize = 0x8000;
       for (let i = 0; i < bytes.length; i += chunkSize) {
-        binary += String.fromCharCode(
-          ...bytes.subarray(i, i + chunkSize),
-        );
+        binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
       }
       const result = await stationFilePlugin.saveFile({
         fileName: "设备导入模板.xlsx",
@@ -740,9 +740,7 @@ async function pickAndroidFile() {
     if (!result.fileName || !result.dataBase64) {
       throw new Error("文件选择器未返回有效文件内容");
     }
-    await importFile(
-      decodeBase64File(result.fileName, result.dataBase64),
-    );
+    await importFile(decodeBase64File(result.fileName, result.dataBase64));
   } catch (error) {
     console.error("Failed to select import file", error);
     showToast(

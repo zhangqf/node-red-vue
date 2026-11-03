@@ -19,6 +19,7 @@ const menuItems = [
     key: "assets",
     label: "设备资产",
     children: [
+      { key: "station-manager", label: "站场模式管理" },
       { key: "device-manager", label: "机型资产管理" },
       { key: "combination-manager", label: "组合方式管理" },
       { key: "config-manager", label: "测试机型管理" },
