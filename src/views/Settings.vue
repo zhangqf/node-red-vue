@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import {
   saveRuntimeConfig,
   DEFAULT_CONFIG,
@@ -8,14 +8,57 @@ import {
 } from "@/config/config";
 import { useAuth } from "@/composables/useAuth";
 
-const { changePassword } = useAuth();
+const {
+  sessionAuthed,
+  authExpiresAt,
+  unlockDeviceAssets,
+  clearAuth,
+} = useAuth();
 
-const oldPassword = ref("");
-const newPassword = ref("");
-const confirmPassword = ref("");
-const message = ref("");
+const assetPassword = ref("");
+const unlockMessage = ref("");
+const isUnlockError = ref(false);
+const now = ref(Date.now());
+let unlockTimer: number | undefined;
+const remainingText = computed(() => {
+  if (!authExpiresAt.value) return "00:00";
+  const seconds = Math.max(
+    0,
+    Math.ceil((authExpiresAt.value - now.value) / 1000),
+  );
+  return `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(
+    seconds % 60,
+  ).padStart(2, "0")}`;
+});
+
+async function onUnlock() {
+  unlockMessage.value = "";
+  isUnlockError.value = false;
+
+  if (!assetPassword.value) {
+    unlockMessage.value = "请输入设备资产密码";
+    isUnlockError.value = true;
+    return;
+  }
+
+  const ok = await unlockDeviceAssets(assetPassword.value);
+  if (ok) {
+    assetPassword.value = "";
+    unlockMessage.value = "设备资产已解锁，10 分钟后自动隐藏";
+    isUnlockError.value = false;
+  } else {
+    unlockMessage.value = "设备资产密码错误，请重试";
+    isUnlockError.value = true;
+  }
+}
+
+function onHideAssets() {
+  clearAuth();
+  unlockMessage.value = "设备资产已隐藏";
+  isUnlockError.value = false;
+}
+
 const messageUrl = ref("");
-const isError = ref(false);
 const isErrorUrl = ref(false);
 
 const httpUrl = ref(DEFAULT_CONFIG.httpUrl);
@@ -54,46 +97,17 @@ const onSaveNetworkConfig = () => {
   messageUrl.value = "服务器地址已保存，已立即生效";
 };
 
-async function onSubmit() {
-  message.value = "";
-  isError.value = false;
-
-  if (!oldPassword.value) {
-    message.value = "请输入原密码";
-    isError.value = true;
-    return;
-  }
-  if (!newPassword.value) {
-    message.value = "请输入新密码";
-    isError.value = true;
-    return;
-  }
-  if (newPassword.value.length < 6) {
-    message.value = "新密码至少 6 位";
-    isError.value = true;
-    return;
-  }
-  if (newPassword.value !== confirmPassword.value) {
-    message.value = "两次输入的新密码不一致";
-    isError.value = true;
-    return;
-  }
-
-  const result = await changePassword(oldPassword.value, newPassword.value);
-  if (result.success) {
-    message.value = "密码修改成功";
-    isError.value = false;
-    oldPassword.value = "";
-    newPassword.value = "";
-    confirmPassword.value = "";
-  } else {
-    message.value = result.error || "修改失败";
-    isError.value = true;
-  }
-}
-
 onMounted(() => {
   loadConfig();
+  unlockTimer = window.setInterval(() => {
+    now.value = Date.now();
+  }, 1000);
+});
+
+onUnmounted(() => {
+  if (unlockTimer !== undefined) {
+    window.clearInterval(unlockTimer);
+  }
 });
 </script>
 
@@ -153,38 +167,53 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="section">
-        <h3 class="section-title">修改资产操作密码</h3>
-        <form class="password-form" @submit.prevent="onSubmit">
-          <div class="form-item">
-            <label class="form-label">原密码</label>
+      <div class="section asset-access-section">
+        <h3 class="section-title">管理设备资产显示</h3>
+        <p class="section-desc">
+          输入设备资产密码即可显示“设备资产”菜单。默认显示 10 分钟，
+          超过时间后自动隐藏，需再次输入密码才能显示。
+        </p>
+
+        <div v-if="!sessionAuthed" class="asset-access-card">
+          <div class="form-item password-row">
+            <label class="form-label" for="asset-password">设备资产密码</label>
             <input
-              v-model="oldPassword"
+              id="asset-password"
+              v-model="assetPassword"
               type="password"
               class="form-input"
-              placeholder="输入原密码" />
+              placeholder="请输入设备资产密码"
+              autocomplete="off"
+              @keyup.enter="onUnlock" />
           </div>
-          <div class="form-item">
-            <label class="form-label">新密码</label>
-            <input
-              v-model="newPassword"
-              type="password"
-              class="form-input"
-              placeholder="至少 6 位" />
-          </div>
-          <div class="form-item">
-            <label class="form-label">确认新密码</label>
-            <input
-              v-model="confirmPassword"
-              type="password"
-              class="form-input"
-              placeholder="再次输入新密码" />
-          </div>
-          <p v-if="message" :class="['form-msg', { error: isError }]">
-            {{ message }}
+          <p v-if="unlockMessage" :class="['form-msg', { error: isUnlockError }]">
+            {{ unlockMessage }}
           </p>
-          <button type="submit" class="form-btn">保存修改</button>
-        </form>
+          <div class="config-actions">
+            <button type="button" class="form-btn" @click="onUnlock">
+              验证并显示设备资产
+            </button>
+          </div>
+        </div>
+
+        <div v-else class="asset-access-card asset-unlocked">
+          <div class="status-line">
+            <span class="status-dot"></span>
+            设备资产已显示
+          </div>
+          <p class="remaining-time">
+            剩余 {{ remainingText }} 后自动隐藏
+          </p>
+          <p v-if="unlockMessage" class="form-msg">
+            {{ unlockMessage }}
+          </p>
+          <div class="config-actions">
+            <button type="button" class="reset-btn hide-btn" @click="onHideAssets">
+              立即隐藏设备资产
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -219,7 +248,65 @@ onMounted(() => {
   margin-bottom: 16px;
 }
 
-.password-form,
+.asset-access-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.section-desc {
+  color: #7a8fa0;
+  font-size: 13px;
+  line-height: 1.7;
+  margin: -6px 0 16px;
+}
+
+.asset-access-card {
+  background: rgba(5, 20, 36, 0.6);
+  border: 1px solid #1a2d44;
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.password-row {
+  max-width: 360px;
+}
+
+.asset-unlocked {
+  border-color: rgba(52, 211, 153, 0.35);
+  background: rgba(19, 74, 54, 0.28);
+}
+
+.status-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #8ff0c0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.16);
+}
+
+.remaining-time {
+  margin: 10px 0 14px;
+  color: #e8473b;
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.hide-btn {
+  background: rgba(217, 48, 37, 0.65);
+}
+
+
+
 .network-form {
   display: flex;
   flex-direction: column;

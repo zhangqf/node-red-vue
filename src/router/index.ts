@@ -83,8 +83,8 @@ const router = createRouter({
 
 router.beforeEach((to, _from, next) => {
   if (assetRouteNames.includes(to.name as string)) {
-    const { sessionAuthed } = useAuth();
-    if (!sessionAuthed.value) {
+    const { hasValidAuth } = useAuth();
+    if (!hasValidAuth()) {
       next({ name: "home" });
       return;
     }

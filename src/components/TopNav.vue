@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, computed } from "vue";
+import { useAuth } from "@/composables/useAuth";
 
 defineProps<{
   activeMenu?: string;
@@ -13,25 +14,33 @@ const emit = defineEmits<{
 const openSubmenu = ref("");
 const navRef = ref<HTMLElement | null>(null);
 
-const menuItems = [
+interface MenuItem {
+  key: string;
+  label: string;
+  children?: Array<{ key: string; label: string }>;
+}
+
+const { sessionAuthed } = useAuth();
+const assetMenuItem: MenuItem = {
+  key: "assets",
+  label: "设备资产",
+  children: [
+    { key: "station-manager", label: "站场模式管理" },
+    { key: "device-manager", label: "机型资产管理" },
+    { key: "combination-manager", label: "组合方式管理" },
+    { key: "config-manager", label: "测试机型管理" },
+    { key: "binding-manager", label: "绑定配置" },
+    { key: "channel-config-manager", label: "通道配置" },
+    { key: "threshold-config-manager", label: "阻值阈值" },
+    { key: "curve-threshold-manager", label: "曲线阈值" },
+  ],
+};
+const menuItems = computed<MenuItem[]>(() => [
   { key: "home", label: "首页" },
-  {
-    key: "assets",
-    label: "设备资产",
-    children: [
-      { key: "station-manager", label: "站场模式管理" },
-      { key: "device-manager", label: "机型资产管理" },
-      { key: "combination-manager", label: "组合方式管理" },
-      { key: "config-manager", label: "测试机型管理" },
-      { key: "binding-manager", label: "绑定配置" },
-      { key: "channel-config-manager", label: "通道配置" },
-      { key: "threshold-config-manager", label: "阻值阈值" },
-      { key: "curve-threshold-manager", label: "曲线阈值" },
-    ],
-  },
+  ...(sessionAuthed.value ? [assetMenuItem] : []),
   { key: "history", label: "历史记录" },
   { key: "settings", label: "系统设置" },
-];
+]);
 
 function onMenuClick(key: string) {
   openSubmenu.value = openSubmenu.value === key ? "" : key;

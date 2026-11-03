@@ -9,8 +9,14 @@ import { AndroidSystemBars } from "capacitor-android-system-bars";
 
 const route = useRoute();
 const router = useRouter();
-const { showDialog, errorMsg, requireAuth, onDialogConfirm, onDialogCancel } =
-  useAuth();
+const {
+  showDialog,
+  errorMsg,
+  requireAuth,
+  onDialogConfirm,
+  onDialogCancel,
+  sessionAuthed,
+} = useAuth();
 
 const hideUpdateBar = computed(() => route.name === "work");
 
@@ -133,6 +139,16 @@ watch(
     else activeMenu.value = "home";
   },
   { immediate: true },
+);
+
+// 资产权限到期后，停留在资产页时自动回到首页
+watch(
+  sessionAuthed,
+  (authed) => {
+    if (!authed && assetRoutes.includes(route.name as string)) {
+      router.replace({ name: "home" });
+    }
+  },
 );
 
 const enterImmersive = async () => {
